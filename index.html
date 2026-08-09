@@ -287,7 +287,7 @@
 
   <main>
     <!-- ===== Showdown tab ===== -->
-    <div class="tabpanel active" id="tab-showdown">
+    <div class="tabpanel" id="tab-showdown">
       <div id="showdown-picker"></div>
       <div id="showdown-progress" style="display:none;">
         <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
@@ -329,8 +329,11 @@
     </div>
 
     <!-- ===== Browse tab ===== -->
-    <div class="tabpanel" id="tab-browse">
-      <input type="text" id="search" placeholder="Search your items…" autocomplete="off">
+    <div class="tabpanel active" id="tab-browse">
+      <div style="display:flex; gap:8px; align-items:center; margin-top:4px;">
+        <input type="text" id="search" placeholder="Search your items…" autocomplete="off" style="flex:1;">
+        <button class="bracket-nav" id="sweepModeBtn" style="white-space:nowrap;">⚔️ Sweep</button>
+      </div>
       <div class="chiprow" id="sortChips">
         <div class="chip active" data-sort="name">Name</div>
         <div class="chip" data-sort="tier">Rarity</div>
@@ -342,9 +345,8 @@
   </main>
 
   <nav class="tabs">
-    <button class="tab-btn active" data-tab="showdown"><span class="emoji">⚔️</span>Showdown</button>
+    <button class="tab-btn active" data-tab="browse"><span class="emoji">🧳</span>Vault</button>
     <button class="tab-btn" data-tab="marked"><span class="emoji">🗑️</span>Marked<span class="badge" id="markedCountBadge" style="display:none;">0</span></button>
-    <button class="tab-btn" data-tab="browse"><span class="emoji">🔍</span>Browse</button>
   </nav>
 </div>
 
@@ -781,7 +783,8 @@ function renderShowdownPicker(){
   const classes = [
     { id: 0, label: "Titan" }, { id: 1, label: "Hunter" }, { id: 2, label: "Warlock" }, { id: "weapons", label: "⚔️ Weapons" }
   ];
-  let html = `<div class="class-chips">` + classes.map(c =>
+  let html = `<button class="bracket-nav" id="exitSweepBtn" style="margin-bottom:10px;">← Vault</button>`;
+  html += `<div class="class-chips">` + classes.map(c =>
     `<div class="class-chip ${selectedClass === c.id ? 'active' : ''}" data-class-id="${c.id}">${c.label}</div>`
   ).join("") + `</div>`;
 
@@ -823,6 +826,17 @@ function renderShowdownPicker(){
   el.querySelectorAll(".slot-row[data-slot]:not([data-slot=''])").forEach(row => row.addEventListener("click", () => {
     startBracket(armorForSlot(selectedClass, row.dataset.slot), `No comparable ${row.dataset.slot} for this class right now.`);
   }));
+  $("#exitSweepBtn").addEventListener("click", exitComparisonScreen);
+}
+function enterComparisonScreen(){
+  document.querySelectorAll(".tabpanel").forEach(p=>p.classList.remove("active"));
+  $("#tab-showdown").classList.add("active");
+}
+function exitComparisonScreen(){
+  document.querySelectorAll(".tabpanel").forEach(p=>p.classList.remove("active"));
+  $("#tab-browse").classList.add("active");
+  document.querySelectorAll(".tab-btn").forEach(b=>b.classList.remove("active"));
+  document.querySelector('[data-tab="browse"]').classList.add("active");
 }
 function backToPicker(){
   showdownMode = "picker";
@@ -1187,7 +1201,7 @@ function openItemDetail(item){
     }
     const pool = [item, ...others].sort((a,b) => b.power - a.power || (b.masterwork - a.masterwork) || (b.crafted - a.crafted));
     startBracket([{ pool }], "Nothing left to compare here.");
-    document.querySelector('[data-tab="showdown"]').click();
+    enterComparisonScreen();
   });
   const lockBtn = $("#detailLockBtn");
   if(lockBtn) lockBtn.addEventListener("click", async () => {
@@ -1258,6 +1272,11 @@ $("#stageAllBtn").addEventListener("click", stageAllOnCharacter);
 $("#exportDimCsvBtn").addEventListener("click", exportMarkedAsDimCsv);
 $("#copyDimQueryBtn").addEventListener("click", copyMarkedAsDimQuery);
 $("#sheet-backdrop").addEventListener("click", closeSheet);
+$("#sweepModeBtn").addEventListener("click", () => {
+  showdownMode = "picker"; selectedClass = null;
+  enterComparisonScreen();
+  renderShowdown();
+});
 $("#logoutBtn").addEventListener("click", logout);
 $("#loginBtn").addEventListener("click", startLogin);
 
