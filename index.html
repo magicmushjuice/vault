@@ -398,15 +398,19 @@ async function loadEverything(){
   allItems = raw.map(([it, cid, label, equipped]) => {
     const def = defCache[it.itemHash];
     if(!def) return null;
-    const power = it.itemInstanceId ? (instanceStats[it.itemInstanceId]?.primaryStat?.value || 0) : 0;
+   const power = it.itemInstanceId ? (instanceStats[it.itemInstanceId]?.primaryStat?.value || 0) : 0;
+    const state = it.state || 0;
     return {
       itemHash: it.itemHash, itemInstanceId: it.itemInstanceId, quantity: it.quantity,
       name: def.displayProperties.name,
       icon: def.displayProperties.icon ? BASE + def.displayProperties.icon : null,
       tier: def.inventory?.tierTypeName || "Common",
       type: def.itemTypeDisplayName || "",
+      itemType: def.itemType,
       transferStatus: it.transferStatus,
+      locked: !!(state & 1), masterwork: !!(state & 4), crafted: !!(state & 8),
       characterId: cid, location: label, equipped, power
+    };
     };
   }).filter(Boolean);
 
@@ -447,12 +451,14 @@ function classTypeName(n){ return n===0?"Titan":n===1?"Hunter":n===2?"Warlock":"
 function buildShowdownQueue(){
   const groups = {};
   allItems.forEach(it => {
-    if(!it.itemInstanceId) return; // only instanced gear (weapons/armor) can be compared
+if(!it.itemInstanceId) return; // needs to be an instanced item to compare
+    if(it.itemType !== 2 && it.itemType !== 3) return; // Armor (2) or Weapon (3) only — excludes the Artifact, Ghosts, etc.
+    if(it.locked) return; // you've already told the game "keep this" by locking it
     if(marked.some(m => m.itemInstanceId === it.itemInstanceId)) return; // already dealt with
     (groups[it.itemHash] = groups[it.itemHash] || []).push(it);
   });
   matchQueue = Object.values(groups).filter(g => g.length > 1)
-    .map(g => ({ pool: g.slice().sort((a,b) => b.power - a.power) }));
+    .map(g => ({ pool: g.slice().sort((a,b) => b.power - a.power || (b.masterwork - a.masterwork) || (b.crafted - a.crafted)) }));
   totalMatchups = matchQueue.reduce((sum, g) => sum + (g.pool.length - 1), 0);
   matchupsDone = 0;
   currentGroupIndex = 0;
@@ -515,17 +521,21 @@ function vcardEl(item, onPick){
   const el = document.createElement("div");
   el.className = "vcard";
   const color = TIER_COLORS[item.tier] || TIER_COLORS.Common;
+  const badges = [
+    item.masterwork ? '⭐ Masterwork' : '',
+    item.crafted ? '🛠️ Crafted' : '',
+    item.equipped ? '✅ Equipped' : ''
+  ].filter(Boolean).join(' · ');
   el.innerHTML = `
     <div class="icon">${item.icon ? `<img src="${item.icon}" onerror="this.style.display='none'">` : ''}<div class="tier-dot" style="background:${color}"></div></div>
     <div class="info">
       <div class="name">${escapeHtml(item.name)}</div>
-      <div class="meta">${item.equipped ? '⭐ Equipped · ' : ''}${item.location}</div>
+      <div class="meta">${item.location}${badges ? ' · ' + badges : ''}</div>
       <div class="power">${item.power || '—'}<span class="lbl">POWER</span></div>
     </div>`;
   el.addEventListener("click", onPick);
   return el;
 }
-
 function resolveMatchup(winner, loser){
   markForCleanup(loser);
   currentChampion = winner;
