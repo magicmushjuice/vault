@@ -387,6 +387,14 @@ let accessToken = localStorage.getItem("vault_access_token") || null;
 let membership = null;
 let allItems = [];
 let characterClassById = {};
+// Bumped whenever trimDefinition()'s shape changes (a new field added, etc). Any cache saved
+// under an older version is missing that field and needs to be re-fetched fresh — otherwise
+// items cached before the change silently behave as if the new field doesn't exist forever.
+const DEF_CACHE_VERSION = "2";
+if(localStorage.getItem("vault_def_cache_version") !== DEF_CACHE_VERSION){
+  localStorage.removeItem("vault_def_cache");
+  localStorage.setItem("vault_def_cache_version", DEF_CACHE_VERSION);
+}
 let defCache = JSON.parse(localStorage.getItem("vault_def_cache") || "{}");
 let cleanupCharacterId = localStorage.getItem("vault_cleanup_char") || null;
 
@@ -1073,12 +1081,87 @@ function renderBrowse(){
       <div class="icon">${iconImgHtml(item)}<div class="tier-dot" style="background:${color}"></div></div>
       <div class="info"><div class="name">${escapeHtml(item.name)}</div><div class="sub">${item.location}${item.quantity>1?' · x'+item.quantity:''}</div></div>
       <button class="xfer" ${transferrable?'':'disabled'}>${item.location==='Vault'?'TO CHAR':'TO VAULT'}</button>`;
-    el.querySelector(".xfer").addEventListener("click", () => transferPrompt(item));
+    el.querySelector(".xfer").addEventListener("click", (e) => { e.stopPropagation(); transferPrompt(item); });
+    el.addEventListener("click", () => openItemDetail(item));
     container.appendChild(el);
   });
 }
 function tierRank(t){ return {"Exotic":5,"Legendary":4,"Rare":3,"Uncommon":2,"Common":1}[t]||0; }
 function escapeHtml(s){ return s.replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+// ---------- Item detail / inspect sheet ----------
+async function setLockState(item, locked){
+  const charId = item.characterId || Object.keys(characterClassById)[0];
+  const res = await apiPost("/Platform/Destiny2/Actions/Items/SetLockState/", {
+    state: locked, itemId: item.itemInstanceId, characterId: charId, membershipType: membership.membershipType
+  });
+  return res?.ErrorCode === 1;
+}
+
+// "Similar" for weapons = same weapon type (e.g. every Hand Cannon you own), not just exact
+// duplicates — matches how a player actually thinks about culling ("do I need 6 hand cannons").
+// For armor it's the same slot+class grouping Showdown's picker already uses.
+function findSimilarPool(item){
+  if(!item.itemInstanceId) return [];
+  const eligible = it => it.itemInstanceId && !it.locked && it.itemInstanceId !== item.itemInstanceId &&
+    !marked.some(m => m.itemInstanceId === it.itemInstanceId);
+  if(item.itemType === 3){
+    return allItems.filter(it => eligible(it) && it.itemType === 3 && it.type === item.type);
+  }
+  if(item.itemType === 2){
+    const slot = armorSlotName(item);
+    return allItems.filter(it => eligible(it) && it.itemType === 2 && armorSlotName(it) === slot && fitsClass(it, item.classType));
+  }
+  return [];
+}
+
+function openItemDetail(item){
+  const sheet = $("#sheet");
+  const isArmor = item.itemType === 2;
+  const statLine = isArmor
+    ? [item.archetype ? `Archetype: ${item.archetype}` : '', ...(item.statBreakdown||[]).slice(0,2).map(s=>`${s.name} ${s.value}`)].filter(Boolean).join(' · ')
+    : [item.rpm ? `${item.rpm} RPM` : '', item.element || ''].filter(Boolean).join(' · ');
+  sheet.innerHTML = `
+    <div style="text-align:center;">
+      <div style="width:80px;height:80px;border-radius:20px;background:var(--line);margin:0 auto 10px auto;overflow:hidden;">
+        ${item.icon ? `<img src="${item.icon}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'">` : ''}
+      </div>
+      <h3 style="margin-bottom:2px;">${escapeHtml(item.name)}</h3>
+      <div style="color:var(--dim);font-weight:700;font-size:12px;margin-bottom:8px;">${item.type||item.tier} · ${item.location}</div>
+      <div style="font-family:'Baloo 2',sans-serif;font-size:26px;font-weight:800;color:var(--purple-dk);">${item.power||'—'} <span style="font-size:11px;color:var(--dim);">POWER</span></div>
+      ${statLine ? `<div style="margin-top:6px;font-size:12px;font-weight:800;color:var(--dim);">${statLine}</div>` : ''}
+      <div style="margin:10px 0; font-size:12px; font-weight:800; color:var(--dim);">
+        ${item.masterwork?'⭐ Masterwork &nbsp;':''}${item.crafted?'🛠️ Crafted &nbsp;':''}${item.equipped?'✅ Equipped &nbsp;':''}${item.locked?'🔒 Locked':''}
+      </div>
+    </div>
+    <div class="opt" id="detailCompareBtn">⚔️ Compare against similar<span>›</span></div>
+    ${item.itemInstanceId ? `<div class="opt" id="detailLockBtn">${item.locked ? '🔓 Unlock item' : '🔒 Lock item'}<span>›</span></div>` : ''}
+    ${item.itemInstanceId ? `<div class="opt" id="detailTransferBtn">${item.location==='Vault'?'Move to a character':'Move to Vault'}<span>›</span></div>` : ''}
+    <div class="cancel" id="sheetCancel">Close</div>`;
+  openSheet();
+
+  $("#detailCompareBtn").addEventListener("click", () => {
+    const others = findSimilarPool(item);
+    closeSheet();
+    if(others.length === 0){
+      alert(`Nothing else like this to compare — "${item.name}" is the only one of its kind right now.`);
+      return;
+    }
+    const pool = [item, ...others].sort((a,b) => b.power - a.power || (b.masterwork - a.masterwork) || (b.crafted - a.crafted));
+    startBracket([{ pool }], "Nothing left to compare here.");
+    document.querySelector('[data-tab="showdown"]').click();
+  });
+  const lockBtn = $("#detailLockBtn");
+  if(lockBtn) lockBtn.addEventListener("click", async () => {
+    closeSheet(); showLoading(item.locked ? "UNLOCKING…" : "LOCKING…");
+    const ok = await setLockState(item, !item.locked);
+    hideLoading();
+    if(ok){ item.locked = !item.locked; renderBrowse(); } else { alert("Couldn't change lock state."); }
+  });
+  const transferBtn = $("#detailTransferBtn");
+  if(transferBtn) transferBtn.addEventListener("click", () => { closeSheet(); transferPrompt(item); });
+  $("#sheetCancel").addEventListener("click", closeSheet);
+}
 
 function transferPrompt(item){
   const sheet = $("#sheet");
