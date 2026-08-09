@@ -357,7 +357,17 @@ async function apiGet(path, needsAuth=true){
   const headers = { "X-API-Key": API_KEY };
   if(needsAuth && accessToken) headers["Authorization"] = "Bearer " + accessToken;
   const res = await fetch(BASE + path, { headers });
-  return res.json();
+  if(res.status === 401){ forceReLogin(); throw new Error("Session expired, please sign in again."); }
+  try{ return await res.json(); }
+  catch(e){ throw new Error(`Bungie returned an unexpected response (status ${res.status})`); }
+}
+function forceReLogin(){
+  localStorage.removeItem("vault_access_token");
+  localStorage.removeItem("vault_refresh_token");
+  accessToken = null;
+  hideLoading();
+  alert("Your session expired — please sign in again.");
+  window.location.href = REDIRECT_URI;
 }
 async function apiPost(path, body){
   const headers = { "X-API-Key":API_KEY, "Authorization":"Bearer "+accessToken, "Content-Type":"application/json" };
@@ -367,7 +377,11 @@ async function apiPost(path, body){
 function logout(){ localStorage.removeItem("vault_access_token"); localStorage.removeItem("vault_refresh_token"); window.location.href = REDIRECT_URI; }
 
 // ---------- Data loading ----------
-async function loadEverything(){
+}catch(e){
+    console.error("Failed to load vault:", e);
+    hideLoading();
+    if(!String(e?.message).includes("Session expired")) alert("Something went wrong loading your vault: " + (e?.message || e));
+  }
   // Reset diagnostics each load — cached-but-icon-less defs get re-flagged every time from defCache,
   // resolve failures get a fresh chance to succeed or fail again.
   diagDefResolveFailed = [];
