@@ -301,6 +301,15 @@ let cleanupCharacterId = localStorage.getItem("vault_cleanup_char") || null;
 
 let marked = JSON.parse(localStorage.getItem("vault_marked") || "[]");
 
+// ---------- Icon diagnostics ----------
+// Three distinct failure modes get tracked separately so we stop guessing:
+//   1) diagDefResolveFailed  — manifest lookup for this hash never succeeded (item is dropped from allItems entirely, not just icon-less)
+//   2) diagIconMissingInDef  — the manifest definition resolved fine, but displayProperties.icon is empty/null (genuine manifest gap)
+//   3) diagIconLoadFailed    — displayProperties.icon had a path, we built a URL, but the <img> itself failed to load (bad/expired URL, CDN issue, etc.)
+let diagDefResolveFailed = [];
+let diagIconMissingInDef = [];
+let diagIconLoadFailed = [];
+
 // Showdown state
 let matchQueue = []; // array of {hash, pool:[items remaining to face champion]}
 let currentGroupIndex = 0;
@@ -359,6 +368,12 @@ function logout(){ localStorage.removeItem("vault_access_token"); localStorage.r
 
 // ---------- Data loading ----------
 async function loadEverything(){
+  // Reset diagnostics each load — cached-but-icon-less defs get re-flagged every time from defCache,
+  // resolve failures get a fresh chance to succeed or fail again.
+  diagDefResolveFailed = [];
+  diagIconMissingInDef = [];
+  diagIconLoadFailed = [];
+
   showLoading("FINDING YOUR GUARDIAN…");
   const memberships = await apiGet("/Platform/User/GetMembershipsForCurrentUser/");
   const list = memberships?.Response?.destinyMemberships || [];
@@ -400,10 +415,18 @@ async function loadEverything(){
     if(!def) return null;
    const power = it.itemInstanceId ? (instanceStats[it.itemInstanceId]?.primaryStat?.value || 0) : 0;
     const state = it.state || 0;
+    const hasIconPath = !!def.displayProperties.icon;
+    if(!hasIconPath){
+      diagIconMissingInDef.push({
+        hash: it.itemHash, name: def.displayProperties.name || "(unnamed)",
+        itemType: def.itemType, typeName: def.itemTypeDisplayName || "",
+        tier: def.inventory?.tierTypeName || "", redacted: !!def.redacted
+      });
+    }
     return {
       itemHash: it.itemHash, itemInstanceId: it.itemInstanceId, quantity: it.quantity,
       name: def.displayProperties.name,
-      icon: def.displayProperties.icon ? BASE + def.displayProperties.icon : null,
+      icon: hasIconPath ? BASE + def.displayProperties.icon : null,
       tier: def.inventory?.tierTypeName || "Common",
       type: def.itemTypeDisplayName || "",
       itemType: def.itemType,
@@ -418,6 +441,9 @@ async function loadEverything(){
   renderShowdown();
   renderMarked();
   renderBrowse();
+  // Image loads kicked off by the render calls above are async — give them a few seconds
+  // to settle (success or onerror) before printing the full diagnostic summary.
+  setTimeout(logIconDiagnostics, 3000);
 }
 
 async function resolveDefinitions(hashes){
@@ -442,9 +468,39 @@ async function fetchDefinitionWithRetry(hash, attempt=1){
   }catch(e){
     if(attempt < 3){ await new Promise(r=>setTimeout(r,300*attempt)); return fetchDefinitionWithRetry(hash, attempt+1); }
     console.warn("Giving up on hash", hash, e);
+    diagDefResolveFailed.push({ hash, error: String(e?.message || e) });
   }
 }
 function classTypeName(n){ return n===0?"Titan":n===1?"Hunter":n===2?"Warlock":"Guardian"; }
+
+// ---------- Icon rendering + diagnostics ----------
+// Single shared place that builds an item's <img>, so every list (Showdown, Marked, Browse)
+// reports load failures the same way instead of three separate silent onerror handlers.
+function iconImgHtml(item){
+  if(!item.icon) return '';
+  return `<img src="${item.icon}" data-hash="${item.itemHash}" data-name="${escapeHtml(item.name || '')}" onerror="handleIconLoadError(this)">`;
+}
+function handleIconLoadError(imgEl){
+  diagIconLoadFailed.push({ hash: imgEl.dataset.hash, name: imgEl.dataset.name, url: imgEl.src });
+  imgEl.style.display = 'none';
+}
+function logIconDiagnostics(){
+  const totalFlagged = diagDefResolveFailed.length + diagIconMissingInDef.length + diagIconLoadFailed.length;
+  console.group(`%cVault Showdown icon diagnostics — ${totalFlagged} flagged item(s)`, "color:#6d3fd6;font-weight:bold;");
+
+  console.log(`(1) Manifest lookup never resolved — item dropped from the whole app, not just missing an icon: ${diagDefResolveFailed.length}`);
+  if(diagDefResolveFailed.length) console.table(diagDefResolveFailed);
+
+  console.log(`(2) Manifest definition resolved but has NO icon path at all (genuine manifest gap): ${diagIconMissingInDef.length}`);
+  if(diagIconMissingInDef.length) console.table(diagIconMissingInDef);
+
+  console.log(`(3) Icon path existed and a URL was built, but the <img> failed to load: ${diagIconLoadFailed.length}`);
+  if(diagIconLoadFailed.length) console.table(diagIconLoadFailed);
+
+  console.groupEnd();
+  console.log("Re-run this summary any time with: vaultIconDiagnostics()");
+}
+window.vaultIconDiagnostics = logIconDiagnostics;
 
 // ---------- Showdown (duplicate comparison game) ----------
 function buildShowdownQueue(){
@@ -526,7 +582,7 @@ function vcardEl(item, onPick){
     item.equipped ? '✅ Equipped' : ''
   ].filter(Boolean).join(' · ');
   el.innerHTML = `
-    <div class="icon">${item.icon ? `<img src="${item.icon}" onerror="this.style.display='none'">` : ''}<div class="tier-dot" style="background:${color}"></div></div>
+    <div class="icon">${iconImgHtml(item)}<div class="tier-dot" style="background:${color}"></div></div>
     <div class="info">
       <div class="name">${escapeHtml(item.name)}</div>
       <div class="meta">${item.location}${badges ? ' · ' + badges : ''}</div>
@@ -572,7 +628,7 @@ function renderMarked(){
     const el = document.createElement("div");
     el.className = "marked-item";
     el.innerHTML = `
-      <div class="icon">${item.icon ? `<img src="${item.icon}" onerror="this.style.display='none'">` : ''}</div>
+      <div class="icon">${iconImgHtml(item)}</div>
       <div class="info"><div class="name">${escapeHtml(item.name)}</div><div class="meta">${item.location} · ${item.power||'—'} power</div></div>
       <button data-idx="${idx}">✕</button>`;
     el.querySelector("button").addEventListener("click", () => {
@@ -649,7 +705,7 @@ function renderBrowse(){
     const transferrable = (item.transferStatus & 0x1) === 0 && item.itemInstanceId;
     const color = TIER_COLORS[item.tier] || TIER_COLORS.Common;
     el.innerHTML = `
-      <div class="icon">${item.icon ? `<img src="${item.icon}" onerror="this.style.display='none'">` : ''}<div class="tier-dot" style="background:${color}"></div></div>
+      <div class="icon">${iconImgHtml(item)}<div class="tier-dot" style="background:${color}"></div></div>
       <div class="info"><div class="name">${escapeHtml(item.name)}</div><div class="sub">${item.location}${item.quantity>1?' · x'+item.quantity:''}</div></div>
       <button class="xfer" ${transferrable?'':'disabled'}>${item.location==='Vault'?'TO CHAR':'TO VAULT'}</button>`;
     el.querySelector(".xfer").addEventListener("click", () => transferPrompt(item));
