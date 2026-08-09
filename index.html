@@ -157,6 +157,24 @@
     display:flex; align-items:center; justify-content:center; box-shadow:0 4px 0 rgba(0,0,0,0.10); margin:-4px 0;
   }
 
+  #showdown-picker .class-chips{display:flex; gap:8px; margin:10px 0 16px 0; overflow-x:auto;}
+  #showdown-picker .class-chip{
+    flex:0 0 auto; background:var(--card); border:2px solid var(--line); color:var(--dim);
+    font-size:13px; font-weight:800; padding:9px 16px; border-radius:999px; white-space:nowrap;
+  }
+  #showdown-picker .class-chip.active{border-color:var(--purple); color:var(--purple-dk); background:#f3edff;}
+  .slot-row{
+    display:flex; align-items:center; gap:14px; background:var(--card); border-radius:20px; padding:14px;
+    margin-bottom:10px; box-shadow:0 4px 12px rgba(80,40,140,0.06);
+  }
+  .slot-row.disabled{opacity:0.45;}
+  .slot-row .slot-icon{width:48px; height:48px; border-radius:14px; background:var(--line); flex:0 0 auto; overflow:hidden;}
+  .slot-row .slot-icon img{width:100%; height:100%; object-fit:cover;}
+  .slot-row .slot-info{flex:1;}
+  .slot-row .slot-name{font-family:'Baloo 2',sans-serif; font-weight:700; font-size:15px;}
+  .slot-row .slot-count{font-size:12px; color:var(--dim); font-weight:700; margin-top:2px;}
+  .slot-row .slot-arrow{font-size:20px; color:var(--purple-dk);}
+
   #showdown-empty, #showdown-done{
     text-align:center; padding:60px 20px; color:var(--dim); font-weight:700;
   }
@@ -263,6 +281,7 @@
   <main>
     <!-- ===== Showdown tab ===== -->
     <div class="tabpanel active" id="tab-showdown">
+      <div id="showdown-picker"></div>
       <div id="showdown-progress" style="display:none;">
         <span id="progressText"></span>
         <div class="track"><div class="fill" id="progressFill" style="width:0%"></div></div>
@@ -270,14 +289,15 @@
       <div id="matchupArea"></div>
       <div id="showdown-empty" style="display:none;">
         <div style="font-size:44px;">✨</div>
-        <h2 class="disp">No duplicates found</h2>
-        <p>Every weapon and piece of armor you own is a one-of-one right now — nothing to compare.</p>
+        <h2 class="disp">Nothing to compare here</h2>
+        <p id="emptyReason"></p>
       </div>
       <div id="showdown-done" style="display:none;">
         <div class="big">🎉</div>
         <h2 class="disp">Showdown complete!</h2>
         <p id="doneSummary"></p>
-        <button class="btn primary" id="goToMarkedBtn" style="margin-top:14px;">Review the losers</button>
+        <button class="btn primary" id="backToPickerBtn" style="margin-top:14px;">Back to overview</button>
+        <button class="btn ghost" id="goToMarkedBtn" style="margin-top:8px;">Review the losers</button>
       </div>
     </div>
 
@@ -372,6 +392,28 @@ let cleanupCharacterId = localStorage.getItem("vault_cleanup_char") || null;
 
 let marked = JSON.parse(localStorage.getItem("vault_marked") || "[]");
 
+// ---------- Showdown state ----------
+// "picker" = choosing a class/slot (or Weapons) to compare; "bracket" = actively running matchups
+let showdownMode = "picker";
+let selectedClass = null; // 0=Titan, 1=Hunter, 2=Warlock, or null while on the class-chip row
+let matchQueue = []; // array of {pool:[items remaining to face champion]} — one group for weapon dupes-by-hash, one single group for an armor slot
+let currentGroupIndex = 0;
+let currentChampion = null;
+let totalMatchups = 0;
+let matchupsDone = 0;
+
+const ARMOR_SLOTS = ["Helmet", "Gauntlets", "Chest Armor", "Leg Armor", "Class Item"];
+// Classified from itemTypeDisplayName — the real string Bungie's manifest already gives us —
+// rather than guessing numeric bucket-hash constants, which would silently misfile gear if wrong.
+function armorSlotName(item){
+  if(item.itemType !== 2) return null;
+  if(ARMOR_SLOTS.includes(item.type)) return item.type;
+  if(/cloak|bond|mark/i.test(item.type)) return "Class Item"; // per-class naming for the same slot
+  return null;
+}
+// classType 3 = class-agnostic (some exotic class items work for any class)
+function fitsClass(item, classType){ return item.classType === classType || item.classType === 3; }
+
 // ---------- Icon diagnostics ----------
 // Three distinct failure modes get tracked separately so we stop guessing:
 //   1) diagDefResolveFailed  — manifest lookup for this hash never succeeded (item is dropped from allItems entirely, not just icon-less)
@@ -380,13 +422,6 @@ let marked = JSON.parse(localStorage.getItem("vault_marked") || "[]");
 let diagDefResolveFailed = [];
 let diagIconMissingInDef = [];
 let diagIconLoadFailed = [];
-
-// Showdown state
-let matchQueue = []; // array of {hash, pool:[items remaining to face champion]}
-let currentGroupIndex = 0;
-let currentChampion = null;
-let totalMatchups = 0;
-let matchupsDone = 0;
 
 // Browse state
 let searchQuery = "", sortMode = "name", locationFilter = null;
@@ -546,6 +581,7 @@ async function loadEverything(){
       tier: def.inventory?.tierTypeName || "Common",
       type: def.itemTypeDisplayName || "",
       itemType: def.itemType,
+      classType: def.classType,
       transferStatus: it.transferStatus,
       locked: !!(state & 1), masterwork: !!(state & 4), crafted: !!(state & 8),
       characterId: cid, location: label, equipped, power,
@@ -556,7 +592,7 @@ async function loadEverything(){
 
 
   hideLoading();
-  buildShowdownQueue();
+  showdownMode = "picker"; selectedClass = null;
   renderShowdown();
   renderMarked();
   renderBrowse();
@@ -595,6 +631,7 @@ function trimDefinition(full){
     inventory: { tierTypeName: full.inventory?.tierTypeName },
     itemTypeDisplayName: full.itemTypeDisplayName,
     itemType: full.itemType,
+    classType: full.classType,
     redacted: full.redacted,
     stats: full.stats?.stats?.[RPM_STAT_HASH] ? { stats: { [RPM_STAT_HASH]: { value: full.stats.stats[RPM_STAT_HASH].value } } } : undefined
   };
@@ -684,28 +721,108 @@ function logIconDiagnostics(){
 window.vaultIconDiagnostics = logIconDiagnostics;
 
 // ---------- Showdown (duplicate comparison game) ----------
-function buildShowdownQueue(){
+// Weapon duplicates: grouped by exact itemHash, same as before — this stays a "you own two
+// of the literal same gun" comparison since that's an unambiguous keep/trash call.
+function buildWeaponDuplicateGroups(){
   const groups = {};
   allItems.forEach(it => {
-if(!it.itemInstanceId) return; // needs to be an instanced item to compare
-    if(it.itemType !== 2 && it.itemType !== 3) return; // Armor (2) or Weapon (3) only — excludes the Artifact, Ghosts, etc.
+    if(!it.itemInstanceId || it.itemType !== 3) return;
     if(it.locked) return; // you've already told the game "keep this" by locking it
     if(marked.some(m => m.itemInstanceId === it.itemInstanceId)) return; // already dealt with
     (groups[it.itemHash] = groups[it.itemHash] || []).push(it);
   });
-  matchQueue = Object.values(groups).filter(g => g.length > 1)
+  return Object.values(groups).filter(g => g.length > 1)
     .map(g => ({ pool: g.slice().sort((a,b) => b.power - a.power || (b.masterwork - a.masterwork) || (b.crafted - a.crafted)) }));
+}
+// Armor for a slot: EVERY piece you own in that slot for that class, not just exact duplicates —
+// the point here is "which Helmet do I actually keep using", not just literal copies.
+function armorForSlot(classType, slotName){
+  const pool = allItems.filter(it =>
+    it.itemInstanceId && it.itemType === 2 && !it.locked &&
+    !marked.some(m => m.itemInstanceId === it.itemInstanceId) &&
+    fitsClass(it, classType) && armorSlotName(it) === slotName
+  ).sort((a,b) => b.power - a.power || (b.masterwork - a.masterwork) || (b.crafted - a.crafted));
+  return pool.length > 1 ? [{ pool }] : [];
+}
+
+function startBracket(groups, emptyReason){
+  matchQueue = groups;
   totalMatchups = matchQueue.reduce((sum, g) => sum + (g.pool.length - 1), 0);
-  matchupsDone = 0;
-  currentGroupIndex = 0;
-  currentChampion = null;
+  matchupsDone = 0; currentGroupIndex = 0; currentChampion = null;
+  showdownMode = "bracket";
+  $("#emptyReason").textContent = emptyReason;
+  renderShowdown();
+}
+
+// ---------- Picker ----------
+function renderShowdownPicker(){
+  const el = $("#showdown-picker");
+  const classes = [
+    { id: 0, label: "Titan" }, { id: 1, label: "Hunter" }, { id: 2, label: "Warlock" }, { id: "weapons", label: "⚔️ Weapons" }
+  ];
+  let html = `<div class="class-chips">` + classes.map(c =>
+    `<div class="class-chip ${selectedClass === c.id ? 'active' : ''}" data-class-id="${c.id}">${c.label}</div>`
+  ).join("") + `</div>`;
+
+  if(selectedClass === "weapons"){
+    html += `<div class="slot-row" id="weaponsEntry"><div class="slot-info">
+      <div class="slot-name">Compare weapon duplicates</div>
+      <div class="slot-count">Every gun you own more than one copy of</div>
+    </div><span class="slot-arrow">›</span></div>`;
+  } else if(selectedClass === 0 || selectedClass === 1 || selectedClass === 2){
+    ARMOR_SLOTS.forEach(slot => {
+      const candidates = allItems.filter(it =>
+        it.itemInstanceId && it.itemType === 2 && !it.locked &&
+        !marked.some(m => m.itemInstanceId === it.itemInstanceId) &&
+        fitsClass(it, selectedClass) && armorSlotName(it) === slot
+      );
+      const enough = candidates.length > 1;
+      const rep = candidates[0];
+      html += `<div class="slot-row ${enough ? '' : 'disabled'}" data-slot="${enough ? slot : ''}">
+        <div class="slot-icon">${rep ? iconImgHtml(rep) : ''}</div>
+        <div class="slot-info">
+          <div class="slot-name">${slot}</div>
+          <div class="slot-count">${candidates.length} owned${enough ? '' : candidates.length === 1 ? ' — nothing to compare' : ''}</div>
+        </div>
+        ${enough ? '<span class="slot-arrow">›</span>' : ''}
+      </div>`;
+    });
+  }
+  el.innerHTML = html;
+
+  el.querySelectorAll(".class-chip").forEach(chip => chip.addEventListener("click", () => {
+    const id = chip.dataset.classId;
+    selectedClass = id === "weapons" ? "weapons" : Number(id);
+    renderShowdownPicker();
+  }));
+  const weaponsEntry = $("#weaponsEntry");
+  if(weaponsEntry) weaponsEntry.addEventListener("click", () => {
+    startBracket(buildWeaponDuplicateGroups(), "Every weapon you own is a one-of-one right now — nothing to compare.");
+  });
+  el.querySelectorAll(".slot-row[data-slot]:not([data-slot=''])").forEach(row => row.addEventListener("click", () => {
+    startBracket(armorForSlot(selectedClass, row.dataset.slot), `No comparable ${row.dataset.slot} for this class right now.`);
+  }));
+}
+function backToPicker(){
+  showdownMode = "picker";
+  $("#showdown-done").style.display = "none";
+  renderShowdown();
 }
 
 function renderShowdown(){
+  const picker = $("#showdown-picker");
   const area = $("#matchupArea");
   const progress = $("#showdown-progress");
   const empty = $("#showdown-empty");
   const done = $("#showdown-done");
+
+  if(showdownMode === "picker"){
+    picker.style.display = "block";
+    area.innerHTML = ""; empty.style.display="none"; done.style.display="none"; progress.style.display="none";
+    renderShowdownPicker();
+    return;
+  }
+  picker.style.display = "none";
   area.innerHTML = ""; empty.style.display="none"; done.style.display="none"; progress.style.display="none";
 
   if(totalMatchups === 0){ empty.style.display="block"; return; }
@@ -1011,6 +1128,7 @@ document.querySelectorAll(".tab-btn").forEach(btn => {
     $("#tab-"+btn.dataset.tab).classList.add("active");
   });
 });
+$("#backToPickerBtn").addEventListener("click", backToPicker);
 $("#goToMarkedBtn").addEventListener("click", () => document.querySelector('[data-tab="marked"]').click());
 $("#stageAllBtn").addEventListener("click", stageAllOnCharacter);
 $("#exportDimCsvBtn").addEventListener("click", exportMarkedAsDimCsv);
