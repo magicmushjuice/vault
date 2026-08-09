@@ -1,0 +1,22 @@
+name: Check index.html syntax
+on: [push]
+jobs:
+  check-syntax:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Extract and check JavaScript syntax
+        run: |
+          node -e "
+            const fs = require('fs');
+            const content = fs.readFileSync('index.html', 'utf8');
+            const match = content.match(/<script>([\s\S]*)<\/script>/);
+            if (!match) { console.error('❌ No <script> tag found in index.html'); process.exit(1); }
+            try {
+              new Function(match[1]);
+              console.log('✅ JavaScript syntax is valid');
+            } catch (e) {
+              console.error('❌ Syntax error: ' + e.message);
+              process.exit(1);
+            }
+          "
