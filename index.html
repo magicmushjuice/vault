@@ -351,7 +351,7 @@ async function resolveStatDefinitions(hashes){
   await Promise.all(todo.map(async h => {
     try{
       const res = await apiGet(`/Platform/Destiny2/Manifest/DestinyStatDefinition/${h}/`, false);
-      if(res?.Response) statDefCache[h] = res.Response;
+      if(res?.Response) statDefCache[h] = { displayProperties: { name: res.Response.displayProperties?.name } };
     }catch(e){ /* a missing stat name just won't label that stat — cosmetic, not worth retrying */ }
   }));
   try{ localStorage.setItem("vault_stat_def_cache", JSON.stringify(statDefCache)); }
@@ -584,10 +584,25 @@ async function resolveDefinitions(hashes){
   try{ localStorage.setItem("vault_def_cache", JSON.stringify(defCache)); }
   catch(e){ console.warn("Definition cache too big for localStorage, skipping save", e); }
 }
+// Full item definitions from Bungie are heavy — stats, sockets, flavor text, screenshots,
+// translated strings, etc. Caching the whole thing per item blows past localStorage's quota
+// almost immediately (a few thousand items = many MB), which silently fails every save and
+// means the cache never actually helps. Trimming to just what this app reads keeps each
+// entry under ~300 bytes instead of 5-20KB, so the whole vault's worth genuinely fits.
+function trimDefinition(full){
+  return {
+    displayProperties: { name: full.displayProperties?.name, icon: full.displayProperties?.icon },
+    inventory: { tierTypeName: full.inventory?.tierTypeName },
+    itemTypeDisplayName: full.itemTypeDisplayName,
+    itemType: full.itemType,
+    redacted: full.redacted,
+    stats: full.stats?.stats?.[RPM_STAT_HASH] ? { stats: { [RPM_STAT_HASH]: { value: full.stats.stats[RPM_STAT_HASH].value } } } : undefined
+  };
+}
 async function fetchDefinitionWithRetry(hash, attempt=1){
   try{
     const res = await apiGet(`/Platform/Destiny2/Manifest/DestinyInventoryItemDefinition/${hash}/`, false);
-    if(res?.Response){ defCache[hash] = res.Response; return; }
+    if(res?.Response){ defCache[hash] = trimDefinition(res.Response); return; }
     throw new Error(res?.Message || "empty response");
   }catch(e){
     if(attempt < 3){ await new Promise(r=>setTimeout(r,300*attempt)); return fetchDefinitionWithRetry(hash, attempt+1); }
@@ -631,7 +646,7 @@ async function resolvePerkDefinitions(hashes){
   await Promise.all(todo.map(async h => {
     try{
       const res = await apiGet(`/Platform/Destiny2/Manifest/DestinySandboxPerkDefinition/${h}/`, false);
-      if(res?.Response) perkDefCache[h] = res.Response;
+      if(res?.Response) perkDefCache[h] = { displayProperties: { name: res.Response.displayProperties?.name } };
     }catch(e){ /* a missing perk name just won't render — not worth retrying, it's cosmetic */ }
   }));
   try{ localStorage.setItem("vault_perk_def_cache", JSON.stringify(perkDefCache)); }
