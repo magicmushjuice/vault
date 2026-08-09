@@ -283,7 +283,11 @@
     <div class="tabpanel active" id="tab-showdown">
       <div id="showdown-picker"></div>
       <div id="showdown-progress" style="display:none;">
-        <span id="progressText"></span>
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
+          <button class="icon" id="bracketBackBtn" style="font-size:11px;">← Back</button>
+          <span id="progressText"></span>
+          <button class="icon" id="undoMatchupBtn" style="font-size:11px;" disabled>↩ Undo</button>
+        </div>
         <div class="track"><div class="fill" id="progressFill" style="width:0%"></div></div>
       </div>
       <div id="matchupArea"></div>
@@ -291,6 +295,7 @@
         <div style="font-size:44px;">✨</div>
         <h2 class="disp">Nothing to compare here</h2>
         <p id="emptyReason"></p>
+        <button class="btn primary" id="emptyBackBtn" style="margin-top:14px;">Back to overview</button>
       </div>
       <div id="showdown-done" style="display:none;">
         <div class="big">🎉</div>
@@ -409,6 +414,7 @@ let currentGroupIndex = 0;
 let currentChampion = null;
 let totalMatchups = 0;
 let matchupsDone = 0;
+let matchupHistory = []; // stack of past decisions in the current bracket, for Undo
 
 const ARMOR_SLOTS = ["Helmet", "Gauntlets", "Chest Armor", "Leg Armor", "Class Item"];
 // Classified from itemTypeDisplayName — the real string Bungie's manifest already gives us —
@@ -756,7 +762,7 @@ function armorForSlot(classType, slotName){
 function startBracket(groups, emptyReason){
   matchQueue = groups;
   totalMatchups = matchQueue.reduce((sum, g) => sum + (g.pool.length - 1), 0);
-  matchupsDone = 0; currentGroupIndex = 0; currentChampion = null;
+  matchupsDone = 0; currentGroupIndex = 0; currentChampion = null; matchupHistory = [];
   showdownMode = "bracket";
   $("#emptyReason").textContent = emptyReason;
   renderShowdown();
@@ -858,6 +864,7 @@ function renderShowdown(){
   }
 
   progress.style.display = "block";
+  $("#undoMatchupBtn").disabled = matchupHistory.length === 0;
   $("#progressText").textContent = `Matchup ${matchupsDone+1} of ${totalMatchups}`;
   $("#progressFill").style.width = `${Math.round((matchupsDone/totalMatchups)*100)}%`;
 
@@ -931,11 +938,35 @@ function vcardEl(item, onPick){
 }
 
 function resolveMatchup(winner, loser){
+  matchupHistory.push({
+    groupIndex: currentGroupIndex,
+    previousChampion: currentChampion,
+    winner, loser
+  });
   markForCleanup(loser);
   currentChampion = winner;
   matchQueue[currentGroupIndex].pool.shift();
   matchupsDone++;
   renderShowdown();
+}
+
+function undoLastMatchup(){
+  const last = matchupHistory.pop();
+  if(!last) return;
+  unmarkItem(last.loser.itemInstanceId);
+  matchQueue[last.groupIndex].pool.unshift(last.loser);
+  currentGroupIndex = last.groupIndex;
+  currentChampion = last.previousChampion;
+  matchupsDone = Math.max(0, matchupsDone - 1);
+  renderShowdown();
+}
+
+function unmarkItem(itemInstanceId){
+  const idx = marked.findIndex(m => m.itemInstanceId === itemInstanceId);
+  if(idx === -1) return;
+  marked.splice(idx, 1);
+  localStorage.setItem("vault_marked", JSON.stringify(marked));
+  renderMarked();
 }
 
 function markForCleanup(item){
@@ -1212,6 +1243,9 @@ document.querySelectorAll(".tab-btn").forEach(btn => {
   });
 });
 $("#backToPickerBtn").addEventListener("click", backToPicker);
+$("#emptyBackBtn").addEventListener("click", backToPicker);
+$("#bracketBackBtn").addEventListener("click", backToPicker);
+$("#undoMatchupBtn").addEventListener("click", undoLastMatchup);
 $("#goToMarkedBtn").addEventListener("click", () => document.querySelector('[data-tab="marked"]').click());
 $("#stageAllBtn").addEventListener("click", stageAllOnCharacter);
 $("#exportDimCsvBtn").addEventListener("click", exportMarkedAsDimCsv);
