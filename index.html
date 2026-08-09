@@ -380,16 +380,32 @@ const memberships = await apiGet("/Platform/User/GetMembershipsForCurrentUser/")
 
 async function resolveDefinitions(hashes){
   const todo = hashes.filter(h => !defCache[h]);
-  const CHUNK = 8;
+  const CHUNK = 3;
+  const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+
   for(let i=0; i<todo.length; i+=CHUNK){
     const chunk = todo.slice(i, i+CHUNK);
-    await Promise.all(chunk.map(async h => {
-      const res = await apiGet(`/Platform/Destiny2/Manifest/DestinyInventoryItemDefinition/${h}/`, false);
-      if(res?.Response) defCache[h] = res.Response;
-    }));
+    await Promise.all(chunk.map(h => fetchDefinitionWithRetry(h)));
+    await sleep(150); // give Bungie's API a breather between batches
   }
 }
 
+async function fetchDefinitionWithRetry(hash, attempt = 1){
+  try {
+    const res = await apiGet(`/Platform/Destiny2/Manifest/DestinyInventoryItemDefinition/${hash}/`, false);
+    if(res?.Response){
+      defCache[hash] = res.Response;
+      return;
+    }
+    throw new Error(res?.Message || "empty response");
+  } catch (e) {
+    if(attempt < 3){
+      await new Promise(r => setTimeout(r, 300 * attempt));
+      return fetchDefinitionWithRetry(hash, attempt + 1);
+    }
+    console.warn("Giving up on item definition for hash", hash, e);
+  }
+}
 function classTypeName(n){
   return n===0 ? "Titan" : n===1 ? "Hunter" : n===2 ? "Warlock" : "Guardian";
 }
