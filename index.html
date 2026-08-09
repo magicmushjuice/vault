@@ -377,11 +377,8 @@ async function apiPost(path, body){
 function logout(){ localStorage.removeItem("vault_access_token"); localStorage.removeItem("vault_refresh_token"); window.location.href = REDIRECT_URI; }
 
 // ---------- Data loading ----------
-}catch(e){
-    console.error("Failed to load vault:", e);
-    hideLoading();
-    if(!String(e?.message).includes("Session expired")) alert("Something went wrong loading your vault: " + (e?.message || e));
-  }
+async function loadEverything(){
+ try{
   // Reset diagnostics each load — cached-but-icon-less defs get re-flagged every time from defCache,
   // resolve failures get a fresh chance to succeed or fail again.
   diagDefResolveFailed = [];
@@ -458,6 +455,11 @@ function logout(){ localStorage.removeItem("vault_access_token"); localStorage.r
   // Image loads kicked off by the render calls above are async — give them a few seconds
   // to settle (success or onerror) before printing the full diagnostic summary.
   setTimeout(logIconDiagnostics, 3000);
+ }catch(e){
+  console.error("Failed to load vault:", e);
+  hideLoading();
+  if(!String(e?.message).includes("Session expired")) alert("Something went wrong loading your vault: " + (e?.message || e));
+ }
 }
 
 async function resolveDefinitions(hashes){
