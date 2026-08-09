@@ -290,6 +290,7 @@
       <div id="markedActions" style="display:none;">
         <button class="btn primary" id="stageAllBtn">Stage all on a character</button>
         <button class="btn ghost" id="exportDimCsvBtn">Export for DIM (CSV)</button>
+        <button class="btn ghost" id="copyDimQueryBtn">Copy DIM search query</button>
       </div>
       <div id="markedList"></div>
       <div id="markedEmpty">Nothing marked yet — losers from Showdown will land here.</div>
@@ -859,6 +860,21 @@ async function stageAllOnCharacter(){
   await doStageAll();
 }
 
+// DIM's documented search syntax doesn't currently list an "id:" filter for matching a
+// specific item instance (there's a long-standing feature request for one, unclear if it
+// shipped) — so this is a best-effort convenience, not a guaranteed-working mechanism.
+// If it doesn't filter correctly in DIM, use "Export for DIM (CSV)" instead, which
+// references items unambiguously by their exact instance ID.
+function copyMarkedAsDimQuery(){
+  if(marked.length === 0) return;
+  const query = marked.map(item => `id:${item.itemInstanceId}`).join(" or ");
+  navigator.clipboard.writeText(query).then(() => {
+    alert("Copied — paste into DIM's search bar. If nothing matches, DIM may not support this filter; use the CSV export instead.");
+  }).catch(() => {
+    prompt("Copy this into DIM's search bar:", query);
+  });
+}
+
 // DIM's Settings page has an "Import tags/notes from CSV" tool that expects columns
 // exactly named Id, Hash, Tag, Notes (extra columns are ignored, and this OVERWRITES
 // existing tags/notes for any item listed — so only what's actually marked goes in here).
@@ -983,6 +999,7 @@ document.querySelectorAll(".tab-btn").forEach(btn => {
 $("#goToMarkedBtn").addEventListener("click", () => document.querySelector('[data-tab="marked"]').click());
 $("#stageAllBtn").addEventListener("click", stageAllOnCharacter);
 $("#exportDimCsvBtn").addEventListener("click", exportMarkedAsDimCsv);
+$("#copyDimQueryBtn").addEventListener("click", copyMarkedAsDimQuery);
 $("#sheet-backdrop").addEventListener("click", closeSheet);
 $("#logoutBtn").addEventListener("click", logout);
 $("#loginBtn").addEventListener("click", startLogin);
