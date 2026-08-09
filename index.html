@@ -3,262 +3,321 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Vault // Terminal</title>
+<title>Vault Showdown</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#0b0d10;
-    --panel:#12161b;
-    --panel-2:#171c22;
-    --line:#232a32;
-    --text:#e7ecef;
-    --dim:#7d8894;
-    --faint:#4d5761;
+    --bg1:#efe7ff; --bg2:#ffe9dc;
+    --card:#ffffff;
+    --ink:#3a2e4d;
+    --dim:#8b7fa3;
+    --line:#ece4fb;
 
-    --common:#8a939c;
-    --uncommon:#3f7d4a;
-    --rare:#3a6ea8;
-    --legendary:#6b3f92;
-    --exotic:#c4a127;
+    --purple:#8b5cf6; --purple-dk:#6d3fd6;
+    --pink:#f472b6;
+    --green:#34d399; --green-dk:#16a37a;
+    --red:#fb7185; --red-dk:#e34d64;
+    --gold:#f5b942;
+
+    --common:#9ca3af; --uncommon:#4ade80; --rare:#60a5fa; --legendary:#c084fc; --exotic:#f5b942;
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
-  html,body{margin:0; padding:0; background:var(--bg); color:var(--text);
-    font-family:'Inter',sans-serif; height:100%; overflow-x:hidden;}
-  body{padding-bottom:env(safe-area-inset-bottom);}
-  .disp{font-family:'Chakra Petch',sans-serif; letter-spacing:0.04em; text-transform:uppercase;}
-  .mono{font-family:'JetBrains Mono',monospace;}
-
-  /* ---------- scanline texture, subtle ---------- */
-  body::before{
-    content:""; position:fixed; inset:0; pointer-events:none; z-index:999;
-    background:repeating-linear-gradient(to bottom, rgba(255,255,255,0.012) 0px, rgba(255,255,255,0.012) 1px, transparent 1px, transparent 3px);
-    mix-blend-mode:overlay;
+  html,body{margin:0; height:100%; overflow-x:hidden;}
+  body{
+    font-family:'Nunito',sans-serif; color:var(--ink);
+    background:linear-gradient(160deg, var(--bg1), var(--bg2));
+    min-height:100dvh; padding-bottom:env(safe-area-inset-bottom);
   }
+  .disp{font-family:'Baloo 2',sans-serif;}
+  h1,h2,h3{font-family:'Baloo 2',sans-serif; margin:0;}
+  button{font-family:'Nunito',sans-serif;}
 
-  /* ---------- Login screen ---------- */
+  /* ---------- Login ---------- */
   #login{
     height:100dvh; display:flex; flex-direction:column; align-items:center; justify-content:center;
-    padding:24px; text-align:center; gap:18px;
+    padding:28px; text-align:center; gap:16px;
   }
-  #login .mark{
-    width:52px; height:52px; border:2px solid var(--legendary); transform:rotate(45deg);
-    display:flex; align-items:center; justify-content:center;
-  }
-  #login .mark::after{content:""; width:18px; height:18px; background:var(--legendary);}
-  #login h1{font-size:22px; margin:0; font-weight:700;}
-  #login p{color:var(--dim); font-size:14px; max-width:320px; line-height:1.5; margin:0;}
-  #login .badge{color:var(--faint); font-size:11px; margin-top:-6px;}
+  #login .mark{font-size:52px; line-height:1;}
+  #login h1{font-size:28px; color:var(--purple-dk);}
+  #login p{color:var(--dim); font-size:15px; max-width:300px; line-height:1.5; margin:0; font-weight:600;}
   .btn{
-    appearance:none; border:1px solid var(--line); background:var(--panel-2); color:var(--text);
-    font-family:'Chakra Petch',sans-serif; letter-spacing:0.06em; text-transform:uppercase;
-    font-size:13px; font-weight:600; padding:14px 22px; border-radius:2px; cursor:pointer;
+    appearance:none; border:none; font-family:'Baloo 2',sans-serif; font-weight:700; font-size:16px;
+    padding:15px 26px; border-radius:999px; cursor:pointer; box-shadow:0 6px 0 rgba(0,0,0,0.12);
   }
-  .btn:active{transform:translateY(1px);}
-  .btn.primary{background:var(--legendary); border-color:var(--legendary); color:#fff;}
-  .btn:disabled{opacity:0.35;}
-
+  .btn:active{transform:translateY(3px); box-shadow:0 3px 0 rgba(0,0,0,0.12);}
+  .btn.primary{background:linear-gradient(135deg, var(--purple), var(--pink)); color:#fff;}
+  .btn.ghost{background:var(--card); color:var(--purple-dk); border:2px solid var(--line);}
+  .btn:disabled{opacity:0.4;}
   #config-warning{
-    display:none; margin-top:8px; font-size:12px; color:#d99b3f; max-width:320px;
-    border:1px solid #3a2f1a; background:#1a1610; padding:10px 12px; border-radius:2px; text-align:left;
+    display:none; margin-top:6px; font-size:12.5px; color:#9a5b12; max-width:300px;
+    border:2px dashed var(--gold); background:#fff6e6; padding:12px 14px; border-radius:16px; text-align:left; font-weight:700;
   }
-  #config-warning code{color:#e7ecef;}
 
   /* ---------- App shell ---------- */
-  #app{display:none; height:100dvh; flex-direction:column;}
+  #app{display:none; flex-direction:column; height:100dvh;}
   header{
-    flex:0 0 auto; border-bottom:1px solid var(--line); background:var(--panel);
-    padding:12px 14px calc(10px + env(safe-area-inset-top)) 14px;
-    padding-top:calc(12px + env(safe-area-inset-top));
+    flex:0 0 auto; padding:calc(14px + env(safe-area-inset-top)) 16px 10px 16px;
+    display:flex; align-items:center; justify-content:space-between;
   }
-  header .row1{display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;}
-  header .row1 .title{font-size:13px; font-weight:600; color:var(--dim); display:flex; align-items:center; gap:6px;}
-  header .row1 .title .dot{width:6px; height:6px; background:var(--legendary); border-radius:50%;}
-  header .row1 button.icon{background:none; border:none; color:var(--faint); font-size:12px; font-family:'JetBrains Mono',monospace;}
+  header .brand{font-size:18px; color:var(--purple-dk); display:flex; align-items:center; gap:6px;}
+  header button.icon{
+    background:var(--card); border:none; color:var(--dim); font-size:12px; font-weight:800;
+    padding:8px 14px; border-radius:999px; box-shadow:0 3px 0 var(--line);
+  }
 
+  main{flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; padding-bottom:90px;}
+
+  nav.tabs{
+    position:fixed; left:0; right:0; bottom:0; background:var(--card);
+    display:flex; padding:8px 10px calc(8px + env(safe-area-inset-bottom)) 10px;
+    box-shadow:0 -4px 16px rgba(80,40,140,0.08); z-index:30;
+  }
+  nav.tabs button{
+    flex:1; background:none; border:none; padding:8px 4px; border-radius:16px;
+    display:flex; flex-direction:column; align-items:center; gap:2px; color:var(--dim); font-weight:800; font-size:11px;
+  }
+  nav.tabs button.active{color:var(--purple-dk); background:#f3edff;}
+  nav.tabs button .emoji{font-size:19px;}
+  nav.tabs .badge{
+    background:var(--red); color:#fff; border-radius:999px; font-size:10px; padding:1px 6px; margin-left:4px;
+  }
+
+  .tabpanel{display:none; padding:0 16px;}
+  .tabpanel.active{display:block;}
+
+  /* ---------- Compare (Showdown) ---------- */
+  #showdown-progress{
+    text-align:center; font-weight:800; color:var(--purple-dk); font-size:13px; margin:4px 0 14px 0;
+  }
+  #showdown-progress .track{
+    height:6px; background:var(--line); border-radius:99px; margin-top:6px; overflow:hidden;
+  }
+  #showdown-progress .fill{height:100%; background:linear-gradient(90deg, var(--purple), var(--pink)); border-radius:99px; transition:width .3s;}
+
+  .matchup{display:flex; flex-direction:column; gap:14px; align-items:center;}
+  .vcard{
+    width:100%; max-width:360px; background:var(--card); border-radius:26px; padding:18px;
+    box-shadow:0 10px 24px rgba(80,40,140,0.10); border:3px solid transparent; cursor:pointer;
+    display:flex; gap:14px; align-items:center; transition:transform .15s, border-color .15s;
+  }
+  .vcard:active{transform:scale(0.97);}
+  .vcard.winner{border-color:var(--green); background:#f0fffa;}
+  .vcard.loser{opacity:0.35; filter:grayscale(0.4);}
+  .vcard .icon{width:64px; height:64px; border-radius:16px; flex:0 0 auto; background:var(--line); overflow:hidden; position:relative;}
+  .vcard .icon img{width:100%; height:100%; object-fit:cover;}
+  .vcard .icon .tier-dot{position:absolute; top:4px; right:4px; width:10px; height:10px; border-radius:50%; border:2px solid #fff;}
+  .vcard .info{flex:1; min-width:0;}
+  .vcard .name{font-family:'Baloo 2',sans-serif; font-size:15px; font-weight:700; line-height:1.2;}
+  .vcard .meta{font-size:12px; color:var(--dim); font-weight:700; margin-top:3px;}
+  .vcard .power{
+    font-family:'Baloo 2',sans-serif; font-size:22px; font-weight:800; color:var(--purple-dk); margin-top:2px;
+  }
+  .vcard .power .lbl{font-size:10px; color:var(--dim); font-weight:700; margin-left:3px;}
+
+  .vs-badge{
+    width:44px; height:44px; border-radius:50%; background:linear-gradient(135deg, var(--purple), var(--pink));
+    color:#fff; font-family:'Baloo 2',sans-serif; font-weight:800; font-size:14px;
+    display:flex; align-items:center; justify-content:center; box-shadow:0 4px 0 rgba(0,0,0,0.10); margin:-4px 0;
+  }
+
+  #showdown-empty, #showdown-done{
+    text-align:center; padding:60px 20px; color:var(--dim); font-weight:700;
+  }
+  #showdown-done .big{font-size:44px;}
+  #showdown-done h2{color:var(--purple-dk); margin:10px 0 6px 0; font-size:22px;}
+
+  /* ---------- Marked tab ---------- */
+  .marked-item{
+    display:flex; align-items:center; gap:12px; background:var(--card); border-radius:20px; padding:12px;
+    margin-bottom:10px; box-shadow:0 4px 12px rgba(80,40,140,0.06);
+  }
+  .marked-item .icon{width:44px; height:44px; border-radius:12px; background:var(--line); overflow:hidden; flex:0 0 auto;}
+  .marked-item .icon img{width:100%; height:100%; object-fit:cover;}
+  .marked-item .info{flex:1; min-width:0;}
+  .marked-item .name{font-weight:800; font-size:14px;}
+  .marked-item .meta{font-size:11px; color:var(--dim); font-weight:700;}
+  .marked-item button{
+    background:none; border:none; color:var(--red-dk); font-size:20px; font-weight:800; padding:4px 8px;
+  }
+  #markedActions{display:flex; gap:8px; margin:10px 0 16px 0;}
+  #markedActions .btn{flex:1; font-size:13px; padding:12px;}
+  #markedEmpty{text-align:center; padding:50px 20px; color:var(--dim); font-weight:700;}
+
+  /* ---------- Browse tab ---------- */
   #search{
-    width:100%; background:var(--panel-2); border:1px solid var(--line); color:var(--text);
-    padding:11px 12px; border-radius:2px; font-size:15px; font-family:'Inter',sans-serif;
+    width:100%; background:var(--card); border:2px solid var(--line); color:var(--ink);
+    padding:12px 16px; border-radius:999px; font-size:15px; font-weight:700; margin-top:6px;
   }
-  #search::placeholder{color:var(--faint);}
-
-  .controls{display:flex; gap:8px; margin-top:10px; overflow-x:auto; padding-bottom:2px;}
+  #search::placeholder{color:#c3b8de;}
+  .chiprow{display:flex; gap:8px; margin:10px 0; overflow-x:auto; padding-bottom:2px;}
   .chip{
-    flex:0 0 auto; background:var(--panel-2); border:1px solid var(--line); color:var(--dim);
-    font-size:12px; padding:7px 12px; border-radius:20px; white-space:nowrap; cursor:pointer;
-    font-family:'JetBrains Mono',monospace;
+    flex:0 0 auto; background:var(--card); border:2px solid var(--line); color:var(--dim);
+    font-size:12px; font-weight:800; padding:7px 14px; border-radius:999px; white-space:nowrap;
   }
-  .chip.active{border-color:var(--legendary); color:#fff; background:rgba(107,63,146,0.25);}
-
-  #count{font-size:11px; color:var(--faint); margin-top:8px; font-family:'JetBrains Mono',monospace;}
-
-  main{flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch;}
-  .section-head{
-    position:sticky; top:0; background:var(--bg); padding:14px 14px 6px 14px;
-    font-size:11px; color:var(--faint); letter-spacing:0.08em; z-index:2;
+  .chip.active{border-color:var(--purple); color:var(--purple-dk); background:#f3edff;}
+  .browse-item{
+    display:flex; align-items:center; gap:12px; background:var(--card); border-radius:18px; padding:10px 12px;
+    margin-bottom:8px; box-shadow:0 3px 10px rgba(80,40,140,0.05);
   }
-
-  .item{
-    display:flex; align-items:center; gap:12px; padding:10px 14px; border-bottom:1px solid var(--line);
-    background:var(--panel);
+  .browse-item .icon{width:44px; height:44px; border-radius:12px; background:var(--line); flex:0 0 auto; overflow:hidden; position:relative;}
+  .browse-item .icon img{width:100%; height:100%; object-fit:cover;}
+  .browse-item .icon .tier-dot{position:absolute; bottom:2px; right:2px; width:9px; height:9px; border-radius:50%; border:2px solid #fff;}
+  .browse-item .info{flex:1; min-width:0;}
+  .browse-item .name{font-weight:800; font-size:13.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .browse-item .sub{font-size:11px; color:var(--dim); font-weight:700; margin-top:1px;}
+  .browse-item .xfer{
+    background:var(--card); border:2px solid var(--line); color:var(--purple-dk); font-size:10px; font-weight:800;
+    padding:8px 10px; border-radius:999px;
   }
-  .icon-wrap{
-    width:46px; height:46px; flex:0 0 auto; position:relative; background:var(--panel-2);
-    border:1px solid var(--line);
-  }
-  .icon-wrap img{width:100%; height:100%; object-fit:cover; display:block;}
-  .icon-wrap .tier-bar{position:absolute; left:0; top:0; bottom:0; width:3px;}
+  .browse-item .xfer:disabled{opacity:0.3;}
 
-  .item-info{flex:1; min-width:0;}
-  .item-info .name{font-size:14px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
-  .item-info .sub{font-size:11px; color:var(--dim); margin-top:2px; font-family:'JetBrains Mono',monospace;}
-  .item-info .sub .loc{color:#6f9bd1;}
-
-  .xfer{
-    flex:0 0 auto; background:none; border:1px solid var(--line); color:var(--dim);
-    font-size:10px; padding:8px 10px; border-radius:2px; font-family:'JetBrains Mono',monospace;
-    letter-spacing:0.04em; text-transform:uppercase;
-  }
-  .xfer:disabled{opacity:0.3;}
-  .xfer.active{color:#fff; border-color:var(--legendary);}
-
-  #empty{padding:60px 20px; text-align:center; color:var(--faint); font-size:13px; display:none;}
-
+  /* ---------- Loading ---------- */
   #loading{
-    position:fixed; inset:0; background:var(--bg); display:none; align-items:center; justify-content:center;
-    flex-direction:column; gap:12px; z-index:50;
+    position:fixed; inset:0; background:linear-gradient(160deg, var(--bg1), var(--bg2));
+    display:none; align-items:center; justify-content:center; flex-direction:column; gap:14px; z-index:60;
   }
-  #loading .bar{width:140px; height:2px; background:var(--line); overflow:hidden; position:relative;}
-  #loading .bar::after{
-    content:""; position:absolute; left:-40%; top:0; bottom:0; width:40%; background:var(--legendary);
-    animation:scan 1.1s ease-in-out infinite;
+  #loading .spin{
+    width:46px; height:46px; border-radius:50%; border:5px solid var(--line); border-top-color:var(--purple);
+    animation:spin 0.9s linear infinite;
   }
-  @keyframes scan{0%{left:-40%;} 100%{left:100%;}}
-  #loading span{font-size:11px; color:var(--faint); font-family:'JetBrains Mono',monospace; letter-spacing:0.06em;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  #loading span{font-weight:800; color:var(--purple-dk); font-size:13px;}
 
-  #sheet-backdrop{position:fixed; inset:0; background:rgba(0,0,0,0.6); display:none; z-index:40;}
+  /* ---------- Sheet ---------- */
+  #sheet-backdrop{position:fixed; inset:0; background:rgba(60,30,90,0.35); display:none; z-index:40;}
   #sheet{
-    position:fixed; left:0; right:0; bottom:0; background:var(--panel); border-top:1px solid var(--line);
-    border-radius:8px 8px 0 0; padding:18px 16px calc(18px + env(safe-area-inset-bottom)) 16px;
-    display:none; z-index:41; max-height:70vh; overflow-y:auto;
+    position:fixed; left:0; right:0; bottom:0; background:var(--card); border-radius:26px 26px 0 0;
+    padding:20px 18px calc(20px + env(safe-area-inset-bottom)) 18px; display:none; z-index:41; max-height:70vh; overflow-y:auto;
   }
-  #sheet h3{margin:0 0 12px 0; font-size:14px; font-weight:600;}
+  #sheet h3{font-size:16px; margin-bottom:12px; color:var(--purple-dk);}
   #sheet .opt{
-    padding:13px 12px; border:1px solid var(--line); border-radius:2px; margin-bottom:8px; font-size:14px;
+    padding:14px; border:2px solid var(--line); border-radius:16px; margin-bottom:8px; font-weight:800;
     display:flex; justify-content:space-between; align-items:center;
   }
-  #sheet .opt:active{background:var(--panel-2);}
-  #sheet .cancel{color:var(--faint); text-align:center; padding:12px; font-size:13px; margin-top:4px;}
+  #sheet .opt:active{background:#f3edff;}
+  #sheet .cancel{color:var(--dim); text-align:center; padding:12px; font-weight:800;}
 
-  @media (prefers-reduced-motion:reduce){
-    #loading .bar::after{animation:none;}
-  }
+  @media(prefers-reduced-motion:reduce){ *{transition:none !important; animation:none !important;} }
 </style>
 </head>
 <body>
 
-<!-- ===================== LOGIN ===================== -->
 <div id="login">
-  <div class="mark"></div>
-  <h1 class="disp">Vault // Terminal</h1>
-  <p>Direct connection to your Guardian's inventory. No middleman site, no stale cache — signs in with your Bungie.net account.</p>
+  <div class="mark">🫧</div>
+  <h1 class="disp">Vault Showdown</h1>
+  <p>Pick a winner between your duplicate gear, one matchup at a time — the app remembers who lost so you can clear them out.</p>
   <button class="btn primary" id="loginBtn">Sign in with Bungie.net</button>
-  <div class="badge mono" id="statusLine"></div>
   <div id="config-warning">
-    App not configured yet. Open this file and set <code>API_KEY</code> and <code>CLIENT_ID</code>
-    near the top of the &lt;script&gt; tag, using the values from your Bungie.net application.
+    Not configured yet — set <code>API_KEY</code> and <code>CLIENT_ID</code> near the top of the script.
   </div>
 </div>
 
-<!-- ===================== APP ===================== -->
 <div id="app">
   <header>
-    <div class="row1">
-      <div class="title"><span class="dot"></span><span id="guardianLabel">CONNECTED</span></div>
-      <button class="icon mono" id="logoutBtn">LOG OUT</button>
-    </div>
-    <input type="text" id="search" placeholder="Search items…" autocomplete="off">
-    <div class="controls" id="sortChips">
-      <div class="chip active" data-sort="name">NAME</div>
-      <div class="chip" data-sort="tier">RARITY</div>
-      <div class="chip" data-sort="type">TYPE</div>
-      <div class="chip" data-sort="loc" id="locFilterChip">LOCATION ▾</div>
-    </div>
-    <div id="count" class="mono">— items</div>
+    <div class="brand disp"><span>🫧</span> Vault Showdown</div>
+    <button class="icon" id="logoutBtn">LOG OUT</button>
   </header>
 
   <main>
-    <div id="list"></div>
-    <div id="empty">No items match.</div>
+    <!-- ===== Showdown tab ===== -->
+    <div class="tabpanel active" id="tab-showdown">
+      <div id="showdown-progress" style="display:none;">
+        <span id="progressText"></span>
+        <div class="track"><div class="fill" id="progressFill" style="width:0%"></div></div>
+      </div>
+      <div id="matchupArea"></div>
+      <div id="showdown-empty" style="display:none;">
+        <div style="font-size:44px;">✨</div>
+        <h2 class="disp">No duplicates found</h2>
+        <p>Every weapon and piece of armor you own is a one-of-one right now — nothing to compare.</p>
+      </div>
+      <div id="showdown-done" style="display:none;">
+        <div class="big">🎉</div>
+        <h2 class="disp">Showdown complete!</h2>
+        <p id="doneSummary"></p>
+        <button class="btn primary" id="goToMarkedBtn" style="margin-top:14px;">Review the losers</button>
+      </div>
+    </div>
+
+    <!-- ===== Marked tab ===== -->
+    <div class="tabpanel" id="tab-marked">
+      <h2 class="disp" style="font-size:18px; margin:12px 0 4px 0; color:var(--purple-dk);">Marked for cleanup</h2>
+      <p style="color:var(--dim); font-weight:700; font-size:12.5px; margin:0 0 10px 0;">
+        These lost their showdown. Bungie's API can't dismantle items for you — but you can stage them all on one character so they're easy to find next time you're in-game.
+      </p>
+      <div id="markedActions" style="display:none;">
+        <button class="btn primary" id="stageAllBtn">Stage all on a character</button>
+      </div>
+      <div id="markedList"></div>
+      <div id="markedEmpty">Nothing marked yet — losers from Showdown will land here.</div>
+    </div>
+
+    <!-- ===== Browse tab ===== -->
+    <div class="tabpanel" id="tab-browse">
+      <input type="text" id="search" placeholder="Search your items…" autocomplete="off">
+      <div class="chiprow" id="sortChips">
+        <div class="chip active" data-sort="name">Name</div>
+        <div class="chip" data-sort="tier">Rarity</div>
+        <div class="chip" data-sort="type">Type</div>
+        <div class="chip" id="locFilterChip">Location ▾</div>
+      </div>
+      <div id="browseList"></div>
+    </div>
   </main>
+
+  <nav class="tabs">
+    <button class="tab-btn active" data-tab="showdown"><span class="emoji">⚔️</span>Showdown</button>
+    <button class="tab-btn" data-tab="marked"><span class="emoji">🗑️</span>Marked<span class="badge" id="markedCountBadge" style="display:none;">0</span></button>
+    <button class="tab-btn" data-tab="browse"><span class="emoji">🔍</span>Browse</button>
+  </nav>
 </div>
 
-<div id="loading">
-  <div class="bar"></div>
-  <span id="loadingLabel">SYNCING VAULT…</span>
-</div>
-
+<div id="loading"><div class="spin"></div><span id="loadingLabel">LOADING…</span></div>
 <div id="sheet-backdrop"></div>
 <div id="sheet"></div>
 
 <script>
 /* =========================================================================
-   CONFIG — fill these in from your Bungie.net application
-   (https://www.bungie.net/en/Application/Create)
-   - OAuth Client Type: Public
-   - Redirect URL: must exactly match window.location.origin + pathname
-     of wherever you host this file, e.g. https://yourname.github.io/vault/
-   - Origin (CORS): same URL, registered in the app's settings
+   CONFIG — from your Bungie.net application (bungie.net/en/Application/Create)
+   OAuth Client Type: Public. Redirect URL: exact hosted URL of this page.
+   Origin Header: just the domain (scheme://host, no path).
    ========================================================================= */
-const API_KEY = "7bd68c95acb94f859bdbd66e7e7aee1c";
-const CLIENT_ID = "54353";
+const API_KEY = "YOUR_API_KEY_HERE";
+const CLIENT_ID = "YOUR_OAUTH_CLIENT_ID_HERE";
 const REDIRECT_URI = window.location.origin + window.location.pathname;
-
 /* ========================================================================= */
 
 const BASE = "https://www.bungie.net";
 const $ = (sel) => document.querySelector(sel);
-
-const TIER_COLORS = {
-  "Common": "var(--common)",
-  "Uncommon": "var(--uncommon)",
-  "Rare": "var(--rare)",
-  "Legendary": "var(--legendary)",
-  "Exotic": "var(--exotic)"
-};
+const TIER_COLORS = { "Common":"var(--common)","Uncommon":"var(--uncommon)","Rare":"var(--rare)","Legendary":"var(--legendary)","Exotic":"var(--exotic)" };
 
 let accessToken = localStorage.getItem("vault_access_token") || null;
-let refreshToken = localStorage.getItem("vault_refresh_token") || null;
 let membership = null;
 let allItems = [];
 let characterClassById = {};
-let searchQuery = "";
-let sortMode = "name";
-let locationFilter = null;
-const defCache = {};
+let defCache = {};
+let cleanupCharacterId = localStorage.getItem("vault_cleanup_char") || null;
 
-// ---------- PKCE helpers ----------
-function b64url(bytes){
-  let str = btoa(String.fromCharCode(...bytes));
-  return str.replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
-}
-function genVerifier(){
-  const arr = new Uint8Array(64);
-  crypto.getRandomValues(arr);
-  return b64url(arr);
-}
-async function genChallenge(verifier){
-  const enc = new TextEncoder().encode(verifier);
-  const digest = await crypto.subtle.digest('SHA-256', enc);
-  return b64url(new Uint8Array(digest));
-}
+let marked = JSON.parse(localStorage.getItem("vault_marked") || "[]");
 
-// ---------- Config check ----------
-function configured(){
-  return API_KEY && API_KEY !== "YOUR_API_KEY_HERE" && CLIENT_ID && CLIENT_ID !== "YOUR_OAUTH_CLIENT_ID_HERE";
-}
+// Showdown state
+let matchQueue = []; // array of {hash, pool:[items remaining to face champion]}
+let currentGroupIndex = 0;
+let currentChampion = null;
+let totalMatchups = 0;
+let matchupsDone = 0;
 
-// ---------- Auth flow ----------
+// Browse state
+let searchQuery = "", sortMode = "name", locationFilter = null;
+
+// ---------- PKCE ----------
+function b64url(bytes){ return btoa(String.fromCharCode(...bytes)).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,''); }
+function genVerifier(){ const a=new Uint8Array(64); crypto.getRandomValues(a); return b64url(a); }
+async function genChallenge(v){ const d=await crypto.subtle.digest('SHA-256', new TextEncoder().encode(v)); return b64url(new Uint8Array(d)); }
+
+function configured(){ return API_KEY!=="YOUR_API_KEY_HERE" && CLIENT_ID!=="YOUR_OAUTH_CLIENT_ID_HERE"; }
+
 async function startLogin(){
   const verifier = genVerifier();
   sessionStorage.setItem("pkce_verifier", verifier);
@@ -273,21 +332,15 @@ async function startLogin(){
 
 async function exchangeCodeForToken(code){
   const verifier = sessionStorage.getItem("pkce_verifier");
-  const body = new URLSearchParams({
-    grant_type: "authorization_code",
-    code, client_id: CLIENT_ID, code_verifier: verifier
-  });
+  const body = new URLSearchParams({ grant_type:"authorization_code", code, client_id:CLIENT_ID, code_verifier:verifier });
   const res = await fetch(BASE + "/Platform/App/OAuth/Token/", {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded", "X-API-Key": API_KEY },
-    body
+    method:"POST", headers:{ "Content-Type":"application/x-www-form-urlencoded", "X-API-Key":API_KEY }, body
   });
   if(!res.ok) return false;
   const data = await res.json();
   accessToken = data.access_token;
-  refreshToken = data.refresh_token;
   localStorage.setItem("vault_access_token", accessToken);
-  localStorage.setItem("vault_refresh_token", refreshToken);
+  localStorage.setItem("vault_refresh_token", data.refresh_token);
   return true;
 }
 
@@ -295,276 +348,381 @@ async function apiGet(path, needsAuth=true){
   const headers = { "X-API-Key": API_KEY };
   if(needsAuth && accessToken) headers["Authorization"] = "Bearer " + accessToken;
   const res = await fetch(BASE + path, { headers });
-  const json = await res.json();
-  return json;
-}
-
-async function apiPost(path, body){
-  const headers = {
-    "X-API-Key": API_KEY,
-    "Authorization": "Bearer " + accessToken,
-    "Content-Type": "application/json"
-  };
-  const res = await fetch(BASE + path, { method: "POST", headers, body: JSON.stringify(body) });
   return res.json();
 }
-
-function logout(){
-  localStorage.removeItem("vault_access_token");
-  localStorage.removeItem("vault_refresh_token");
-  window.location.href = REDIRECT_URI;
+async function apiPost(path, body){
+  const headers = { "X-API-Key":API_KEY, "Authorization":"Bearer "+accessToken, "Content-Type":"application/json" };
+  const res = await fetch(BASE + path, { method:"POST", headers, body: JSON.stringify(body) });
+  return res.json();
 }
+function logout(){ localStorage.removeItem("vault_access_token"); localStorage.removeItem("vault_refresh_token"); window.location.href = REDIRECT_URI; }
 
 // ---------- Data loading ----------
 async function loadEverything(){
-  showLoading("SYNCING VAULT…");
-const memberships = await apiGet("/Platform/User/GetMembershipsForCurrentUser/");
+  showLoading("FINDING YOUR GUARDIAN…");
+  const memberships = await apiGet("/Platform/User/GetMembershipsForCurrentUser/");
   const list = memberships?.Response?.destinyMemberships || [];
   const primaryId = memberships?.Response?.primaryMembershipId;
   const dm = (primaryId && list.find(m => m.membershipId === primaryId)) || list[0];
-  if(!dm){
-    hideLoading();
-    alert("Debug info:\n" + JSON.stringify(memberships).slice(0, 600));
-    return;
-  }
+  if(!dm){ hideLoading(); alert("No Destiny membership found on this account."); return; }
   membership = dm;
 
-  const profile = await apiGet(`/Platform/Destiny2/${dm.membershipType}/Profile/${dm.membershipId}/?components=200,201,205,102`);
+  showLoading("SYNCING VAULT…");
+  const profile = await apiGet(`/Platform/Destiny2/${dm.membershipType}/Profile/${dm.membershipId}/?components=200,201,205,102,300`);
   const r = profile?.Response;
-  if(!r){ alert("Couldn't load profile."); hideLoading(); return; }
+  if(!r){ hideLoading(); alert("Couldn't load profile."); return; }
 
   const characters = r.characters?.data || {};
   characterClassById = {};
-  for(const id in characters){
-    characterClassById[id] = classTypeName(characters[id].classType);
-  }
+  for(const id in characters) characterClassById[id] = classTypeName(characters[id].classType);
+
+  const instanceStats = r.itemComponents?.instances?.data || {};
 
   const raw = [];
-  (r.profileInventory?.data?.items || []).forEach(it => raw.push([it, null, "Vault"]));
+  (r.profileInventory?.data?.items || []).forEach(it => raw.push([it, null, "Vault", false]));
   const invByChar = r.characterInventories?.data || {};
   for(const cid in invByChar){
     const label = characterClassById[cid] || "Guardian";
-    invByChar[cid].items.forEach(it => raw.push([it, cid, label]));
+    invByChar[cid].items.forEach(it => raw.push([it, cid, label, false]));
   }
   const eqByChar = r.characterEquipment?.data || {};
   for(const cid in eqByChar){
     const label = characterClassById[cid] || "Guardian";
-    eqByChar[cid].items.forEach(it => raw.push([it, cid, label]));
+    eqByChar[cid].items.forEach(it => raw.push([it, cid, label, true]));
   }
 
   const uniqueHashes = [...new Set(raw.map(([it]) => it.itemHash))];
   showLoading(`RESOLVING ${uniqueHashes.length} ITEMS…`);
   await resolveDefinitions(uniqueHashes);
 
-  allItems = raw.map(([it, cid, label]) => {
+  allItems = raw.map(([it, cid, label, equipped]) => {
     const def = defCache[it.itemHash];
     if(!def) return null;
+    const power = it.itemInstanceId ? (instanceStats[it.itemInstanceId]?.primaryStat?.value || 0) : 0;
     return {
-      itemHash: it.itemHash,
-      itemInstanceId: it.itemInstanceId,
-      quantity: it.quantity,
+      itemHash: it.itemHash, itemInstanceId: it.itemInstanceId, quantity: it.quantity,
       name: def.displayProperties.name,
       icon: def.displayProperties.icon ? BASE + def.displayProperties.icon : null,
       tier: def.inventory?.tierTypeName || "Common",
       type: def.itemTypeDisplayName || "",
       transferStatus: it.transferStatus,
-      characterId: cid,
-      location: label
+      characterId: cid, location: label, equipped, power
     };
   }).filter(Boolean);
 
   hideLoading();
-  $("#guardianLabel").textContent = (dm.bungieGlobalDisplayName || dm.displayName || "CONNECTED").toUpperCase();
-  render();
+  buildShowdownQueue();
+  renderShowdown();
+  renderMarked();
+  renderBrowse();
 }
 
 async function resolveDefinitions(hashes){
   const todo = hashes.filter(h => !defCache[h]);
   const CHUNK = 3;
   const sleep = (ms) => new Promise(r => setTimeout(r, ms));
-
   for(let i=0; i<todo.length; i+=CHUNK){
     const chunk = todo.slice(i, i+CHUNK);
     await Promise.all(chunk.map(h => fetchDefinitionWithRetry(h)));
-    await sleep(150); // give Bungie's API a breather between batches
+    await sleep(150);
   }
 }
-
-async function fetchDefinitionWithRetry(hash, attempt = 1){
-  try {
+async function fetchDefinitionWithRetry(hash, attempt=1){
+  try{
     const res = await apiGet(`/Platform/Destiny2/Manifest/DestinyInventoryItemDefinition/${hash}/`, false);
-    if(res?.Response){
-      defCache[hash] = res.Response;
-      return;
-    }
+    if(res?.Response){ defCache[hash] = res.Response; return; }
     throw new Error(res?.Message || "empty response");
-  } catch (e) {
-    if(attempt < 3){
-      await new Promise(r => setTimeout(r, 300 * attempt));
-      return fetchDefinitionWithRetry(hash, attempt + 1);
-    }
-    console.warn("Giving up on item definition for hash", hash, e);
+  }catch(e){
+    if(attempt < 3){ await new Promise(r=>setTimeout(r,300*attempt)); return fetchDefinitionWithRetry(hash, attempt+1); }
+    console.warn("Giving up on hash", hash, e);
   }
 }
-function classTypeName(n){
-  return n===0 ? "Titan" : n===1 ? "Hunter" : n===2 ? "Warlock" : "Guardian";
+function classTypeName(n){ return n===0?"Titan":n===1?"Hunter":n===2?"Warlock":"Guardian"; }
+
+// ---------- Showdown (duplicate comparison game) ----------
+function buildShowdownQueue(){
+  const groups = {};
+  allItems.forEach(it => {
+    if(!it.itemInstanceId) return; // only instanced gear (weapons/armor) can be compared
+    if(marked.some(m => m.itemInstanceId === it.itemInstanceId)) return; // already dealt with
+    (groups[it.itemHash] = groups[it.itemHash] || []).push(it);
+  });
+  matchQueue = Object.values(groups).filter(g => g.length > 1)
+    .map(g => ({ pool: g.slice().sort((a,b) => b.power - a.power) }));
+  totalMatchups = matchQueue.reduce((sum, g) => sum + (g.pool.length - 1), 0);
+  matchupsDone = 0;
+  currentGroupIndex = 0;
+  currentChampion = null;
 }
 
-// ---------- Render ----------
-function render(){
+function renderShowdown(){
+  const area = $("#matchupArea");
+  const progress = $("#showdown-progress");
+  const empty = $("#showdown-empty");
+  const done = $("#showdown-done");
+  area.innerHTML = ""; empty.style.display="none"; done.style.display="none"; progress.style.display="none";
+
+  if(totalMatchups === 0){ empty.style.display="block"; return; }
+
+  // advance to next group with items left to compare
+  while(currentGroupIndex < matchQueue.length){
+    const group = matchQueue[currentGroupIndex];
+    if(!currentChampion){
+      currentChampion = group.pool.shift();
+    }
+    if(group.pool.length === 0){
+      currentGroupIndex++;
+      currentChampion = null;
+      continue;
+    }
+    break;
+  }
+
+  if(currentGroupIndex >= matchQueue.length){
+    done.style.display = "block";
+    $("#doneSummary").textContent = marked.length
+      ? `You marked ${marked.length} item${marked.length===1?'':'s'} for cleanup.`
+      : `Nothing marked yet — check the Marked tab any time.`;
+    return;
+  }
+
+  progress.style.display = "block";
+  $("#progressText").textContent = `Matchup ${matchupsDone+1} of ${totalMatchups}`;
+  $("#progressFill").style.width = `${Math.round((matchupsDone/totalMatchups)*100)}%`;
+
+  const group = matchQueue[currentGroupIndex];
+  const challenger = group.pool[0];
+  area.innerHTML = "";
+  area.appendChild(buildMatchupDOM(currentChampion, challenger));
+}
+
+function buildMatchupDOM(a, b){
+  const wrap = document.createElement("div");
+  wrap.className = "matchup";
+  wrap.appendChild(vcardEl(a, () => resolveMatchup(a, b)));
+  const vs = document.createElement("div");
+  vs.className = "vs-badge"; vs.textContent = "VS";
+  wrap.appendChild(vs);
+  wrap.appendChild(vcardEl(b, () => resolveMatchup(b, a)));
+  return wrap;
+}
+
+function vcardEl(item, onPick){
+  const el = document.createElement("div");
+  el.className = "vcard";
+  const color = TIER_COLORS[item.tier] || TIER_COLORS.Common;
+  el.innerHTML = `
+    <div class="icon">${item.icon ? `<img src="${item.icon}" onerror="this.style.display='none'">` : ''}<div class="tier-dot" style="background:${color}"></div></div>
+    <div class="info">
+      <div class="name">${escapeHtml(item.name)}</div>
+      <div class="meta">${item.equipped ? '⭐ Equipped · ' : ''}${item.location}</div>
+      <div class="power">${item.power || '—'}<span class="lbl">POWER</span></div>
+    </div>`;
+  el.addEventListener("click", onPick);
+  return el;
+}
+
+function resolveMatchup(winner, loser){
+  markForCleanup(loser);
+  currentChampion = winner;
+  matchQueue[currentGroupIndex].pool.shift();
+  matchupsDone++;
+  renderShowdown();
+}
+
+function markForCleanup(item){
+  if(marked.some(m => m.itemInstanceId === item.itemInstanceId)) return;
+  marked.push({
+    itemInstanceId: item.itemInstanceId, itemHash: item.itemHash, name: item.name, icon: item.icon,
+    tier: item.tier, location: item.location, characterId: item.characterId, power: item.power
+  });
+  localStorage.setItem("vault_marked", JSON.stringify(marked));
+  renderMarked();
+}
+
+// ---------- Marked tab ----------
+function renderMarked(){
+  const listEl = $("#markedList");
+  const badge = $("#markedCountBadge");
+  const emptyEl = $("#markedEmpty");
+  const actionsEl = $("#markedActions");
+  listEl.innerHTML = "";
+
+  if(marked.length === 0){
+    emptyEl.style.display = "block"; actionsEl.style.display = "none"; badge.style.display = "none";
+    return;
+  }
+  emptyEl.style.display = "none"; actionsEl.style.display = "flex";
+  badge.style.display = "inline-block"; badge.textContent = marked.length;
+
+  marked.forEach((item, idx) => {
+    const el = document.createElement("div");
+    el.className = "marked-item";
+    el.innerHTML = `
+      <div class="icon">${item.icon ? `<img src="${item.icon}" onerror="this.style.display='none'">` : ''}</div>
+      <div class="info"><div class="name">${escapeHtml(item.name)}</div><div class="meta">${item.location} · ${item.power||'—'} power</div></div>
+      <button data-idx="${idx}">✕</button>`;
+    el.querySelector("button").addEventListener("click", () => {
+      marked.splice(idx, 1);
+      localStorage.setItem("vault_marked", JSON.stringify(marked));
+      renderMarked();
+    });
+    listEl.appendChild(el);
+  });
+}
+
+async function stageAllOnCharacter(){
+  const charIds = Object.keys(characterClassById);
+  if(charIds.length === 0) return;
+  if(!cleanupCharacterId || !charIds.includes(cleanupCharacterId)){
+    const sheet = $("#sheet");
+    sheet.innerHTML = "<h3>Stage cleanup items on which character?</h3>" +
+      charIds.map(cid => `<div class="opt" data-cid="${cid}">${characterClassById[cid]}<span>›</span></div>`).join("") +
+      `<div class="cancel" id="sheetCancel">Cancel</div>`;
+    openSheet();
+    sheet.querySelectorAll(".opt").forEach(opt => opt.addEventListener("click", async () => {
+      cleanupCharacterId = opt.dataset.cid;
+      localStorage.setItem("vault_cleanup_char", cleanupCharacterId);
+      closeSheet();
+      await doStageAll();
+    }));
+    $("#sheetCancel").addEventListener("click", closeSheet);
+    return;
+  }
+  await doStageAll();
+}
+
+async function doStageAll(){
+  showLoading("MOVING ITEMS…");
+  for(const item of marked){
+    if(item.characterId === cleanupCharacterId) continue; // already on the cleanup character
+    try{
+      if(item.characterId){
+        // Currently on a different character: send to vault first.
+        await apiPost("/Platform/Destiny2/Actions/Items/TransferItem/", {
+          itemReferenceHash: item.itemHash, stackSize: 1, transferToVault: true,
+          itemId: item.itemInstanceId, characterId: item.characterId,
+          membershipType: membership.membershipType
+        });
+      }
+      // Now in the vault (either already was, or just arrived): send to the cleanup character.
+      await apiPost("/Platform/Destiny2/Actions/Items/TransferItem/", {
+        itemReferenceHash: item.itemHash, stackSize: 1, transferToVault: false,
+        itemId: item.itemInstanceId, characterId: cleanupCharacterId,
+        membershipType: membership.membershipType
+      });
+    }catch(e){ console.warn("Stage failed for", item.name, e); }
+  }
+  hideLoading();
+  alert(`Staged on ${characterClassById[cleanupCharacterId]}. Log in-game to dismantle them.`);
+}
+
+// ---------- Browse tab (search / sort / manual transfer) ----------
+function renderBrowse(){
   let list = allItems;
-  if(searchQuery.trim()){
-    const q = searchQuery.toLowerCase();
-    list = list.filter(i => i.name.toLowerCase().includes(q));
-  }
-  if(locationFilter){
-    list = list.filter(i => i.location === locationFilter);
-  }
-  list = [...list].sort((a,b) => {
-    if(sortMode === "name") return a.name.localeCompare(b.name);
-    if(sortMode === "tier") return tierRank(b.tier) - tierRank(a.tier);
-    if(sortMode === "type") return a.type.localeCompare(b.type);
+  if(searchQuery.trim()){ const q=searchQuery.toLowerCase(); list = list.filter(i=>i.name.toLowerCase().includes(q)); }
+  if(locationFilter) list = list.filter(i => i.location === locationFilter);
+  list = [...list].sort((a,b)=>{
+    if(sortMode==="name") return a.name.localeCompare(b.name);
+    if(sortMode==="tier") return tierRank(b.tier)-tierRank(a.tier);
+    if(sortMode==="type") return (a.type||"").localeCompare(b.type||"");
     return 0;
   });
-
-  $("#count").textContent = `${list.length} item${list.length===1?'':'s'}`;
-  const container = $("#list");
+  const container = $("#browseList");
   container.innerHTML = "";
-  $("#empty").style.display = list.length ? "none" : "block";
-
   list.forEach(item => {
     const el = document.createElement("div");
-    el.className = "item";
+    el.className = "browse-item";
     const transferrable = (item.transferStatus & 0x1) === 0 && item.itemInstanceId;
     const color = TIER_COLORS[item.tier] || TIER_COLORS.Common;
     el.innerHTML = `
-      <div class="icon-wrap">
-        ${item.icon ? `<img src="${item.icon}" loading="lazy">` : ''}
-        <div class="tier-bar" style="background:${color}"></div>
-      </div>
-      <div class="item-info">
-        <div class="name">${escapeHtml(item.name)}</div>
-        <div class="sub"><span class="loc">${item.location}</span> · ${item.type || item.tier}${item.quantity>1 ? ' · x'+item.quantity : ''}</div>
-      </div>
-      <button class="xfer ${transferrable?'active':''}" ${transferrable?'':'disabled'}>${item.location==='Vault' ? 'TO CHAR' : 'TO VAULT'}</button>
-    `;
+      <div class="icon">${item.icon ? `<img src="${item.icon}" onerror="this.style.display='none'">` : ''}<div class="tier-dot" style="background:${color}"></div></div>
+      <div class="info"><div class="name">${escapeHtml(item.name)}</div><div class="sub">${item.location}${item.quantity>1?' · x'+item.quantity:''}</div></div>
+      <button class="xfer" ${transferrable?'':'disabled'}>${item.location==='Vault'?'TO CHAR':'TO VAULT'}</button>`;
     el.querySelector(".xfer").addEventListener("click", () => transferPrompt(item));
     container.appendChild(el);
   });
 }
+function tierRank(t){ return {"Exotic":5,"Legendary":4,"Rare":3,"Uncommon":2,"Common":1}[t]||0; }
+function escapeHtml(s){ return s.replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
-function tierRank(t){
-  return {"Exotic":5,"Legendary":4,"Rare":3,"Uncommon":2,"Common":1}[t] || 0;
-}
-function escapeHtml(s){
-  return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-}
-
-// ---------- Transfer ----------
 function transferPrompt(item){
   const sheet = $("#sheet");
   if(item.location === "Vault"){
-    const opts = Object.entries(characterClassById).map(([cid,label]) =>
-      `<div class="opt" data-cid="${cid}">${label}<span>›</span></div>`).join("");
+    const opts = Object.entries(characterClassById).map(([cid,label]) => `<div class="opt" data-cid="${cid}">${label}<span>›</span></div>`).join("");
     sheet.innerHTML = `<h3>Move ${escapeHtml(item.name)} to</h3>${opts}<div class="cancel" id="sheetCancel">Cancel</div>`;
   } else {
-    sheet.innerHTML = `<h3>Move ${escapeHtml(item.name)} to Vault?</h3>
-      <div class="opt" data-cid="__vault__">Confirm<span>›</span></div>
-      <div class="cancel" id="sheetCancel">Cancel</div>`;
+    sheet.innerHTML = `<h3>Move ${escapeHtml(item.name)} to Vault?</h3><div class="opt" data-cid="__vault__">Confirm<span>›</span></div><div class="cancel" id="sheetCancel">Cancel</div>`;
   }
   openSheet();
-  sheet.querySelectorAll(".opt").forEach(opt => {
-    opt.addEventListener("click", async () => {
-      closeSheet();
-      const cid = opt.dataset.cid;
-      const toVault = item.location !== "Vault";
-      const characterId = toVault ? item.characterId : cid;
-      await doTransfer(item, characterId, toVault);
+  sheet.querySelectorAll(".opt").forEach(opt => opt.addEventListener("click", async () => {
+    closeSheet();
+    const toVault = item.location !== "Vault";
+    const characterId = toVault ? item.characterId : opt.dataset.cid;
+    showLoading("MOVING ITEM…");
+    await apiPost("/Platform/Destiny2/Actions/Items/TransferItem/", {
+      itemReferenceHash: item.itemHash, stackSize: item.quantity, transferToVault: toVault,
+      itemId: item.itemInstanceId, characterId, membershipType: membership.membershipType
     });
-  });
+    await loadEverything();
+  }));
   $("#sheetCancel").addEventListener("click", closeSheet);
 }
 
-async function doTransfer(item, characterId, toVault){
-  showLoading("MOVING ITEM…");
-  const res = await apiPost("/Platform/Destiny2/Actions/Items/TransferItem/", {
-    itemReferenceHash: item.itemHash,
-    stackSize: item.quantity,
-    transferToVault: toVault,
-    itemId: item.itemInstanceId,
-    characterId: characterId,
-    membershipType: membership.membershipType
+function openSheet(){ $("#sheet").style.display="block"; $("#sheet-backdrop").style.display="block"; }
+function closeSheet(){ $("#sheet").style.display="none"; $("#sheet-backdrop").style.display="none"; }
+function showLoading(label){ $("#loadingLabel").textContent = label; $("#loading").style.display="flex"; }
+function hideLoading(){ $("#loading").style.display="none"; }
+
+// ---------- Tabs ----------
+document.querySelectorAll(".tab-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".tab-btn").forEach(b=>b.classList.remove("active"));
+    document.querySelectorAll(".tabpanel").forEach(p=>p.classList.remove("active"));
+    btn.classList.add("active");
+    $("#tab-"+btn.dataset.tab).classList.add("active");
   });
-  hideLoading();
-  if(res.ErrorCode === 1){
-    await loadEverything();
-  } else {
-    alert("Transfer failed: " + (res.Message || "unknown error"));
-  }
-}
-
-function openSheet(){ $("#sheet").style.display = "block"; $("#sheet-backdrop").style.display = "block"; }
-function closeSheet(){ $("#sheet").style.display = "none"; $("#sheet-backdrop").style.display = "none"; }
-
-// ---------- UI wiring ----------
-function showLoading(label){ $("#loadingLabel").textContent = label; $("#loading").style.display = "flex"; }
-function hideLoading(){ $("#loading").style.display = "none"; }
-
-$("#search").addEventListener("input", e => { searchQuery = e.target.value; render(); });
+});
+$("#goToMarkedBtn").addEventListener("click", () => document.querySelector('[data-tab="marked"]').click());
+$("#stageAllBtn").addEventListener("click", stageAllOnCharacter);
+$("#sheet-backdrop").addEventListener("click", closeSheet);
+$("#logoutBtn").addEventListener("click", logout);
+$("#loginBtn").addEventListener("click", startLogin);
+$("#search").addEventListener("input", e => { searchQuery = e.target.value; renderBrowse(); });
 $("#sortChips").addEventListener("click", e => {
   const chip = e.target.closest(".chip");
   if(!chip) return;
   if(chip.id === "locFilterChip"){ openLocationSheet(); return; }
-  document.querySelectorAll("#sortChips .chip[data-sort]").forEach(c => c.classList.remove("active"));
-  chip.classList.add("active");
-  sortMode = chip.dataset.sort;
-  render();
+  document.querySelectorAll("#sortChips .chip[data-sort]").forEach(c=>c.classList.remove("active"));
+  chip.classList.add("active"); sortMode = chip.dataset.sort; renderBrowse();
 });
 function openLocationSheet(){
-  const locs = ["All", ...new Set(allItems.map(i => i.location))];
+  const locs = ["All", ...new Set(allItems.map(i=>i.location))];
   const sheet = $("#sheet");
-  sheet.innerHTML = "<h3>Show items from</h3>" +
-    locs.map(l => `<div class="opt" data-loc="${l}">${l}<span>›</span></div>`).join("") +
-    `<div class="cancel" id="sheetCancel">Cancel</div>`;
+  sheet.innerHTML = "<h3>Show items from</h3>" + locs.map(l=>`<div class="opt" data-loc="${l}">${l}<span>›</span></div>`).join("") + `<div class="cancel" id="sheetCancel">Cancel</div>`;
   openSheet();
-  sheet.querySelectorAll(".opt").forEach(opt => {
-    opt.addEventListener("click", () => {
-      locationFilter = opt.dataset.loc === "All" ? null : opt.dataset.loc;
-      closeSheet();
-      render();
-    });
-  });
+  sheet.querySelectorAll(".opt").forEach(opt => opt.addEventListener("click", () => {
+    locationFilter = opt.dataset.loc === "All" ? null : opt.dataset.loc;
+    closeSheet(); renderBrowse();
+  }));
   $("#sheetCancel").addEventListener("click", closeSheet);
 }
-$("#sheet-backdrop").addEventListener("click", closeSheet);
-$("#logoutBtn").addEventListener("click", logout);
-$("#loginBtn").addEventListener("click", startLogin);
 
 // ---------- Boot ----------
 (async function init(){
-  if(!configured()){
-    $("#config-warning").style.display = "block";
-    $("#loginBtn").disabled = true;
-    return;
-  }
+  if(!configured()){ $("#config-warning").style.display="block"; $("#loginBtn").disabled=true; return; }
   const params = new URLSearchParams(window.location.search);
   const code = params.get("code");
   if(code){
-    $("#statusLine").textContent = "COMPLETING SIGN-IN…";
     const ok = await exchangeCodeForToken(code);
     window.history.replaceState({}, document.title, REDIRECT_URI);
     if(ok){ showApp(); return; }
-    $("#statusLine").textContent = "SIGN-IN FAILED, TRY AGAIN";
+    alert("Sign-in failed, please try again.");
     return;
   }
-  if(accessToken){ showApp(); }
+  if(accessToken) showApp();
 })();
-
-function showApp(){
-  $("#login").style.display = "none";
-  $("#app").style.display = "flex";
-  loadEverything();
-}
+function showApp(){ $("#login").style.display="none"; $("#app").style.display="flex"; loadEverything(); }
 </script>
 </body>
 </html>
