@@ -155,6 +155,14 @@
     font-weight:700; padding:3px 9px; border-radius:999px; white-space:nowrap;
   }
   .perk-loading{font-size:11px; color:var(--dim); font-weight:700; font-style:italic;}
+  .stat-bars{display:flex; flex-direction:column; gap:4px;}
+  .stat-bar-row{display:flex; align-items:center; gap:8px; font-size:10.5px;}
+  .stat-bar-row .stat-label{width:64px; flex:0 0 auto; color:var(--dim); font-weight:800; text-align:right;}
+  .stat-bar-row .stat-track{flex:1; height:6px; background:var(--line); border-radius:99px; overflow:hidden;}
+  .stat-bar-row .stat-fill{height:100%; background:linear-gradient(90deg, var(--purple), var(--pink)); border-radius:99px;}
+  .stat-bar-row .stat-value{width:24px; flex:0 0 auto; font-weight:800; color:var(--ink);}
+  .perk-chip{display:inline-flex; align-items:center; gap:4px;}
+  .perk-chip img{width:14px; height:14px; border-radius:3px;}
   .vcard .drop-link{font-size:11px; font-weight:800; color:var(--dim); text-decoration:none;}
   .vcard .drop-link:active{color:var(--purple-dk);}
 
@@ -393,6 +401,12 @@ async function resolveStatDefinitions(hashes){
 }
 function statName(hash){ return statDefCache[hash]?.displayProperties?.name || null; }
 const ELEMENT_NAMES = { 1:"Kinetic", 2:"Arc", 3:"Solar", 4:"Void", 6:"Stasis", 7:"Strand" };
+// Same staleness issue as the item-definition cache: bump this whenever what's stored per perk changes.
+const PERK_CACHE_VERSION = "2";
+if(localStorage.getItem("vault_perk_cache_version") !== PERK_CACHE_VERSION){
+  localStorage.removeItem("vault_perk_def_cache");
+  localStorage.setItem("vault_perk_cache_version", PERK_CACHE_VERSION);
+}
 const perkDefCache = JSON.parse(localStorage.getItem("vault_perk_def_cache") || "{}"); // SandboxPerkDefinition lookups — static, safe to persist
 const itemPerksCache = new Map(); // itemInstanceId -> resolved perk list for THIS session (rolls are per-instance, not safe to persist long-term)
 let bulkTransferInProgress = false; // guard so perk lookups don't compete with a bulk stage-for-cleanup transfer
@@ -551,18 +565,17 @@ async function loadEverything(){
   showLoading(`RESOLVING ${uniqueHashes.length} ITEMS…`);
   await resolveDefinitions(uniqueHashes);
 
-  // Armor stat names come from a tiny, mostly-fixed set of stat hashes shared across
-  // the whole game (Weapons/Health/Class/Super/Grenade/Melee, or the older stat set on
-  // legacy gear) — resolving them is effectively a one-time cost, not per-item, so it's
-  // done for the whole vault up front rather than lazily.
-  const armorStatHashes = new Set();
+  // Stat names (for both armor archetypes and weapon stat bars) come from a small, mostly-fixed
+  // set of stat hashes shared across the whole game — resolving them is effectively a one-time
+  // cost, not per-item, so it's done for the whole vault up front rather than lazily.
+  const statHashesToResolve = new Set();
   raw.forEach(([it]) => {
     const def = defCache[it.itemHash];
-    if(def?.itemType === 2 && it.itemInstanceId && itemStats[it.itemInstanceId]){
-      Object.keys(itemStats[it.itemInstanceId].stats || {}).forEach(h => armorStatHashes.add(Number(h)));
+    if((def?.itemType === 2 || def?.itemType === 3) && it.itemInstanceId && itemStats[it.itemInstanceId]){
+      Object.keys(itemStats[it.itemInstanceId].stats || {}).forEach(h => statHashesToResolve.add(Number(h)));
     }
   });
-  await resolveStatDefinitions([...armorStatHashes]);
+  await resolveStatDefinitions([...statHashesToResolve]);
 
   allItems = raw.map(([it, cid, label, equipped]) => {
     const def = defCache[it.itemHash];
@@ -585,17 +598,20 @@ async function loadEverything(){
     // Armor archetype — top 2 stats by value, named via the manifest lookup above,
     // matched against the confirmed 12-archetype table. Falls back to just showing the
     // raw stat names if it's an older piece using a stat set that predates archetypes.
+    // Weapons get the same stat lookup minus archetype-matching, just for the stat bars —
+    // RPM is excluded here since it's already shown as its own chip.
     let archetype = null, statBreakdown = null;
-    if(def.itemType === 2 && it.itemInstanceId && itemStats[it.itemInstanceId]){
+    if(it.itemInstanceId && itemStats[it.itemInstanceId] && (def.itemType === 2 || def.itemType === 3)){
       const entries = Object.entries(itemStats[it.itemInstanceId].stats || {})
+        .filter(([h]) => Number(h) !== RPM_STAT_HASH)
         .map(([h, s]) => ({ name: statName(Number(h)), value: s.value }))
         .filter(s => s.name)
         .sort((a, b) => b.value - a.value);
-      if(entries.length >= 2){
+      if(def.itemType === 2 && entries.length >= 2){
         const label = `${entries[0].name}/${entries[1].name}`;
         archetype = ARCHETYPES[label] || `${entries[0].name} / ${entries[1].name}`;
-        statBreakdown = entries;
       }
+      if(entries.length) statBreakdown = entries;
     }
     return {
       itemHash: it.itemHash, itemInstanceId: it.itemInstanceId, quantity: it.quantity,
@@ -692,7 +708,10 @@ async function fetchItemPerks(item){
     const visible = rawPerks.filter(p => p.visible);
     const hashes = [...new Set(visible.map(p => p.perkHash))];
     await resolvePerkDefinitions(hashes);
-    const resolved = visible.map(p => perkDefCache[p.perkHash]?.displayProperties?.name).filter(Boolean);
+    const resolved = visible.map(p => {
+      const def = perkDefCache[p.perkHash]?.displayProperties;
+      return def?.name ? { name: def.name, icon: def.icon ? BASE + def.icon : null } : null;
+    }).filter(Boolean);
     itemPerksCache.set(item.itemInstanceId, resolved);
     return resolved;
   }catch(e){
@@ -706,7 +725,7 @@ async function resolvePerkDefinitions(hashes){
   await Promise.all(todo.map(async h => {
     try{
       const res = await apiGet(`/Platform/Destiny2/Manifest/DestinySandboxPerkDefinition/${h}/`, false);
-      if(res?.Response) perkDefCache[h] = { displayProperties: { name: res.Response.displayProperties?.name } };
+      if(res?.Response) perkDefCache[h] = { displayProperties: { name: res.Response.displayProperties?.name, icon: res.Response.displayProperties?.icon } };
     }catch(e){ /* a missing perk name just won't render — not worth retrying, it's cosmetic */ }
   }));
   try{ localStorage.setItem("vault_perk_def_cache", JSON.stringify(perkDefCache)); }
@@ -917,17 +936,25 @@ function vcardEl(item, onPick){
   ].filter(Boolean).join(' · ');
   const isArmor = item.itemType === 2;
 
-  const statChips = isArmor
+  const headerChips = isArmor
     ? [
         item.power ? `<span class="stat-chip">${item.power} PWR</span>` : '',
-        item.archetype ? `<span class="stat-chip">${item.archetype}</span>` : '',
-        ...(item.statBreakdown || []).slice(0, 2).map(s => `<span class="stat-chip">${s.name} ${s.value}</span>`)
+        item.archetype ? `<span class="stat-chip">${item.archetype}</span>` : ''
       ].filter(Boolean).join('')
     : [
         item.power ? `<span class="stat-chip">${item.power} PWR</span>` : '',
         item.rpm ? `<span class="stat-chip">${item.rpm} RPM</span>` : '',
         item.element ? `<span class="stat-chip">${item.element}</span>` : ''
       ].filter(Boolean).join('');
+
+  // Real stat bars, like the in-game inspect screen — scaled against 100 since that's the
+  // usual ceiling for both weapon and armor stats in the current stat system.
+  const statBarsHtml = (item.statBreakdown || []).slice(0, isArmor ? 6 : 4).map(s => `
+    <div class="stat-bar-row">
+      <span class="stat-label">${escapeHtml(s.name)}</span>
+      <div class="stat-track"><div class="stat-fill" style="width:${Math.min(100, s.value)}%"></div></div>
+      <span class="stat-value">${s.value}</span>
+    </div>`).join('');
 
   el.innerHTML = `
     <div class="top-row">
@@ -937,7 +964,8 @@ function vcardEl(item, onPick){
         <div class="meta">${item.location}${badges ? ' · ' + badges : ''}</div>
       </div>
     </div>
-    ${statChips ? `<div class="stat-row">${statChips}</div>` : ''}
+    ${headerChips ? `<div class="stat-row">${headerChips}</div>` : ''}
+    ${statBarsHtml ? `<div class="stat-bars">${statBarsHtml}</div>` : ''}
     ${isArmor ? '' : '<div class="perk-row"><span class="perk-loading">loading roll…</span></div>'}
   `;
   el.addEventListener("click", onPick);
@@ -949,7 +977,7 @@ function vcardEl(item, onPick){
     const perkRow = el.querySelector(".perk-row");
     fetchItemPerks(item).then(perks => {
       perkRow.innerHTML = perks.length
-        ? perks.map(p => `<span class="perk-chip">${escapeHtml(p)}</span>`).join('')
+        ? perks.map(p => `<span class="perk-chip">${p.icon ? `<img src="${p.icon}" onerror="this.style.display='none'">` : ''}${escapeHtml(p.name)}</span>`).join('')
         : `<span class="perk-loading">no roll data</span>`;
     });
   }
@@ -1113,28 +1141,56 @@ async function doStageAll(){
 
 // ---------- Browse tab (search / sort / manual transfer) ----------
 function renderBrowse(){
-  let list = allItems;
+  // Only weapons and armor — quest steps, bounties, consumables etc. aren't vault-cleanup
+  // material and were just adding noise to a screen about deciding what gear to keep.
+  let list = allItems.filter(i => i.itemType === 2 || i.itemType === 3);
   if(searchQuery.trim()){ const q=searchQuery.toLowerCase(); list = list.filter(i=>i.name.toLowerCase().includes(q)); }
   if(locationFilter) list = list.filter(i => i.location === locationFilter);
-  list = [...list].sort((a,b)=>{
-    if(sortMode==="name") return a.name.localeCompare(b.name);
-    if(sortMode==="tier") return tierRank(b.tier)-tierRank(a.tier);
-    if(sortMode==="type") return (a.type||"").localeCompare(b.type||"");
+
+  // Group exact duplicates into one row instead of one per copy — a stack of 6 identical
+  // guns is a "how many do I have" fact worth surfacing, not 6 rows to scroll past.
+  const groups = {};
+  list.forEach(item => { (groups[item.itemHash] = groups[item.itemHash] || []).push(item); });
+  let rows = Object.values(groups).map(g => ({
+    rep: g.slice().sort((a,b)=>b.power-a.power)[0],
+    items: g
+  }));
+  rows.sort((a,b) => {
+    if(sortMode==="name") return a.rep.name.localeCompare(b.rep.name);
+    if(sortMode==="tier") return tierRank(b.rep.tier)-tierRank(a.rep.tier);
+    if(sortMode==="type") return (a.rep.type||"").localeCompare(b.rep.type||"");
     return 0;
   });
+
   const container = $("#browseList");
   container.innerHTML = "";
-  list.forEach(item => {
+  rows.forEach(({rep, items}) => {
     const el = document.createElement("div");
     el.className = "browse-item";
-    const transferrable = (item.transferStatus & 0x1) === 0 && item.itemInstanceId;
-    const color = TIER_COLORS[item.tier] || TIER_COLORS.Common;
-    el.innerHTML = `
-      <div class="icon">${iconImgHtml(item)}<div class="tier-dot" style="background:${color}"></div></div>
-      <div class="info"><div class="name">${escapeHtml(item.name)}</div><div class="sub">${item.location}${item.quantity>1?' · x'+item.quantity:''}</div></div>
-      <button class="xfer" ${transferrable?'':'disabled'}>${item.location==='Vault'?'TO CHAR':'TO VAULT'}</button>`;
-    el.querySelector(".xfer").addEventListener("click", (e) => { e.stopPropagation(); transferPrompt(item); });
-    el.addEventListener("click", () => openItemDetail(item));
+    const color = TIER_COLORS[rep.tier] || TIER_COLORS.Common;
+
+    if(items.length > 1){
+      el.innerHTML = `
+        <div class="icon">${iconImgHtml(rep)}<div class="tier-dot" style="background:${color}"></div></div>
+        <div class="info"><div class="name">${escapeHtml(rep.name)}</div><div class="sub">${items.length} copies owned</div></div>
+        <button class="xfer">⚔️ Compare</button>`;
+      el.querySelector(".xfer").addEventListener("click", (e) => {
+        e.stopPropagation();
+        const pool = items.slice().sort((a,b)=>b.power-a.power || (b.masterwork-a.masterwork) || (b.crafted-a.crafted));
+        startBracket([{ pool }], "Nothing left to compare here.");
+        enterComparisonScreen();
+      });
+      el.addEventListener("click", () => openItemDetail(rep));
+    } else {
+      const item = rep;
+      const transferrable = (item.transferStatus & 0x1) === 0 && item.itemInstanceId;
+      el.innerHTML = `
+        <div class="icon">${iconImgHtml(item)}<div class="tier-dot" style="background:${color}"></div></div>
+        <div class="info"><div class="name">${escapeHtml(item.name)}</div><div class="sub">${item.location}${item.quantity>1?' · x'+item.quantity:''}</div></div>
+        <button class="xfer" ${transferrable?'':'disabled'}>${item.location==='Vault'?'TO CHAR':'TO VAULT'}</button>`;
+      el.querySelector(".xfer").addEventListener("click", (e) => { e.stopPropagation(); transferPrompt(item); });
+      el.addEventListener("click", () => openItemDetail(item));
+    }
     container.appendChild(el);
   });
 }
