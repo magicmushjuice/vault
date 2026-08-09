@@ -115,6 +115,13 @@
     height:6px; background:var(--line); border-radius:99px; margin-top:6px; overflow:hidden;
   }
   #showdown-progress .fill{height:100%; background:linear-gradient(90deg, var(--purple), var(--pink)); border-radius:99px; transition:width .3s;}
+  .bracket-nav{
+    appearance:none; border:2px solid var(--line); background:var(--card); color:var(--purple-dk);
+    font-family:'Baloo 2',sans-serif; font-weight:700; font-size:12px; padding:7px 14px;
+    border-radius:999px; box-shadow:0 3px 0 var(--line);
+  }
+  .bracket-nav:active{transform:translateY(2px); box-shadow:0 1px 0 var(--line);}
+  .bracket-nav:disabled{opacity:0.35; box-shadow:none;}
 
   .matchup{display:flex; flex-direction:column; gap:14px; align-items:center;}
   .vcard{
@@ -284,9 +291,9 @@
       <div id="showdown-picker"></div>
       <div id="showdown-progress" style="display:none;">
         <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
-          <button class="icon" id="bracketBackBtn" style="font-size:11px;">← Back</button>
+          <button class="bracket-nav" id="bracketBackBtn">← Back</button>
           <span id="progressText"></span>
-          <button class="icon" id="undoMatchupBtn" style="font-size:11px;" disabled>↩ Undo</button>
+          <button class="bracket-nav" id="undoMatchupBtn" disabled>↩ Undo</button>
         </div>
         <div class="track"><div class="fill" id="progressFill" style="width:0%"></div></div>
       </div>
