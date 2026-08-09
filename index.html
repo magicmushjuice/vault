@@ -296,7 +296,7 @@ let accessToken = localStorage.getItem("vault_access_token") || null;
 let membership = null;
 let allItems = [];
 let characterClassById = {};
-let defCache = {};
+let defCache = JSON.parse(localStorage.getItem("vault_def_cache") || "{}");
 let cleanupCharacterId = localStorage.getItem("vault_cleanup_char") || null;
 
 let marked = JSON.parse(localStorage.getItem("vault_marked") || "[]");
@@ -419,13 +419,17 @@ async function loadEverything(){
 
 async function resolveDefinitions(hashes){
   const todo = hashes.filter(h => !defCache[h]);
-  const CHUNK = 3;
+  if(todo.length === 0) return;
+  const CHUNK = 5;
   const sleep = (ms) => new Promise(r => setTimeout(r, ms));
   for(let i=0; i<todo.length; i+=CHUNK){
     const chunk = todo.slice(i, i+CHUNK);
     await Promise.all(chunk.map(h => fetchDefinitionWithRetry(h)));
-    await sleep(150);
+    await sleep(100);
   }
+  // Persist for next time — item definitions basically never change.
+  try{ localStorage.setItem("vault_def_cache", JSON.stringify(defCache)); }
+  catch(e){ console.warn("Definition cache too big for localStorage, skipping save", e); }
 }
 async function fetchDefinitionWithRetry(hash, attempt=1){
   try{
