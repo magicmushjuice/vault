@@ -131,6 +131,21 @@
     font-family:'Baloo 2',sans-serif; font-size:22px; font-weight:800; color:var(--purple-dk); margin-top:2px;
   }
   .vcard .power .lbl{font-size:10px; color:var(--dim); font-weight:700; margin-left:3px;}
+  .vcard{flex-direction:column; align-items:stretch; gap:10px;}
+  .vcard .top-row{display:flex; gap:14px; align-items:center;}
+  .vcard .stat-row{display:flex; gap:6px; flex-wrap:wrap;}
+  .stat-chip{
+    background:var(--line); color:var(--ink); font-size:11px; font-weight:800; padding:4px 9px;
+    border-radius:999px; white-space:nowrap;
+  }
+  .vcard .perk-row{display:flex; gap:6px; flex-wrap:wrap; min-height:22px;}
+  .perk-chip{
+    background:transparent; border:1.5px solid var(--purple); color:var(--purple-dk); font-size:10.5px;
+    font-weight:700; padding:3px 9px; border-radius:999px; white-space:nowrap;
+  }
+  .perk-loading{font-size:11px; color:var(--dim); font-weight:700; font-style:italic;}
+  .vcard .drop-link{font-size:11px; font-weight:800; color:var(--dim); text-decoration:none;}
+  .vcard .drop-link:active{color:var(--purple-dk);}
 
   .vs-badge{
     width:44px; height:44px; border-radius:50%; background:linear-gradient(135deg, var(--purple), var(--pink));
@@ -313,6 +328,11 @@ const REDIRECT_URI = window.location.origin + window.location.pathname;
 const BASE = "https://www.bungie.net";
 const $ = (sel) => document.querySelector(sel);
 const TIER_COLORS = { "Common":"var(--common)","Uncommon":"var(--uncommon)","Rare":"var(--rare)","Legendary":"var(--legendary)","Exotic":"var(--exotic)" };
+const RPM_STAT_HASH = 4284893193; // "Rounds Per Minute" — well-known stable community-documented hash
+const ELEMENT_NAMES = { 1:"Kinetic", 2:"Arc", 3:"Solar", 4:"Void", 6:"Stasis", 7:"Strand" };
+const perkDefCache = JSON.parse(localStorage.getItem("vault_perk_def_cache") || "{}"); // SandboxPerkDefinition lookups — static, safe to persist
+const itemPerksCache = new Map(); // itemInstanceId -> resolved perk list for THIS session (rolls are per-instance, not safe to persist long-term)
+let bulkTransferInProgress = false; // guard so perk lookups don't compete with a bulk stage-for-cleanup transfer
 
 let accessToken = localStorage.getItem("vault_access_token") || null;
 let membership = null;
@@ -456,6 +476,10 @@ async function loadEverything(){
         tier: def.inventory?.tierTypeName || "", redacted: !!def.redacted
       });
     }
+    // RPM and element are static per-weapon facts already sitting in the definition
+    // we fetch anyway — free to surface, no extra network calls.
+    const rpm = def.stats?.stats?.[RPM_STAT_HASH]?.value || null;
+    const damageType = it.itemInstanceId ? (instanceStats[it.itemInstanceId]?.damageType || 0) : 0;
     return {
       itemHash: it.itemHash, itemInstanceId: it.itemInstanceId, quantity: it.quantity,
       name: def.displayProperties.name,
@@ -465,7 +489,8 @@ async function loadEverything(){
       itemType: def.itemType,
       transferStatus: it.transferStatus,
       locked: !!(state & 1), masterwork: !!(state & 4), crafted: !!(state & 8),
-      characterId: cid, location: label, equipped, power
+      characterId: cid, location: label, equipped, power,
+      rpm, element: ELEMENT_NAMES[damageType] || null
     };
   }).filter(Boolean);
 
@@ -510,6 +535,48 @@ async function fetchDefinitionWithRetry(hash, attempt=1){
   }
 }
 function classTypeName(n){ return n===0?"Titan":n===1?"Hunter":n===2?"Warlock":"Guardian"; }
+
+// ---------- Perks — fetched lazily, only for items actually on screen in a Showdown matchup ----------
+// This is deliberately NOT part of the initial vault load: pulling perk data for every item up
+// front would mean one extra API call per weapon/armor piece owned, on top of the per-hash
+// definition lookups that are already the slowest part of loading. Instead we fetch it one
+// matchup's worth (2 items) at a time, right when that matchup renders, and cache by
+// itemInstanceId so re-showing the same item later in the session is free.
+async function fetchItemPerks(item){
+  if(!item.itemInstanceId) return [];
+  if(itemPerksCache.has(item.itemInstanceId)) return itemPerksCache.get(item.itemInstanceId);
+  if(bulkTransferInProgress){
+    // Don't compete with an in-flight bulk stage-for-cleanup transfer for API budget.
+    await new Promise(r => setTimeout(r, 400));
+    if(bulkTransferInProgress) return []; // still busy — just skip for this render, card shows without perks
+  }
+  try{
+    const res = await apiGet(`/Platform/Destiny2/${membership.membershipType}/Profile/${membership.membershipId}/Item/${item.itemInstanceId}/?components=302`);
+    const rawPerks = res?.Response?.perks?.data?.perks || [];
+    const visible = rawPerks.filter(p => p.visible);
+    const hashes = [...new Set(visible.map(p => p.perkHash))];
+    await resolvePerkDefinitions(hashes);
+    const resolved = visible.map(p => perkDefCache[p.perkHash]?.displayProperties?.name).filter(Boolean);
+    itemPerksCache.set(item.itemInstanceId, resolved);
+    return resolved;
+  }catch(e){
+    console.warn("Couldn't load perks for", item.name, e);
+    return [];
+  }
+}
+async function resolvePerkDefinitions(hashes){
+  const todo = hashes.filter(h => !perkDefCache[h]);
+  if(todo.length === 0) return;
+  await Promise.all(todo.map(async h => {
+    try{
+      const res = await apiGet(`/Platform/Destiny2/Manifest/DestinySandboxPerkDefinition/${h}/`, false);
+      if(res?.Response) perkDefCache[h] = res.Response;
+    }catch(e){ /* a missing perk name just won't render — not worth retrying, it's cosmetic */ }
+  }));
+  try{ localStorage.setItem("vault_perk_def_cache", JSON.stringify(perkDefCache)); }
+  catch(e){ console.warn("Perk definition cache too big for localStorage, skipping save", e); }
+}
+
 
 // ---------- Icon rendering + diagnostics ----------
 // Single shared place that builds an item's <img>, so every list (Showdown, Marked, Browse)
@@ -619,16 +686,36 @@ function vcardEl(item, onPick){
     item.crafted ? '🛠️ Crafted' : '',
     item.equipped ? '✅ Equipped' : ''
   ].filter(Boolean).join(' · ');
+  const statChips = [
+    item.power ? `<span class="stat-chip">${item.power} PWR</span>` : '',
+    item.rpm ? `<span class="stat-chip">${item.rpm} RPM</span>` : '',
+    item.element ? `<span class="stat-chip">${item.element}</span>` : ''
+  ].filter(Boolean).join('');
   el.innerHTML = `
-    <div class="icon">${iconImgHtml(item)}<div class="tier-dot" style="background:${color}"></div></div>
-    <div class="info">
-      <div class="name">${escapeHtml(item.name)}</div>
-      <div class="meta">${item.location}${badges ? ' · ' + badges : ''}</div>
-      <div class="power">${item.power || '—'}<span class="lbl">POWER</span></div>
-    </div>`;
+    <div class="top-row">
+      <div class="icon">${iconImgHtml(item)}<div class="tier-dot" style="background:${color}"></div></div>
+      <div class="info">
+        <div class="name">${escapeHtml(item.name)}</div>
+        <div class="meta">${item.location}${badges ? ' · ' + badges : ''}</div>
+      </div>
+    </div>
+    ${statChips ? `<div class="stat-row">${statChips}</div>` : ''}
+    <div class="perk-row"><span class="perk-loading">loading roll…</span></div>
+    <a class="drop-link" href="https://www.light.gg/db/items/${item.itemHash}/" target="_blank" rel="noopener">Where this drops from, on light.gg →</a>
+  `;
+  el.querySelector(".drop-link").addEventListener("click", e => e.stopPropagation());
   el.addEventListener("click", onPick);
+
+  const perkRow = el.querySelector(".perk-row");
+  fetchItemPerks(item).then(perks => {
+    perkRow.innerHTML = perks.length
+      ? perks.map(p => `<span class="perk-chip">${escapeHtml(p)}</span>`).join('')
+      : `<span class="perk-loading">no roll data</span>`;
+  });
+
   return el;
 }
+
 function resolveMatchup(winner, loser){
   markForCleanup(loser);
   currentChampion = winner;
@@ -700,6 +787,7 @@ async function stageAllOnCharacter(){
 }
 
 async function doStageAll(){
+  bulkTransferInProgress = true;
   showLoading("MOVING ITEMS…");
   for(const item of marked){
     if(item.characterId === cleanupCharacterId) continue; // already on the cleanup character
@@ -720,6 +808,7 @@ async function doStageAll(){
       });
     }catch(e){ console.warn("Stage failed for", item.name, e); }
   }
+  bulkTransferInProgress = false;
   hideLoading();
   alert(`Staged on ${characterClassById[cleanupCharacterId]}. Log in-game to dismantle them.`);
 }
@@ -767,11 +856,22 @@ function transferPrompt(item){
     const toVault = item.location !== "Vault";
     const characterId = toVault ? item.characterId : opt.dataset.cid;
     showLoading("MOVING ITEM…");
-    await apiPost("/Platform/Destiny2/Actions/Items/TransferItem/", {
+    const res = await apiPost("/Platform/Destiny2/Actions/Items/TransferItem/", {
       itemReferenceHash: item.itemHash, stackSize: item.quantity, transferToVault: toVault,
       itemId: item.itemInstanceId, characterId, membershipType: membership.membershipType
     });
-    await loadEverything();
+    hideLoading();
+    if(res?.ErrorCode === 1){
+      // Update just this item in place rather than re-fetching the whole profile —
+      // a single transfer doesn't need a full vault reload, and skipping it keeps
+      // the app responsive if you're moving several things back to back.
+      item.characterId = toVault ? null : characterId;
+      item.location = toVault ? "Vault" : (characterClassById[characterId] || "Guardian");
+      item.equipped = false;
+      renderBrowse();
+    } else {
+      alert("Transfer failed: " + (res?.Message || "unknown error"));
+    }
   }));
   $("#sheetCancel").addEventListener("click", closeSheet);
 }
@@ -810,7 +910,7 @@ function applyTheme(id){
 }
 function openThemeSheet(){
   const sheet = $("#sheet");
-  const current = localStorage.getItem("vault_theme") || "bubblegum";
+  const current = localStorage.getItem("vault_theme") || "midnight";
   sheet.innerHTML = "<h3>Choose a color theme</h3>" + THEMES.map(t => `
     <div class="opt theme-opt" data-theme-id="${t.id}">
       <div class="swatch" style="background:linear-gradient(135deg, ${t.dot1}, ${t.dot2})"></div>
@@ -825,7 +925,7 @@ function openThemeSheet(){
   $("#sheetCancel").addEventListener("click", closeSheet);
 }
 $("#themeBtn").addEventListener("click", openThemeSheet);
-applyTheme(localStorage.getItem("vault_theme") || "bubblegum");
+applyTheme(localStorage.getItem("vault_theme") || "midnight");
 
 $("#search").addEventListener("input", e => { searchQuery = e.target.value; renderBrowse(); });
 $("#sortChips").addEventListener("click", e => {
