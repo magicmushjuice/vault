@@ -39,6 +39,10 @@
     --bg1:#1b1230; --bg2:#241a3d; --card:#2a2045; --ink:#f1e9ff; --dim:#a897c9; --line:#3a2d5c;
     --purple:#a78bfa; --purple-dk:#c4b5fd; --pink:#f472b6;
   }
+  html[data-theme="blackout"]{
+    --bg1:#000000; --bg2:#050505; --card:#0d0d0d; --ink:#f5f5f5; --dim:#8a8a8a; --line:#1e1e1e;
+    --purple:#a78bfa; --purple-dk:#c9b8ff; --pink:#f472b6;
+  }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
   html,body{margin:0; height:100%; overflow-x:hidden;}
   body{
@@ -251,7 +255,7 @@
   <header>
     <div class="brand disp"><span>🫧</span> Vault Showdown</div>
     <div style="display:flex; gap:8px;">
-      <button class="icon" id="themeBtn">🎨</button>
+      <button class="icon" id="themeBtn">⚙️ Settings</button>
       <button class="icon" id="logoutBtn">LOG OUT</button>
     </div>
   </header>
@@ -285,6 +289,7 @@
       </p>
       <div id="markedActions" style="display:none;">
         <button class="btn primary" id="stageAllBtn">Stage all on a character</button>
+        <button class="btn ghost" id="exportDimCsvBtn">Export for DIM (CSV)</button>
       </div>
       <div id="markedList"></div>
       <div id="markedEmpty">Nothing marked yet — losers from Showdown will land here.</div>
@@ -329,6 +334,29 @@ const BASE = "https://www.bungie.net";
 const $ = (sel) => document.querySelector(sel);
 const TIER_COLORS = { "Common":"var(--common)","Uncommon":"var(--uncommon)","Rare":"var(--rare)","Legendary":"var(--legendary)","Exotic":"var(--exotic)" };
 const RPM_STAT_HASH = 4284893193; // "Rounds Per Minute" — well-known stable community-documented hash
+const statDefCache = JSON.parse(localStorage.getItem("vault_stat_def_cache") || "{}"); // DestinyStatDefinition lookups, by hash — static, safe to persist
+// Armor 3.0 archetypes (confirmed from Bungie's official Update 9.7.0 patch notes, June 2026).
+// Keyed by "Primary/Secondary" using the stat's real display NAME (resolved from the manifest,
+// not a hardcoded hash) so this can't silently mislabel gear if a hash assumption were wrong.
+const ARCHETYPES = {
+  "Super/Melee":"Paragon", "Grenade/Super":"Grenadier", "Class/Weapons":"Specialist",
+  "Melee/Health":"Brawler", "Health/Class":"Bulwark", "Weapons/Grenade":"Gunner",
+  "Health/Grenade":"Siegebreaker", "Melee/Weapons":"Skirmisher", "Grenade/Class":"Demolitionist",
+  "Super/Health":"Colossus", "Class/Melee":"Reaver", "Weapons/Super":"Powerhouse"
+};
+async function resolveStatDefinitions(hashes){
+  const todo = hashes.filter(h => !statDefCache[h]);
+  if(todo.length === 0) return;
+  await Promise.all(todo.map(async h => {
+    try{
+      const res = await apiGet(`/Platform/Destiny2/Manifest/DestinyStatDefinition/${h}/`, false);
+      if(res?.Response) statDefCache[h] = res.Response;
+    }catch(e){ /* a missing stat name just won't label that stat — cosmetic, not worth retrying */ }
+  }));
+  try{ localStorage.setItem("vault_stat_def_cache", JSON.stringify(statDefCache)); }
+  catch(e){ console.warn("Stat definition cache too big for localStorage, skipping save", e); }
+}
+function statName(hash){ return statDefCache[hash]?.displayProperties?.name || null; }
 const ELEMENT_NAMES = { 1:"Kinetic", 2:"Arc", 3:"Solar", 4:"Void", 6:"Stasis", 7:"Strand" };
 const perkDefCache = JSON.parse(localStorage.getItem("vault_perk_def_cache") || "{}"); // SandboxPerkDefinition lookups — static, safe to persist
 const itemPerksCache = new Map(); // itemInstanceId -> resolved perk list for THIS session (rolls are per-instance, not safe to persist long-term)
@@ -436,7 +464,7 @@ async function loadEverything(){
   membership = dm;
 
   showLoading("SYNCING VAULT…");
-  const profile = await apiGet(`/Platform/Destiny2/${dm.membershipType}/Profile/${dm.membershipId}/?components=200,201,205,102,300`);
+  const profile = await apiGet(`/Platform/Destiny2/${dm.membershipType}/Profile/${dm.membershipId}/?components=200,201,205,102,300,304`);
   const r = profile?.Response;
   if(!r){ hideLoading(); alert("Couldn't load profile."); return; }
 
@@ -445,6 +473,7 @@ async function loadEverything(){
   for(const id in characters) characterClassById[id] = classTypeName(characters[id].classType);
 
   const instanceStats = r.itemComponents?.instances?.data || {};
+  const itemStats = r.itemComponents?.stats?.data || {};
 
   const raw = [];
   (r.profileInventory?.data?.items || []).forEach(it => raw.push([it, null, "Vault", false]));
@@ -463,6 +492,19 @@ async function loadEverything(){
   showLoading(`RESOLVING ${uniqueHashes.length} ITEMS…`);
   await resolveDefinitions(uniqueHashes);
 
+  // Armor stat names come from a tiny, mostly-fixed set of stat hashes shared across
+  // the whole game (Weapons/Health/Class/Super/Grenade/Melee, or the older stat set on
+  // legacy gear) — resolving them is effectively a one-time cost, not per-item, so it's
+  // done for the whole vault up front rather than lazily.
+  const armorStatHashes = new Set();
+  raw.forEach(([it]) => {
+    const def = defCache[it.itemHash];
+    if(def?.itemType === 2 && it.itemInstanceId && itemStats[it.itemInstanceId]){
+      Object.keys(itemStats[it.itemInstanceId].stats || {}).forEach(h => armorStatHashes.add(Number(h)));
+    }
+  });
+  await resolveStatDefinitions([...armorStatHashes]);
+
   allItems = raw.map(([it, cid, label, equipped]) => {
     const def = defCache[it.itemHash];
     if(!def) return null;
@@ -480,6 +522,22 @@ async function loadEverything(){
     // we fetch anyway — free to surface, no extra network calls.
     const rpm = def.stats?.stats?.[RPM_STAT_HASH]?.value || null;
     const damageType = it.itemInstanceId ? (instanceStats[it.itemInstanceId]?.damageType || 0) : 0;
+
+    // Armor archetype — top 2 stats by value, named via the manifest lookup above,
+    // matched against the confirmed 12-archetype table. Falls back to just showing the
+    // raw stat names if it's an older piece using a stat set that predates archetypes.
+    let archetype = null, statBreakdown = null;
+    if(def.itemType === 2 && it.itemInstanceId && itemStats[it.itemInstanceId]){
+      const entries = Object.entries(itemStats[it.itemInstanceId].stats || {})
+        .map(([h, s]) => ({ name: statName(Number(h)), value: s.value }))
+        .filter(s => s.name)
+        .sort((a, b) => b.value - a.value);
+      if(entries.length >= 2){
+        const label = `${entries[0].name}/${entries[1].name}`;
+        archetype = ARCHETYPES[label] || `${entries[0].name} / ${entries[1].name}`;
+        statBreakdown = entries;
+      }
+    }
     return {
       itemHash: it.itemHash, itemInstanceId: it.itemInstanceId, quantity: it.quantity,
       name: def.displayProperties.name,
@@ -490,9 +548,11 @@ async function loadEverything(){
       transferStatus: it.transferStatus,
       locked: !!(state & 1), masterwork: !!(state & 4), crafted: !!(state & 8),
       characterId: cid, location: label, equipped, power,
-      rpm, element: ELEMENT_NAMES[damageType] || null
+      rpm, element: ELEMENT_NAMES[damageType] || null,
+      archetype, statBreakdown
     };
   }).filter(Boolean);
+
 
   hideLoading();
   buildShowdownQueue();
@@ -686,11 +746,20 @@ function vcardEl(item, onPick){
     item.crafted ? '🛠️ Crafted' : '',
     item.equipped ? '✅ Equipped' : ''
   ].filter(Boolean).join(' · ');
-  const statChips = [
-    item.power ? `<span class="stat-chip">${item.power} PWR</span>` : '',
-    item.rpm ? `<span class="stat-chip">${item.rpm} RPM</span>` : '',
-    item.element ? `<span class="stat-chip">${item.element}</span>` : ''
-  ].filter(Boolean).join('');
+  const isArmor = item.itemType === 2;
+
+  const statChips = isArmor
+    ? [
+        item.power ? `<span class="stat-chip">${item.power} PWR</span>` : '',
+        item.archetype ? `<span class="stat-chip">${item.archetype}</span>` : '',
+        ...(item.statBreakdown || []).slice(0, 2).map(s => `<span class="stat-chip">${s.name} ${s.value}</span>`)
+      ].filter(Boolean).join('')
+    : [
+        item.power ? `<span class="stat-chip">${item.power} PWR</span>` : '',
+        item.rpm ? `<span class="stat-chip">${item.rpm} RPM</span>` : '',
+        item.element ? `<span class="stat-chip">${item.element}</span>` : ''
+      ].filter(Boolean).join('');
+
   el.innerHTML = `
     <div class="top-row">
       <div class="icon">${iconImgHtml(item)}<div class="tier-dot" style="background:${color}"></div></div>
@@ -700,18 +769,22 @@ function vcardEl(item, onPick){
       </div>
     </div>
     ${statChips ? `<div class="stat-row">${statChips}</div>` : ''}
-    <div class="perk-row"><span class="perk-loading">loading roll…</span></div>
-    <a class="drop-link" href="https://www.light.gg/db/items/${item.itemHash}/" target="_blank" rel="noopener">Where this drops from, on light.gg →</a>
+    ${isArmor ? '' : '<div class="perk-row"><span class="perk-loading">loading roll…</span></div>'}
   `;
-  el.querySelector(".drop-link").addEventListener("click", e => e.stopPropagation());
   el.addEventListener("click", onPick);
 
-  const perkRow = el.querySelector(".perk-row");
-  fetchItemPerks(item).then(perks => {
-    perkRow.innerHTML = perks.length
-      ? perks.map(p => `<span class="perk-chip">${escapeHtml(p)}</span>`).join('')
-      : `<span class="perk-loading">no roll data</span>`;
-  });
+  // Perks are a weapon concept in this app — armor mods/set bonuses work differently
+  // and aren't reliably represented by this same endpoint, so skip the fetch for armor
+  // rather than show something potentially misleading.
+  if(!isArmor){
+    const perkRow = el.querySelector(".perk-row");
+    fetchItemPerks(item).then(perks => {
+      perkRow.innerHTML = perks.length
+        ? perks.map(p => `<span class="perk-chip">${escapeHtml(p)}</span>`).join('')
+        : `<span class="perk-loading">no roll data</span>`;
+    });
+  }
+
 
   return el;
 }
@@ -784,6 +857,23 @@ async function stageAllOnCharacter(){
     return;
   }
   await doStageAll();
+}
+
+// DIM's Settings page has an "Import tags/notes from CSV" tool that expects columns
+// exactly named Id, Hash, Tag, Notes (extra columns are ignored, and this OVERWRITES
+// existing tags/notes for any item listed — so only what's actually marked goes in here).
+// "junk" is DIM's own internal tag keyword for what it calls the Junk tag.
+function exportMarkedAsDimCsv(){
+  if(marked.length === 0) return;
+  const rows = [["Id","Hash","Tag","Notes"]];
+  marked.forEach(item => rows.push([item.itemInstanceId, item.itemHash, "junk", ""]));
+  const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(",")).join("\r\n");
+  const blob = new Blob([csv], { type: "text/csv" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = "vault-showdown-junk-tags.csv";
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
 
 async function doStageAll(){
@@ -892,17 +982,19 @@ document.querySelectorAll(".tab-btn").forEach(btn => {
 });
 $("#goToMarkedBtn").addEventListener("click", () => document.querySelector('[data-tab="marked"]').click());
 $("#stageAllBtn").addEventListener("click", stageAllOnCharacter);
+$("#exportDimCsvBtn").addEventListener("click", exportMarkedAsDimCsv);
 $("#sheet-backdrop").addEventListener("click", closeSheet);
 $("#logoutBtn").addEventListener("click", logout);
 $("#loginBtn").addEventListener("click", startLogin);
 
-// ---------- Theme switcher ----------
+// ---------- Settings (theme) ----------
 const THEMES = [
+  { id:"blackout",  label:"Blackout (true black)", dot1:"#a78bfa", dot2:"#000000" },
+  { id:"midnight",  label:"Midnight",  dot1:"#a78bfa", dot2:"#2a2045" },
   { id:"bubblegum", label:"Bubblegum", dot1:"#8b5cf6", dot2:"#f472b6" },
   { id:"ocean",     label:"Ocean",     dot1:"#0891b2", dot2:"#38bdf8" },
   { id:"sunset",    label:"Sunset",    dot1:"#f97316", dot2:"#fb7185" },
-  { id:"mint",      label:"Mint",      dot1:"#10b981", dot2:"#2dd4bf" },
-  { id:"midnight",  label:"Midnight",  dot1:"#a78bfa", dot2:"#2a2045" }
+  { id:"mint",      label:"Mint",      dot1:"#10b981", dot2:"#2dd4bf" }
 ];
 function applyTheme(id){
   document.documentElement.setAttribute("data-theme", id === "bubblegum" ? "" : id);
@@ -910,8 +1002,8 @@ function applyTheme(id){
 }
 function openThemeSheet(){
   const sheet = $("#sheet");
-  const current = localStorage.getItem("vault_theme") || "midnight";
-  sheet.innerHTML = "<h3>Choose a color theme</h3>" + THEMES.map(t => `
+  const current = localStorage.getItem("vault_theme") || "blackout";
+  sheet.innerHTML = "<h3>Settings</h3><div style=\"font-size:11px;color:var(--dim);font-weight:800;margin-bottom:8px;\">APPEARANCE</div>" + THEMES.map(t => `
     <div class="opt theme-opt" data-theme-id="${t.id}">
       <div class="swatch" style="background:linear-gradient(135deg, ${t.dot1}, ${t.dot2})"></div>
       <span style="flex:1;">${t.label}</span>
@@ -925,7 +1017,17 @@ function openThemeSheet(){
   $("#sheetCancel").addEventListener("click", closeSheet);
 }
 $("#themeBtn").addEventListener("click", openThemeSheet);
-applyTheme(localStorage.getItem("vault_theme") || "midnight");
+
+// One-time forced reset: earlier versions of this app defaulted to the bright "Bubblegum"
+// theme and saved that choice to localStorage the moment the app first loaded — meaning
+// everyone who'd already opened the app has "bubblegum" saved even though they never
+// deliberately chose it. This runs once, overrides that leftover value to the new true-black
+// default, and never touches it again after — so an actual deliberate choice always sticks.
+if(!localStorage.getItem("vault_dark_default_migration_done")){
+  localStorage.setItem("vault_theme", "blackout");
+  localStorage.setItem("vault_dark_default_migration_done", "1");
+}
+applyTheme(localStorage.getItem("vault_theme") || "blackout");
 
 $("#search").addEventListener("input", e => { searchQuery = e.target.value; renderBrowse(); });
 $("#sortChips").addEventListener("click", e => {
