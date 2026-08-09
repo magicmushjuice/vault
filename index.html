@@ -411,7 +411,6 @@ async function loadEverything(){
       locked: !!(state & 1), masterwork: !!(state & 4), crafted: !!(state & 8),
       characterId: cid, location: label, equipped, power
     };
-    };
   }).filter(Boolean);
 
   hideLoading();
