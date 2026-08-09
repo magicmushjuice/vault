@@ -318,9 +318,15 @@ function logout(){
 // ---------- Data loading ----------
 async function loadEverything(){
   showLoading("SYNCING VAULT…");
-  const memberships = await apiGet("/Platform/User/GetMembershipsForCurrentUser/");
-  const dm = memberships?.Response?.destinyMemberships?.[0];
-  if(!dm){ alert("No Destiny membership found on this account."); hideLoading(); return; }
+const memberships = await apiGet("/Platform/User/GetMembershipsForCurrentUser/");
+  const list = memberships?.Response?.destinyMemberships || [];
+  const primaryId = memberships?.Response?.primaryMembershipId;
+  const dm = (primaryId && list.find(m => m.membershipId === primaryId)) || list[0];
+  if(!dm){
+    hideLoading();
+    alert("Debug info:\n" + JSON.stringify(memberships).slice(0, 600));
+    return;
+  }
   membership = dm;
 
   const profile = await apiGet(`/Platform/Destiny2/${dm.membershipType}/Profile/${dm.membershipId}/?components=200,201,205,102`);
