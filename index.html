@@ -213,6 +213,19 @@
   #markedActions .btn{flex:1; font-size:13px; padding:12px;}
   #markedEmpty{text-align:center; padding:50px 20px; color:var(--dim); font-weight:700;}
 
+  /* ---------- Vault/Postmaster capacity dashboard ---------- */
+  #capacityDash{display:flex; flex-direction:column; gap:8px; margin:10px 0 4px 0;}
+  .cap-row{
+    background:var(--card); border-radius:16px; padding:10px 12px; box-shadow:0 3px 10px rgba(80,40,140,0.05);
+  }
+  .cap-row .cap-top{display:flex; justify-content:space-between; align-items:baseline; font-size:12px; font-weight:800; color:var(--dim); margin-bottom:5px;}
+  .cap-row .cap-top .cap-count{color:var(--ink); font-family:'Baloo 2',sans-serif; font-size:13px;}
+  .cap-row .cap-track{height:7px; background:var(--line); border-radius:99px; overflow:hidden;}
+  .cap-row .cap-fill{height:100%; border-radius:99px; background:linear-gradient(90deg, var(--purple), var(--pink)); transition:width .3s;}
+  .cap-row.warn .cap-fill{background:var(--gold);}
+  .cap-row.danger .cap-fill{background:linear-gradient(90deg, var(--red-dk), var(--red));}
+  .cap-row.danger .cap-top{color:var(--red-dk);}
+
   /* ---------- Browse tab ---------- */
   #search{
     width:100%; background:var(--card); border:2px solid var(--line); color:var(--ink);
@@ -240,6 +253,16 @@
     padding:8px 10px; border-radius:999px;
   }
   .browse-item .xfer:disabled{opacity:0.3;}
+  .browse-item .note{font-size:10.5px; color:var(--dim); font-style:italic; margin-top:2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .fav-star{
+    background:none; border:none; font-size:19px; padding:2px 6px; flex:0 0 auto; line-height:1;
+    filter:grayscale(1); opacity:0.35;
+  }
+  .fav-star.active{filter:none; opacity:1;}
+  #noteField{
+    width:100%; border:2px solid var(--line); border-radius:14px; padding:10px 12px; font-family:'Nunito',sans-serif;
+    font-size:13px; font-weight:600; color:var(--ink); resize:vertical; min-height:44px; margin-top:4px; background:var(--card);
+  }
 
   /* ---------- Loading ---------- */
   #loading{
@@ -339,15 +362,17 @@
     <!-- ===== Browse tab ===== -->
     <div class="tabpanel active" id="tab-browse">
       <div style="display:flex; gap:8px; align-items:center; margin-top:4px;">
-        <input type="text" id="search" placeholder="Search your items…" autocomplete="off" style="flex:1;">
+        <input type="text" id="search" placeholder="Search… try is:masterwork, tier:exotic" autocomplete="off" style="flex:1;">
         <button class="bracket-nav" id="sweepModeBtn" style="white-space:nowrap;">⚔️ Sweep</button>
       </div>
       <div class="chiprow" id="sortChips">
         <div class="chip active" data-sort="name">Name</div>
         <div class="chip" data-sort="tier">Rarity</div>
         <div class="chip" data-sort="type">Type</div>
+        <div class="chip" id="favFilterChip">⭐ Favorites</div>
         <div class="chip" id="locFilterChip">Location ▾</div>
       </div>
+      <div id="capacityDash"></div>
       <div id="browseList"></div>
     </div>
   </main>
@@ -376,6 +401,14 @@ const REDIRECT_URI = window.location.origin + window.location.pathname;
 const BASE = "https://www.bungie.net";
 const $ = (sel) => document.querySelector(sel);
 const TIER_COLORS = { "Common":"var(--common)","Uncommon":"var(--uncommon)","Rare":"var(--rare)","Legendary":"var(--legendary)","Exotic":"var(--exotic)" };
+// Current known caps (per Bungie's Renegades-era vault/postmaster rework) — these are the two
+// numbers the community actually loses gear over ("why is my postmaster eating my drops",
+// "why can't I pick this up, vault's full") without any in-game warning until it's too late.
+// Kept as named constants (not buried in the render code) so they're a one-line fix if Bungie
+// changes them again.
+const VAULT_CAPACITY = 1300;
+const POSTMASTER_CAPACITY = 63;
+const POSTMASTER_BUCKET_HASH = 215593132;
 const RPM_STAT_HASH = 4284893193; // "Rounds Per Minute" — well-known stable community-documented hash
 const statDefCache = JSON.parse(localStorage.getItem("vault_stat_def_cache") || "{}"); // DestinyStatDefinition lookups, by hash — static, safe to persist
 // Armor 3.0 archetypes (confirmed from Bungie's official Update 9.7.0 patch notes, June 2026).
@@ -427,6 +460,27 @@ let defCache = JSON.parse(localStorage.getItem("vault_def_cache") || "{}");
 let cleanupCharacterId = localStorage.getItem("vault_cleanup_char") || null;
 
 let marked = JSON.parse(localStorage.getItem("vault_marked") || "[]");
+// Favorites are a deliberate, permanent "never suggest this for cleanup" flag — distinct from
+// in-game Lock, which a lot of players reserve for temporary use (current loadout, etc.) and
+// reflag every session. This is the "no really, don't ever put this in a Showdown" list.
+let favorites = JSON.parse(localStorage.getItem("vault_favorites") || "[]");
+// Free-text notes per item instance, the same "why did I keep/mark this" memory aid DIM offers —
+// persisted independently of the marked list so a note survives even after an item is unmarked.
+let itemNotes = JSON.parse(localStorage.getItem("vault_notes") || "{}");
+function isFavorite(itemInstanceId){ return !!itemInstanceId && favorites.includes(itemInstanceId); }
+function toggleFavorite(itemInstanceId){
+  if(!itemInstanceId) return;
+  const idx = favorites.indexOf(itemInstanceId);
+  if(idx === -1) favorites.push(itemInstanceId); else favorites.splice(idx, 1);
+  localStorage.setItem("vault_favorites", JSON.stringify(favorites));
+}
+function getNote(itemInstanceId){ return itemInstanceId ? (itemNotes[itemInstanceId] || "") : ""; }
+function setNote(itemInstanceId, text){
+  if(!itemInstanceId) return;
+  if(text && text.trim()) itemNotes[itemInstanceId] = text.trim();
+  else delete itemNotes[itemInstanceId];
+  localStorage.setItem("vault_notes", JSON.stringify(itemNotes));
+}
 
 // ---------- Showdown state ----------
 // "picker" = choosing a class/slot (or Weapons) to compare; "bracket" = actively running matchups
@@ -461,7 +515,7 @@ let diagIconMissingInDef = [];
 let diagIconLoadFailed = [];
 
 // Browse state
-let searchQuery = "", sortMode = "name", locationFilter = null;
+let searchQuery = "", sortMode = "name", locationFilter = null, favoritesOnly = false;
 
 // ---------- PKCE ----------
 function b64url(bytes){ return btoa(String.fromCharCode(...bytes)).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,''); }
@@ -552,8 +606,15 @@ async function loadEverything(){
   (r.profileInventory?.data?.items || []).forEach(it => raw.push([it, null, "Vault", false]));
   const invByChar = r.characterInventories?.data || {};
   for(const cid in invByChar){
+    // Postmaster items live inside this same characterInventories component, mixed in with
+    // regular inventory — Bungie tells them apart only by bucketHash, so a per-character
+    // "label" isn't right for them: they need their own location so the capacity dashboard
+    // (and Browse's location filter) can single them out before they get auto-deleted.
     const label = characterClassById[cid] || "Guardian";
-    invByChar[cid].items.forEach(it => raw.push([it, cid, label, false]));
+    invByChar[cid].items.forEach(it => {
+      const loc = it.bucketHash === POSTMASTER_BUCKET_HASH ? `Postmaster (${label})` : label;
+      raw.push([it, cid, loc, false]);
+    });
   }
   const eqByChar = r.characterEquipment?.data || {};
   for(const cid in eqByChar){
@@ -625,7 +686,10 @@ async function loadEverything(){
       locked: !!(state & 1), masterwork: !!(state & 4), crafted: !!(state & 8),
       characterId: cid, location: label, equipped, power,
       rpm, element: ELEMENT_NAMES[damageType] || null,
-      archetype, statBreakdown
+      archetype, statBreakdown,
+      isPostmaster: typeof label === "string" && label.startsWith("Postmaster"),
+      favorite: isFavorite(it.itemInstanceId),
+      note: getNote(it.itemInstanceId)
     };
   }).filter(Boolean);
 
@@ -770,6 +834,7 @@ function buildWeaponDuplicateGroups(){
   allItems.forEach(it => {
     if(!it.itemInstanceId || it.itemType !== 3) return;
     if(it.locked) return; // you've already told the game "keep this" by locking it
+    if(it.favorite) return; // permanently protected — never put a favorite up for a showdown
     if(marked.some(m => m.itemInstanceId === it.itemInstanceId)) return; // already dealt with
     (groups[it.itemHash] = groups[it.itemHash] || []).push(it);
   });
@@ -780,7 +845,7 @@ function buildWeaponDuplicateGroups(){
 // the point here is "which Helmet do I actually keep using", not just literal copies.
 function armorForSlot(classType, slotName){
   const pool = allItems.filter(it =>
-    it.itemInstanceId && it.itemType === 2 && !it.locked &&
+    it.itemInstanceId && it.itemType === 2 && !it.locked && !it.favorite &&
     !marked.some(m => m.itemInstanceId === it.itemInstanceId) &&
     fitsClass(it, classType) && armorSlotName(it) === slotName
   ).sort((a,b) => b.power - a.power || (b.masterwork - a.masterwork) || (b.crafted - a.crafted));
@@ -815,7 +880,7 @@ function renderShowdownPicker(){
   } else if(selectedClass === 0 || selectedClass === 1 || selectedClass === 2){
     ARMOR_SLOTS.forEach(slot => {
       const candidates = allItems.filter(it =>
-        it.itemInstanceId && it.itemType === 2 && !it.locked &&
+        it.itemInstanceId && it.itemType === 2 && !it.locked && !it.favorite &&
         !marked.some(m => m.itemInstanceId === it.itemInstanceId) &&
         fitsClass(it, selectedClass) && armorSlotName(it) === slot
       );
@@ -1046,9 +1111,10 @@ function renderMarked(){
   marked.forEach((item, idx) => {
     const el = document.createElement("div");
     el.className = "marked-item";
+    const note = getNote(item.itemInstanceId);
     el.innerHTML = `
       <div class="icon">${iconImgHtml(item)}</div>
-      <div class="info"><div class="name">${escapeHtml(item.name)}</div><div class="meta">${item.location} · ${item.power||'—'} power</div></div>
+      <div class="info"><div class="name">${escapeHtml(item.name)}</div><div class="meta">${item.location} · ${item.power||'—'} power</div>${note ? `<div class="note">📝 ${escapeHtml(note)}</div>` : ''}</div>
       <button data-idx="${idx}">✕</button>`;
     el.querySelector("button").addEventListener("click", () => {
       marked.splice(idx, 1);
@@ -1139,12 +1205,71 @@ async function doStageAll(){
   alert(`Staged on ${characterClassById[cleanupCharacterId]}. Log in-game to dismantle them.`);
 }
 
+// ---------- Vault / Postmaster capacity dashboard ----------
+// Renders against the FULL profile inventory (not just weapons/armor, since materials, mods and
+// consumables count against the vault's general slots too) so the numbers match what the in-game
+// vault screen actually shows, not just what Showdown cares about.
+function renderCapacityDash(){
+  const el = $("#capacityDash");
+  if(!el) return;
+  const vaultCount = allItems.filter(i => i.location === "Vault").length;
+  const rows = [capRowHtml(`Vault`, vaultCount, VAULT_CAPACITY)];
+  const postmasterCounts = {};
+  allItems.forEach(i => { if(i.isPostmaster) postmasterCounts[i.characterId] = (postmasterCounts[i.characterId]||0) + 1; });
+  Object.keys(characterClassById).forEach(cid => {
+    const count = postmasterCounts[cid] || 0;
+    if(count === 0) return; // don't clutter the dashboard with empty postmasters
+    rows.push(capRowHtml(`${characterClassById[cid]}'s Postmaster`, count, POSTMASTER_CAPACITY,
+      "Items here get auto-deleted once it fills up — pull them in-game."));
+  });
+  el.innerHTML = rows.join("");
+}
+function capRowHtml(label, count, cap, dangerNote){
+  const pct = Math.min(100, Math.round((count/cap)*100));
+  const state = pct >= 95 ? "danger" : pct >= 80 ? "warn" : "";
+  return `<div class="cap-row ${state}">
+    <div class="cap-top"><span>${label}${state==="danger" && dangerNote ? " — " + dangerNote : ""}</span><span class="cap-count">${count} / ${cap}</span></div>
+    <div class="cap-track"><div class="cap-fill" style="width:${pct}%"></div></div>
+  </div>`;
+}
+
 // ---------- Browse tab (search / sort / manual transfer) ----------
+// Supports simple DIM-style query operators alongside plain name text:
+//   is:locked / is:masterwork / is:crafted / is:exotic / is:favorite / is:equipped
+//   tier:<rare|legendary|...>   type:<hand cannon|helmet|...> (substring match)
+// Unrecognized "word:value" tokens are left alone and matched as plain text instead, so this
+// degrades gracefully rather than breaking a search that happens to contain a colon.
+function parseSearchQuery(q){
+  const tokens = q.trim().split(/\s+/).filter(Boolean);
+  const filters = []; const nameWords = [];
+  tokens.forEach(tok => {
+    const m = tok.match(/^(is|tier|type):(.+)$/i);
+    if(!m){ nameWords.push(tok); return; }
+    const [, key, valRaw] = m; const val = valRaw.toLowerCase();
+    const key_ = key.toLowerCase();
+    if(key_ === "is"){
+      const preds = {
+        locked: i=>i.locked, masterwork: i=>i.masterwork, crafted: i=>i.crafted,
+        exotic: i=>i.tier==="Exotic", favorite: i=>i.favorite, equipped: i=>i.equipped
+      };
+      if(preds[val]) filters.push(preds[val]); else nameWords.push(tok);
+    } else if(key_ === "tier"){
+      filters.push(i => (i.tier||"").toLowerCase() === val);
+    } else if(key_ === "type"){
+      filters.push(i => (i.type||"").toLowerCase().includes(val));
+    }
+  });
+  return { filters, name: nameWords.join(" ").toLowerCase() };
+}
 function renderBrowse(){
+  renderCapacityDash();
   // Only weapons and armor — quest steps, bounties, consumables etc. aren't vault-cleanup
   // material and were just adding noise to a screen about deciding what gear to keep.
   let list = allItems.filter(i => i.itemType === 2 || i.itemType === 3);
-  if(searchQuery.trim()){ const q=searchQuery.toLowerCase(); list = list.filter(i=>i.name.toLowerCase().includes(q)); }
+  const { filters, name } = parseSearchQuery(searchQuery);
+  filters.forEach(f => { list = list.filter(f); });
+  if(name){ list = list.filter(i=>i.name.toLowerCase().includes(name)); }
+  if(favoritesOnly) list = list.filter(i => i.favorite);
   if(locationFilter) list = list.filter(i => i.location === locationFilter);
 
   // Group exact duplicates into one row instead of one per copy — a stack of 6 identical
@@ -1186,9 +1311,17 @@ function renderBrowse(){
       const transferrable = (item.transferStatus & 0x1) === 0 && item.itemInstanceId;
       el.innerHTML = `
         <div class="icon">${iconImgHtml(item)}<div class="tier-dot" style="background:${color}"></div></div>
-        <div class="info"><div class="name">${escapeHtml(item.name)}</div><div class="sub">${item.location}${item.quantity>1?' · x'+item.quantity:''}</div></div>
+        <div class="info"><div class="name">${escapeHtml(item.name)}</div><div class="sub">${item.location}${item.quantity>1?' · x'+item.quantity:''}</div>${item.note ? `<div class="note">📝 ${escapeHtml(item.note)}</div>` : ''}</div>
+        ${item.itemInstanceId ? `<button class="fav-star ${item.favorite?'active':''}">★</button>` : ''}
         <button class="xfer" ${transferrable?'':'disabled'}>${item.location==='Vault'?'TO CHAR':'TO VAULT'}</button>`;
       el.querySelector(".xfer").addEventListener("click", (e) => { e.stopPropagation(); transferPrompt(item); });
+      const starBtn = el.querySelector(".fav-star");
+      if(starBtn) starBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        toggleFavorite(item.itemInstanceId);
+        item.favorite = isFavorite(item.itemInstanceId);
+        starBtn.classList.toggle("active", item.favorite);
+      });
       el.addEventListener("click", () => openItemDetail(item));
     }
     container.appendChild(el);
@@ -1211,7 +1344,7 @@ async function setLockState(item, locked){
 // For armor it's the same slot+class grouping Showdown's picker already uses.
 function findSimilarPool(item){
   if(!item.itemInstanceId) return [];
-  const eligible = it => it.itemInstanceId && !it.locked && it.itemInstanceId !== item.itemInstanceId &&
+  const eligible = it => it.itemInstanceId && !it.locked && !it.favorite && it.itemInstanceId !== item.itemInstanceId &&
     !marked.some(m => m.itemInstanceId === it.itemInstanceId);
   if(item.itemType === 3){
     return allItems.filter(it => eligible(it) && it.itemType === 3 && it.type === item.type);
@@ -1242,11 +1375,26 @@ function openItemDetail(item){
         ${item.masterwork?'⭐ Masterwork &nbsp;':''}${item.crafted?'🛠️ Crafted &nbsp;':''}${item.equipped?'✅ Equipped &nbsp;':''}${item.locked?'🔒 Locked':''}
       </div>
     </div>
+    ${item.itemInstanceId ? `<textarea id="noteField" placeholder="Add a note (why you're keeping/marking this)…">${escapeHtml(item.note||'')}</textarea>` : ''}
     <div class="opt" id="detailCompareBtn">⚔️ Compare against similar<span>›</span></div>
+    ${item.itemInstanceId ? `<div class="opt" id="detailFavBtn">${item.favorite ? '★ Unfavorite (allow in Showdown)' : '☆ Favorite (never suggest for cleanup)'}<span>›</span></div>` : ''}
     ${item.itemInstanceId ? `<div class="opt" id="detailLockBtn">${item.locked ? '🔓 Unlock item' : '🔒 Lock item'}<span>›</span></div>` : ''}
     ${item.itemInstanceId ? `<div class="opt" id="detailTransferBtn">${item.location==='Vault'?'Move to a character':'Move to Vault'}<span>›</span></div>` : ''}
     <div class="cancel" id="sheetCancel">Close</div>`;
   openSheet();
+  const noteField = $("#noteField");
+  if(noteField) noteField.addEventListener("blur", () => {
+    setNote(item.itemInstanceId, noteField.value);
+    item.note = getNote(item.itemInstanceId);
+    renderBrowse(); renderMarked();
+  });
+  const favBtn = $("#detailFavBtn");
+  if(favBtn) favBtn.addEventListener("click", () => {
+    toggleFavorite(item.itemInstanceId);
+    item.favorite = isFavorite(item.itemInstanceId);
+    closeSheet();
+    renderBrowse();
+  });
 
   $("#detailCompareBtn").addEventListener("click", () => {
     const others = findSimilarPool(item);
@@ -1383,6 +1531,12 @@ $("#sortChips").addEventListener("click", e => {
   const chip = e.target.closest(".chip");
   if(!chip) return;
   if(chip.id === "locFilterChip"){ openLocationSheet(); return; }
+  if(chip.id === "favFilterChip"){
+    favoritesOnly = !favoritesOnly;
+    chip.classList.toggle("active", favoritesOnly);
+    renderBrowse();
+    return;
+  }
   document.querySelectorAll("#sortChips .chip[data-sort]").forEach(c=>c.classList.remove("active"));
   chip.classList.add("active"); sortMode = chip.dataset.sort; renderBrowse();
 });
