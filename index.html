@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Vault Showdown</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@700;800&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 <style>
   :root{
     --bg1:#efe7ff; --bg2:#ffe9dc;
@@ -20,7 +20,7 @@
     --red:#fb7185; --red-dk:#e34d64;
     --gold:#f5b942;
 
-    --common:#9ca3af; --uncommon:#4ade80; --rare:#60a5fa; --legendary:#c084fc; --exotic:#f5b942;
+    --common:#9ca3af; --uncommon:#3ddc84; --rare:#4f9dff; --legendary:#b45cff; --exotic:#ffcc33;
   }
   /* ---------- Theme palettes — swap the "brand" colors, keep tier/status colors constant ---------- */
   html[data-theme="ocean"]{
@@ -39,20 +39,24 @@
     --bg1:#1b1230; --bg2:#241a3d; --card:#2a2045; --ink:#f1e9ff; --dim:#a897c9; --line:#3a2d5c;
     --purple:#a78bfa; --purple-dk:#c4b5fd; --pink:#f472b6;
   }
+  /* Default theme. Dark, modern base — bubbly comes through in shape (rounded cards, pill
+     buttons) rather than pastel color, and each card's glow is colored by its own item tier
+     (gold for Exotic, violet for Legendary...) the same way the game itself signals rarity. */
   html[data-theme="blackout"]{
-    --bg1:#000000; --bg2:#050505; --card:#0d0d0d; --ink:#f5f5f5; --dim:#8a8a8a; --line:#1e1e1e;
-    --purple:#a78bfa; --purple-dk:#c9b8ff; --pink:#f472b6;
+    --bg1:#0a0a12; --bg2:#0d0c16; --card:#14141f; --ink:#f2f0f7; --dim:#8f8aa3; --line:#242233;
+    --purple:#7c5cff; --purple-dk:#9c85ff; --pink:#ff5ea8;
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
   html,body{margin:0; height:100%; overflow-x:hidden;}
   body{
-    font-family:'Nunito',sans-serif; color:var(--ink);
+    font-family:'Manrope',sans-serif; color:var(--ink);
     background:linear-gradient(160deg, var(--bg1), var(--bg2));
     min-height:100dvh; padding-bottom:env(safe-area-inset-bottom);
   }
   .disp{font-family:'Baloo 2',sans-serif;}
+  .mono{font-family:'JetBrains Mono',monospace;}
   h1,h2,h3{font-family:'Baloo 2',sans-serif; margin:0;}
-  button{font-family:'Nunito',sans-serif;}
+  button{font-family:'Manrope',sans-serif;}
 
   /* ---------- Login ---------- */
   #login{
@@ -92,7 +96,7 @@
   nav.tabs{
     position:fixed; left:0; right:0; bottom:0; background:var(--card);
     display:flex; padding:8px 10px calc(8px + env(safe-area-inset-bottom)) 10px;
-    box-shadow:0 -4px 16px rgba(80,40,140,0.08); z-index:30;
+    box-shadow:0 -4px 16px rgba(0,0,0,0.35); z-index:30;
   }
   nav.tabs button{
     flex:1; background:none; border:none; padding:8px 4px; border-radius:16px;
@@ -126,27 +130,28 @@
   .matchup{display:flex; flex-direction:column; gap:14px; align-items:center;}
   .vcard{
     width:100%; max-width:360px; background:var(--card); border-radius:26px; padding:18px;
-    box-shadow:0 10px 24px rgba(80,40,140,0.10); border:3px solid transparent; cursor:pointer;
+    box-shadow:0 10px 28px rgba(0,0,0,0.35); border:2px solid var(--line); cursor:pointer;
     display:flex; gap:14px; align-items:center; transition:transform .15s, border-color .15s;
   }
   .vcard:active{transform:scale(0.97);}
-  .vcard.winner{border-color:var(--green); background:#f0fffa;}
+  .vcard.winner{border-color:var(--green); background:color-mix(in srgb, var(--green) 12%, var(--card));}
   .vcard.loser{opacity:0.35; filter:grayscale(0.4);}
   .vcard .icon{width:64px; height:64px; border-radius:16px; flex:0 0 auto; background:var(--line); overflow:hidden; position:relative;}
   .vcard .icon img{width:100%; height:100%; object-fit:cover;}
-  .vcard .icon .tier-dot{position:absolute; top:4px; right:4px; width:10px; height:10px; border-radius:50%; border:2px solid #fff;}
+  .vcard .icon .tier-dot{position:absolute; top:4px; right:4px; width:10px; height:10px; border-radius:50%; border:2px solid var(--card);}
   .vcard .info{flex:1; min-width:0;}
   .vcard .name{font-family:'Baloo 2',sans-serif; font-size:15px; font-weight:700; line-height:1.2;}
   .vcard .meta{font-size:12px; color:var(--dim); font-weight:700; margin-top:3px;}
   .vcard .power{
-    font-family:'Baloo 2',sans-serif; font-size:22px; font-weight:800; color:var(--purple-dk); margin-top:2px;
+    font-family:'JetBrains Mono',monospace; font-size:22px; font-weight:700; color:var(--purple-dk); margin-top:2px;
   }
-  .vcard .power .lbl{font-size:10px; color:var(--dim); font-weight:700; margin-left:3px;}
+  .vcard .power .lbl{font-family:'Manrope',sans-serif; font-size:10px; color:var(--dim); font-weight:700; margin-left:3px;}
   .vcard{flex-direction:column; align-items:stretch; gap:10px;}
   .vcard .top-row{display:flex; gap:14px; align-items:center;}
   .vcard .stat-row{display:flex; gap:6px; flex-wrap:wrap;}
   .stat-chip{
-    background:var(--line); color:var(--ink); font-size:11px; font-weight:800; padding:4px 9px;
+    font-family:'JetBrains Mono',monospace;
+    background:var(--line); color:var(--ink); font-size:11px; font-weight:700; padding:4px 9px;
     border-radius:999px; white-space:nowrap;
   }
   .vcard .perk-row{display:flex; gap:6px; flex-wrap:wrap; min-height:22px;}
@@ -160,7 +165,7 @@
   .stat-bar-row .stat-label{width:64px; flex:0 0 auto; color:var(--dim); font-weight:800; text-align:right;}
   .stat-bar-row .stat-track{flex:1; height:6px; background:var(--line); border-radius:99px; overflow:hidden;}
   .stat-bar-row .stat-fill{height:100%; background:linear-gradient(90deg, var(--purple), var(--pink)); border-radius:99px;}
-  .stat-bar-row .stat-value{width:24px; flex:0 0 auto; font-weight:800; color:var(--ink);}
+  .stat-bar-row .stat-value{width:26px; flex:0 0 auto; font-family:'JetBrains Mono',monospace; font-weight:700; color:var(--ink);}
   .perk-chip{display:inline-flex; align-items:center; gap:4px;}
   .perk-chip img{width:14px; height:14px; border-radius:3px;}
   .vcard .drop-link{font-size:11px; font-weight:800; color:var(--dim); text-decoration:none;}
@@ -180,7 +185,7 @@
   #showdown-picker .class-chip.active{border-color:var(--purple); color:var(--purple-dk); background:#f3edff;}
   .slot-row{
     display:flex; align-items:center; gap:14px; background:var(--card); border-radius:20px; padding:14px;
-    margin-bottom:10px; box-shadow:0 4px 12px rgba(80,40,140,0.06);
+    margin-bottom:10px; box-shadow:0 4px 14px rgba(0,0,0,0.28);
   }
   .slot-row.disabled{opacity:0.45;}
   .slot-row .slot-icon{width:48px; height:48px; border-radius:14px; background:var(--line); flex:0 0 auto; overflow:hidden;}
@@ -199,7 +204,7 @@
   /* ---------- Marked tab ---------- */
   .marked-item{
     display:flex; align-items:center; gap:12px; background:var(--card); border-radius:20px; padding:12px;
-    margin-bottom:10px; box-shadow:0 4px 12px rgba(80,40,140,0.06);
+    margin-bottom:10px; box-shadow:0 4px 14px rgba(0,0,0,0.28);
   }
   .marked-item .icon{width:44px; height:44px; border-radius:12px; background:var(--line); overflow:hidden; flex:0 0 auto;}
   .marked-item .icon img{width:100%; height:100%; object-fit:cover;}
@@ -216,7 +221,7 @@
   /* ---------- Vault/Postmaster capacity dashboard ---------- */
   #capacityDash{display:flex; flex-direction:column; gap:8px; margin:10px 0 4px 0;}
   .cap-row{
-    background:var(--card); border-radius:16px; padding:10px 12px; box-shadow:0 3px 10px rgba(80,40,140,0.05);
+    background:var(--card); border-radius:16px; padding:10px 12px; box-shadow:0 3px 10px rgba(0,0,0,0.22);
   }
   .cap-row .cap-top{display:flex; justify-content:space-between; align-items:baseline; font-size:12px; font-weight:800; color:var(--dim); margin-bottom:5px;}
   .cap-row .cap-top .cap-count{color:var(--ink); font-family:'Baloo 2',sans-serif; font-size:13px;}
@@ -231,7 +236,7 @@
     width:100%; background:var(--card); border:2px solid var(--line); color:var(--ink);
     padding:12px 16px; border-radius:999px; font-size:15px; font-weight:700; margin-top:6px;
   }
-  #search::placeholder{color:#c3b8de;}
+  #search::placeholder{color:var(--dim); opacity:0.8;}
   .chiprow{display:flex; gap:8px; margin:10px 0; overflow-x:auto; padding-bottom:2px;}
   .chip{
     flex:0 0 auto; background:var(--card); border:2px solid var(--line); color:var(--dim);
@@ -240,11 +245,11 @@
   .chip.active{border-color:var(--purple); color:var(--purple-dk); background:#f3edff;}
   .browse-item{
     display:flex; align-items:center; gap:12px; background:var(--card); border-radius:18px; padding:10px 12px;
-    margin-bottom:8px; box-shadow:0 3px 10px rgba(80,40,140,0.05);
+    margin-bottom:8px; box-shadow:0 3px 10px rgba(0,0,0,0.22);
   }
   .browse-item .icon{width:44px; height:44px; border-radius:12px; background:var(--line); flex:0 0 auto; overflow:hidden; position:relative;}
   .browse-item .icon img{width:100%; height:100%; object-fit:cover;}
-  .browse-item .icon .tier-dot{position:absolute; bottom:2px; right:2px; width:9px; height:9px; border-radius:50%; border:2px solid #fff;}
+  .browse-item .icon .tier-dot{position:absolute; bottom:2px; right:2px; width:9px; height:9px; border-radius:50%; border:2px solid var(--card);}
   .browse-item .info{flex:1; min-width:0;}
   .browse-item .name{font-weight:800; font-size:13.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
   .browse-item .sub{font-size:11px; color:var(--dim); font-weight:700; margin-top:1px;}
@@ -287,7 +292,7 @@
     padding:14px; border:2px solid var(--line); border-radius:16px; margin-bottom:8px; font-weight:800;
     display:flex; justify-content:space-between; align-items:center;
   }
-  #sheet .opt:active{background:#f3edff;}
+  #sheet .opt:active{background:var(--line);}
   #sheet .cancel{color:var(--dim); text-align:center; padding:12px; font-weight:800;}
   .theme-opt{display:flex; align-items:center; gap:12px;}
   .theme-opt .swatch{width:32px; height:32px; border-radius:50%; flex:0 0 auto; box-shadow:inset 0 0 0 2px rgba(0,0,0,0.08);}
@@ -1023,7 +1028,7 @@ function vcardEl(item, onPick){
 
   el.innerHTML = `
     <div class="top-row">
-      <div class="icon">${iconImgHtml(item)}<div class="tier-dot" style="background:${color}"></div></div>
+      <div class="icon" style="box-shadow:0 0 16px 1px ${color}66;">${iconImgHtml(item)}<div class="tier-dot" style="background:${color}"></div></div>
       <div class="info">
         <div class="name">${escapeHtml(item.name)}</div>
         <div class="meta">${item.location}${badges ? ' · ' + badges : ''}</div>
@@ -1296,7 +1301,7 @@ function renderBrowse(){
 
     if(items.length > 1){
       el.innerHTML = `
-        <div class="icon">${iconImgHtml(rep)}<div class="tier-dot" style="background:${color}"></div></div>
+        <div class="icon" style="box-shadow:0 0 16px 1px ${color}66;">${iconImgHtml(rep)}<div class="tier-dot" style="background:${color}"></div></div>
         <div class="info"><div class="name">${escapeHtml(rep.name)}</div><div class="sub">${items.length} copies owned</div></div>
         <button class="xfer">⚔️ Compare</button>`;
       el.querySelector(".xfer").addEventListener("click", (e) => {
@@ -1310,7 +1315,7 @@ function renderBrowse(){
       const item = rep;
       const transferrable = (item.transferStatus & 0x1) === 0 && item.itemInstanceId;
       el.innerHTML = `
-        <div class="icon">${iconImgHtml(item)}<div class="tier-dot" style="background:${color}"></div></div>
+        <div class="icon" style="box-shadow:0 0 16px 1px ${color}66;">${iconImgHtml(item)}<div class="tier-dot" style="background:${color}"></div></div>
         <div class="info"><div class="name">${escapeHtml(item.name)}</div><div class="sub">${item.location}${item.quantity>1?' · x'+item.quantity:''}</div>${item.note ? `<div class="note">📝 ${escapeHtml(item.note)}</div>` : ''}</div>
         ${item.itemInstanceId ? `<button class="fav-star ${item.favorite?'active':''}">★</button>` : ''}
         <button class="xfer" ${transferrable?'':'disabled'}>${item.location==='Vault'?'TO CHAR':'TO VAULT'}</button>`;
