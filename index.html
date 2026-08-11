@@ -6,6 +6,8 @@
 <title>Vault Showdown</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@700;800&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<!-- Real Destiny 2 glyph icons (elements, ammo types) so these read the way the game itself renders them -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/justrealmilk/destiny-icons@master/css/destiny-icons.css">
 <style>
   :root{
     --bg1:#efe7ff; --bg2:#ffe9dc;
@@ -339,6 +341,12 @@
   .browse-item .info{flex:1; min-width:0;}
   .browse-item .name{font-weight:800; font-size:13.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
   .browse-item .sub{font-size:11px; color:var(--dim); font-weight:700; margin-top:1px; text-transform:uppercase; letter-spacing:0.02em;}
+  .elem-glyph{font-size:11px; vertical-align:-1px;}
+  .elem-glyph.elem-arc{color:#79b2e6;}
+  .elem-glyph.elem-solar{color:#f27212;}
+  .elem-glyph.elem-void{color:#b182e0;}
+  .elem-glyph.elem-stasis{color:#4d88ff;}
+  .elem-glyph.elem-strand{color:#35e381;}
   .browse-item .xfer{
     background:var(--card); border:2px solid var(--line); color:var(--purple-dk); font-size:10px; font-weight:800;
     padding:8px 10px; border-radius:999px; cursor:pointer; transition:border-color .12s, color .12s;
@@ -540,6 +548,27 @@ async function resolveStatDefinitions(hashes){
 function statName(hash){ return statDefCache[hash]?.displayProperties?.name || null; }
 const ELEMENT_NAMES = { 1:"Kinetic", 2:"Arc", 3:"Solar", 4:"Void", 6:"Stasis", 7:"Strand" };
 const AMMO_NAMES = { 1:"Primary", 2:"Special", 3:"Heavy" };
+// Real Destiny glyph classes from the icon font — Kinetic has no distinct glyph in this set
+// (the game shows it as "no element"), so it's intentionally left out and falls back to text-only.
+const ELEMENT_ICON_CLASS = { Arc:"e-arc", Solar:"e-solar", Void:"e-void", Stasis:"e-stasis", Strand:"e-strand" };
+const AMMO_ICON_CLASS = { Primary:"i-primary", Special:"i-special", Heavy:"i-heavy" };
+function elementChipHtml(element){
+  if(!element) return '';
+  const cls = ELEMENT_ICON_CLASS[element];
+  return `<span class="stat-chip">${cls ? `<i class="${cls}"></i> ` : ''}${element}</span>`;
+}
+function ammoChipHtml(ammoName){
+  if(!ammoName) return '';
+  const cls = AMMO_ICON_CLASS[ammoName];
+  return `<span class="stat-chip">${cls ? `<i class="${cls}"></i> ` : ''}${ammoName}</span>`;
+}
+// Small inline glyph (no chip background) for list rows, colored to match the element.
+function elementGlyphInline(item){
+  if(item.itemType !== 3 || !item.element) return '';
+  const cls = ELEMENT_ICON_CLASS[item.element];
+  if(!cls) return '';
+  return `<i class="${cls} elem-glyph elem-${item.element.toLowerCase()}"></i> `;
+}
 // Same staleness issue as the item-definition cache: bump this whenever what's stored per perk changes.
 const PERK_CACHE_VERSION = "2";
 if(localStorage.getItem("vault_perk_cache_version") !== PERK_CACHE_VERSION){
@@ -1170,8 +1199,8 @@ function vcardEl(item){
     : [
         item.power ? `<span class="stat-chip">${item.power} PWR</span>` : '',
         item.rpm ? `<span class="stat-chip">${item.rpm} RPM</span>` : '',
-        item.element ? `<span class="stat-chip">${item.element}</span>` : '',
-        AMMO_NAMES[item.ammoType] ? `<span class="stat-chip">${AMMO_NAMES[item.ammoType]}</span>` : ''
+        elementChipHtml(item.element),
+        ammoChipHtml(AMMO_NAMES[item.ammoType])
       ].filter(Boolean).join('');
 
   // Real stat bars, like the in-game inspect screen — scaled against 100 since that's the
@@ -1508,7 +1537,7 @@ function renderBrowse(){
     if(items.length > 1){
       el.innerHTML = `
         <div class="icon" style="box-shadow:0 0 16px 1px ${color}66;">${iconImgHtml(rep)}<div class="tier-dot" style="background:${color}"></div></div>
-        <div class="info"><div class="name">${escapeHtml(rep.name)}</div><div class="sub">${items.length} copies owned</div></div>
+        <div class="info"><div class="name">${escapeHtml(rep.name)}</div><div class="sub">${elementGlyphInline(rep)}${items.length} copies owned</div></div>
         <button class="xfer">⚔️ Compare</button>`;
       el.querySelector(".xfer").addEventListener("click", (e) => {
         e.stopPropagation();
@@ -1522,7 +1551,7 @@ function renderBrowse(){
       const transferrable = (item.transferStatus & 0x1) === 0 && item.itemInstanceId;
       el.innerHTML = `
         <div class="icon" style="box-shadow:0 0 16px 1px ${color}66;">${iconImgHtml(item)}<div class="tier-dot" style="background:${color}"></div></div>
-        <div class="info"><div class="name">${escapeHtml(item.name)}</div><div class="sub">${item.location}${item.quantity>1?' · x'+item.quantity:''}</div>${item.note ? `<div class="note">📝 ${escapeHtml(item.note)}</div>` : ''}</div>
+        <div class="info"><div class="name">${escapeHtml(item.name)}</div><div class="sub">${elementGlyphInline(item)}${item.location}${item.quantity>1?' · x'+item.quantity:''}</div>${item.note ? `<div class="note">📝 ${escapeHtml(item.note)}</div>` : ''}</div>
         ${item.itemInstanceId ? `<button class="fav-star ${item.favorite?'active':''}">★</button>` : ''}
         <button class="xfer" ${transferrable?'':'disabled'}>${item.location==='Vault'?'TO CHAR':'TO VAULT'}</button>`;
       el.querySelector(".xfer").addEventListener("click", (e) => { e.stopPropagation(); transferPrompt(item); });
