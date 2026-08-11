@@ -71,6 +71,9 @@
     padding:15px 26px; border-radius:999px; cursor:pointer; box-shadow:0 6px 0 rgba(0,0,0,0.12);
   }
   .btn:active{transform:translateY(3px); box-shadow:0 3px 0 rgba(0,0,0,0.12);}
+  @media (hover:hover){
+    .btn:hover:not(:disabled){ filter:brightness(1.1); transform:translateY(-1px); box-shadow:0 7px 0 rgba(0,0,0,0.12); }
+  }
   .btn.primary{background:linear-gradient(135deg, var(--purple), var(--pink)); color:#fff;}
   .btn.ghost{background:var(--card); color:var(--purple-dk); border:2px solid var(--line);}
   .btn:disabled{opacity:0.4;}
@@ -102,7 +105,7 @@
     flex:1; background:none; border:none; padding:8px 4px; border-radius:16px;
     display:flex; flex-direction:column; align-items:center; gap:2px; color:var(--dim); font-weight:800; font-size:11px;
   }
-  nav.tabs button.active{color:var(--purple-dk); background:#f3edff;}
+  nav.tabs button.active{color:var(--purple-dk); background:color-mix(in srgb, var(--purple) 16%, var(--card));}
   nav.tabs button .emoji{font-size:19px;}
   nav.tabs .badge{
     background:var(--red); color:#fff; border-radius:999px; font-size:10px; padding:1px 6px; margin-left:4px;
@@ -126,23 +129,37 @@
     border-radius:999px; box-shadow:0 3px 0 var(--line);
   }
   .bracket-nav:active{transform:translateY(2px); box-shadow:0 1px 0 var(--line);}
+  @media (hover:hover){
+    .bracket-nav:hover:not(:disabled){ border-color:var(--purple); color:var(--purple); }
+  }
   .bracket-nav:disabled{opacity:0.35; box-shadow:none;}
 
   .matchup{display:flex; flex-direction:column; gap:14px; align-items:center;}
   .vcard{
-    width:100%; max-width:360px; background:var(--card); border-radius:26px; padding:18px;
-    box-shadow:0 10px 28px rgba(0,0,0,0.35); border:2px solid var(--line); cursor:pointer;
-    display:flex; gap:14px; align-items:center; transition:transform .15s, border-color .15s;
+    width:100%; max-width:360px; background:var(--card); padding:18px 18px 18px 16px;
+    box-shadow:0 10px 28px rgba(0,0,0,0.35); border:2px solid var(--line); border-left-width:4px; cursor:pointer;
+    display:flex; gap:14px; align-items:center; transition:transform .15s, border-color .15s, box-shadow .15s;
+    clip-path: polygon(0 0, 100% 0, 100% calc(100% - 16px), calc(100% - 16px) 100%, 0 100%);
   }
   .vcard:active{transform:scale(0.97);}
+  @media (hover:hover){
+    .vcard:hover{ transform:translateY(-2px); box-shadow:0 14px 34px rgba(0,0,0,0.45); }
+  }
   .vcard.winner{border-color:var(--green); background:color-mix(in srgb, var(--green) 12%, var(--card));}
   .vcard.loser{opacity:0.35; filter:grayscale(0.4);}
-  .vcard .icon{width:64px; height:64px; border-radius:16px; flex:0 0 auto; background:var(--line); overflow:hidden; position:relative;}
+  .vcard .icon{
+    width:64px; height:64px; flex:0 0 auto; background:var(--line); overflow:hidden; position:relative;
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 10px 100%, 0 calc(100% - 10px));
+  }
   .vcard .icon img{width:100%; height:100%; object-fit:cover;}
-  .vcard .icon .tier-dot{position:absolute; top:4px; right:4px; width:10px; height:10px; border-radius:50%; border:2px solid var(--card);}
+  .vcard .icon .tier-dot{position:absolute; top:3px; right:3px; width:9px; height:9px; border-radius:50%; border:2px solid var(--card);}
   .vcard .info{flex:1; min-width:0;}
-  .vcard .name{font-family:'Baloo 2',sans-serif; font-size:15px; font-weight:700; line-height:1.2;}
-  .vcard .meta{font-size:12px; color:var(--dim); font-weight:700; margin-top:3px;}
+  .vcard .eyebrow{
+    font-family:'JetBrains Mono',monospace; font-size:9.5px; font-weight:700; letter-spacing:0.1em;
+    text-transform:uppercase; margin-bottom:2px;
+  }
+  .vcard .name{font-family:'Manrope',sans-serif; font-size:15px; font-weight:800; line-height:1.2;}
+  .vcard .meta{font-size:11.5px; color:var(--dim); font-weight:700; margin-top:3px; text-transform:uppercase; letter-spacing:0.03em;}
   .vcard .power{
     font-family:'JetBrains Mono',monospace; font-size:22px; font-weight:700; color:var(--purple-dk); margin-top:2px;
   }
@@ -211,7 +228,7 @@
     flex:0 0 auto; background:var(--card); border:2px solid var(--line); color:var(--dim);
     font-size:13px; font-weight:800; padding:9px 16px; border-radius:999px; white-space:nowrap;
   }
-  #showdown-picker .class-chip.active{border-color:var(--purple); color:var(--purple-dk); background:#f3edff;}
+  #showdown-picker .class-chip.active{border-color:var(--purple); color:var(--purple-dk); background:color-mix(in srgb, var(--purple) 16%, var(--card));}
   .slot-row{
     display:flex; align-items:center; gap:14px; background:var(--card); border-radius:20px; padding:14px;
     margin-bottom:10px; box-shadow:0 4px 14px rgba(0,0,0,0.28);
@@ -241,10 +258,16 @@
 
   /* ---------- Marked tab ---------- */
   .marked-item{
-    display:flex; align-items:center; gap:12px; background:var(--card); border-radius:20px; padding:12px;
-    margin-bottom:10px; box-shadow:0 4px 14px rgba(0,0,0,0.28);
+    display:flex; align-items:center; gap:12px; background:var(--card); padding:12px 12px 12px 10px;
+    margin-bottom:10px; box-shadow:0 4px 14px rgba(0,0,0,0.28); border-left:3px solid var(--line);
+    clip-path: polygon(0 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%);
+    transition:transform .12s;
   }
-  .marked-item .icon{width:44px; height:44px; border-radius:12px; background:var(--line); overflow:hidden; flex:0 0 auto;}
+  @media (hover:hover){ .marked-item:hover{ transform:translateX(2px); } }
+  .marked-item .icon{
+    width:44px; height:44px; background:var(--line); overflow:hidden; flex:0 0 auto;
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 8px 100%, 0 calc(100% - 8px));
+  }
   .marked-item .icon img{width:100%; height:100%; object-fit:cover;}
   .marked-item .info{flex:1; min-width:0;}
   .marked-item .name{font-weight:800; font-size:14px;}
@@ -281,30 +304,49 @@
   .cap-row.danger .cap-top{color:var(--red-dk);}
 
   /* ---------- Browse tab ---------- */
+  #searchBar{
+    position:sticky; top:0; z-index:10; padding:10px 0 8px 0; margin-top:-4px;
+    background:linear-gradient(180deg, var(--bg1) 85%, transparent);
+  }
   #search{
     width:100%; background:var(--card); border:2px solid var(--line); color:var(--ink);
-    padding:12px 16px; border-radius:999px; font-size:15px; font-weight:700; margin-top:6px;
+    padding:12px 16px; border-radius:999px; font-size:15px; font-weight:700;
   }
   #search::placeholder{color:var(--dim); opacity:0.8;}
   .chiprow{display:flex; gap:8px; margin:10px 0; overflow-x:auto; padding-bottom:2px;}
   .chip{
     flex:0 0 auto; background:var(--card); border:2px solid var(--line); color:var(--dim);
-    font-size:12px; font-weight:800; padding:7px 14px; border-radius:999px; white-space:nowrap;
+    font-size:12px; font-weight:800; padding:7px 14px; border-radius:999px; white-space:nowrap; cursor:pointer;
+    transition:border-color .12s, color .12s;
   }
-  .chip.active{border-color:var(--purple); color:var(--purple-dk); background:#f3edff;}
+  .chip.active{border-color:var(--purple); color:var(--purple-dk); background:color-mix(in srgb, var(--purple) 16%, var(--card));}
+  @media (hover:hover){
+    .chip:hover:not(.active){ border-color:var(--dim); color:var(--ink); }
+  }
   .browse-item{
-    display:flex; align-items:center; gap:12px; background:var(--card); border-radius:18px; padding:10px 12px;
-    margin-bottom:8px; box-shadow:0 3px 10px rgba(0,0,0,0.22);
+    display:flex; align-items:center; gap:12px; background:var(--card); padding:10px 12px 10px 10px;
+    margin-bottom:8px; box-shadow:0 3px 10px rgba(0,0,0,0.22); border-left:3px solid var(--line); cursor:pointer;
+    clip-path: polygon(0 0, 100% 0, 100% calc(100% - 9px), calc(100% - 9px) 100%, 0 100%);
+    transition:transform .12s, box-shadow .12s;
   }
-  .browse-item .icon{width:44px; height:44px; border-radius:12px; background:var(--line); flex:0 0 auto; overflow:hidden; position:relative;}
+  @media (hover:hover){
+    .browse-item:hover{ transform:translateX(2px); box-shadow:0 6px 16px rgba(0,0,0,0.32); }
+  }
+  .browse-item .icon{
+    width:44px; height:44px; background:var(--line); flex:0 0 auto; overflow:hidden; position:relative;
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 8px 100%, 0 calc(100% - 8px));
+  }
   .browse-item .icon img{width:100%; height:100%; object-fit:cover;}
   .browse-item .icon .tier-dot{position:absolute; bottom:2px; right:2px; width:9px; height:9px; border-radius:50%; border:2px solid var(--card);}
   .browse-item .info{flex:1; min-width:0;}
   .browse-item .name{font-weight:800; font-size:13.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
-  .browse-item .sub{font-size:11px; color:var(--dim); font-weight:700; margin-top:1px;}
+  .browse-item .sub{font-size:11px; color:var(--dim); font-weight:700; margin-top:1px; text-transform:uppercase; letter-spacing:0.02em;}
   .browse-item .xfer{
     background:var(--card); border:2px solid var(--line); color:var(--purple-dk); font-size:10px; font-weight:800;
-    padding:8px 10px; border-radius:999px;
+    padding:8px 10px; border-radius:999px; cursor:pointer; transition:border-color .12s, color .12s;
+  }
+  @media (hover:hover){
+    .browse-item .xfer:hover:not(:disabled){ border-color:var(--purple); color:var(--purple); }
   }
   .browse-item .xfer:disabled{opacity:0.3;}
   @keyframes rowIn{ from{opacity:0; transform:translateY(7px);} to{opacity:1; transform:translateY(0);} }
@@ -425,8 +467,8 @@
 
     <!-- ===== Browse tab ===== -->
     <div class="tabpanel active in" id="tab-browse">
-      <div style="display:flex; gap:8px; align-items:center; margin-top:4px;">
-        <input type="text" id="search" placeholder="Search name, type, or tier…" autocomplete="off" style="flex:1;">
+      <div id="searchBar" style="display:flex; gap:8px; align-items:center;">
+        <input type="text" id="search" placeholder="Search name, type, element, tier…" autocomplete="off" style="flex:1;">
         <button class="bracket-nav" id="sweepModeBtn" style="white-space:nowrap;">⚔️ Sweep</button>
       </div>
       <div class="chiprow" id="sortChips">
@@ -499,6 +541,7 @@ async function resolveStatDefinitions(hashes){
 }
 function statName(hash){ return statDefCache[hash]?.displayProperties?.name || null; }
 const ELEMENT_NAMES = { 1:"Kinetic", 2:"Arc", 3:"Solar", 4:"Void", 6:"Stasis", 7:"Strand" };
+const AMMO_NAMES = { 1:"Primary", 2:"Special", 3:"Heavy" };
 // Same staleness issue as the item-definition cache: bump this whenever what's stored per perk changes.
 const PERK_CACHE_VERSION = "2";
 if(localStorage.getItem("vault_perk_cache_version") !== PERK_CACHE_VERSION){
@@ -516,7 +559,7 @@ let characterClassById = {};
 // Bumped whenever trimDefinition()'s shape changes (a new field added, etc). Any cache saved
 // under an older version is missing that field and needs to be re-fetched fresh — otherwise
 // items cached before the change silently behave as if the new field doesn't exist forever.
-const DEF_CACHE_VERSION = "2";
+const DEF_CACHE_VERSION = "3";
 if(localStorage.getItem("vault_def_cache_version") !== DEF_CACHE_VERSION){
   localStorage.removeItem("vault_def_cache");
   localStorage.setItem("vault_def_cache_version", DEF_CACHE_VERSION);
@@ -766,6 +809,7 @@ async function loadEverything(){
       locked: !!(state & 1), masterwork: !!(state & 4), crafted: !!(state & 8),
       characterId: cid, location: label, equipped, power,
       rpm, element: ELEMENT_NAMES[damageType] || null,
+      ammoType: def.ammoType,
       archetype, statBreakdown,
       isPostmaster: typeof label === "string" && label.startsWith("Postmaster"),
       favorite: isFavorite(it.itemInstanceId),
@@ -817,6 +861,7 @@ function trimDefinition(full){
     itemType: full.itemType,
     classType: full.classType,
     redacted: full.redacted,
+    ammoType: full.equippingBlock?.ammoType,
     stats: full.stats?.stats?.[RPM_STAT_HASH] ? { stats: { [RPM_STAT_HASH]: { value: full.stats.stats[RPM_STAT_HASH].value } } } : undefined
   };
 }
@@ -1111,6 +1156,7 @@ function vcardEl(item){
   const el = document.createElement("div");
   el.className = "vcard";
   const color = TIER_COLORS[item.tier] || TIER_COLORS.Common;
+  el.style.borderLeftColor = color;
   const badges = [
     item.masterwork ? '⭐ Masterwork' : '',
     item.crafted ? '🛠️ Crafted' : '',
@@ -1126,12 +1172,13 @@ function vcardEl(item){
     : [
         item.power ? `<span class="stat-chip">${item.power} PWR</span>` : '',
         item.rpm ? `<span class="stat-chip">${item.rpm} RPM</span>` : '',
-        item.element ? `<span class="stat-chip">${item.element}</span>` : ''
+        item.element ? `<span class="stat-chip">${item.element}</span>` : '',
+        AMMO_NAMES[item.ammoType] ? `<span class="stat-chip">${AMMO_NAMES[item.ammoType]}</span>` : ''
       ].filter(Boolean).join('');
 
   // Real stat bars, like the in-game inspect screen — scaled against 100 since that's the
   // usual ceiling for both weapon and armor stats in the current stat system.
-  const statBarsHtml = (item.statBreakdown || []).slice(0, isArmor ? 6 : 4).map(s => `
+  const statBarsHtml = (item.statBreakdown || []).slice(0, 6).map(s => `
     <div class="stat-bar-row">
       <span class="stat-label">${escapeHtml(s.name)}</span>
       <div class="stat-track"><div class="stat-fill" style="width:${Math.min(100, s.value)}%"></div></div>
@@ -1144,6 +1191,7 @@ function vcardEl(item){
     <div class="top-row">
       <div class="icon" style="box-shadow:0 0 16px 1px ${color}66;">${iconImgHtml(item)}<div class="tier-dot" style="background:${color}"></div></div>
       <div class="info">
+        <div class="eyebrow" style="color:${color};">${item.tier}${item.type ? ' · ' + item.type : ''}</div>
         <div class="name">${escapeHtml(item.name)}</div>
         <div class="meta">${item.location}${badges ? ' · ' + badges : ''}</div>
       </div>
@@ -1229,6 +1277,7 @@ function renderMarked(){
   marked.forEach((item, idx) => {
     const el = document.createElement("div");
     el.className = "marked-item";
+    el.style.borderLeftColor = TIER_COLORS[item.tier] || TIER_COLORS.Common;
     el.style.animationDelay = `${Math.min(idx, 10) * 25}ms`; // cap so long lists don't feel sluggish to appear
     const note = getNote(item.itemInstanceId);
     el.innerHTML = `
@@ -1384,11 +1433,18 @@ function capRowHtml(label, count, cap, dangerNote){
 // and different words are independent (AND'd together, each matching its own field) rather than
 // requiring them adjacent — so "vex exotic" finds an exotic with "vex" in the name even though
 // the literal string "vex exotic" never appears anywhere on the item.
+// Word-boundary matching instead of plain substring — the fix for "machine gun" incorrectly
+// matching "Submachine Gun". A boundary is required right before the search term, so "machine"
+// only matches where it starts a word (never matches inside "Submachine").
+function tokenMatches(haystack, token){
+  const escaped = token.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return new RegExp('\\b' + escaped, 'i').test(haystack);
+}
 function parseSearchQuery(q){
   const tokens = q.trim().split(/\s+/).filter(Boolean);
   const filters = []; const words = [];
   tokens.forEach(tok => {
-    const m = tok.match(/^(is|tier|type):(.+)$/i);
+    const m = tok.match(/^(is|tier|type|element):(.+)$/i);
     if(!m){ words.push(tok.toLowerCase()); return; }
     const [, key, valRaw] = m; const val = valRaw.toLowerCase();
     const key_ = key.toLowerCase();
@@ -1397,14 +1453,16 @@ function parseSearchQuery(q){
         locked: i=>i.locked, masterwork: i=>i.masterwork, crafted: i=>i.crafted,
         exotic: i=>i.tier==="Exotic", favorite: i=>i.favorite, equipped: i=>i.equipped
       };
-      // Recognized is:/tier:/type: operators stay exact (that's the point of typing one on
+      // Recognized is:/tier:/type:/element: operators stay exact (that's the point of typing one on
       // purpose) — anything unrecognized just falls back to being matched as a loose keyword
       // instead of silently doing nothing, e.g. "is:typo" still searches for "is:typo" as text.
       if(preds[val]) filters.push(preds[val]); else words.push(tok.toLowerCase());
     } else if(key_ === "tier"){
       filters.push(i => (i.tier||"").toLowerCase() === val);
     } else if(key_ === "type"){
-      filters.push(i => (i.type||"").toLowerCase().includes(val));
+      filters.push(i => tokenMatches((i.type||"").toLowerCase(), val));
+    } else if(key_ === "element"){
+      filters.push(i => (i.element||"").toLowerCase() === val);
     }
   });
   return { filters, words };
@@ -1418,8 +1476,8 @@ function renderBrowse(){
   filters.forEach(f => { list = list.filter(f); });
   if(words.length){
     list = list.filter(i => {
-      const haystack = `${i.name} ${i.type} ${i.tier}`.toLowerCase();
-      return words.every(w => haystack.includes(w));
+      const haystack = `${i.name} ${i.type} ${i.tier} ${i.element||''}`.toLowerCase();
+      return words.every(w => tokenMatches(haystack, w));
     });
   }
   if(favoritesOnly) list = list.filter(i => i.favorite);
@@ -1447,6 +1505,7 @@ function renderBrowse(){
     el.className = "browse-item";
     el.style.animationDelay = `${Math.min(idx, 10) * 25}ms`; // cap so long lists don't feel sluggish to appear
     const color = TIER_COLORS[rep.tier] || TIER_COLORS.Common;
+    el.style.borderLeftColor = color;
 
     if(items.length > 1){
       el.innerHTML = `
