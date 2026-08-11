@@ -108,8 +108,9 @@
     background:var(--red); color:#fff; border-radius:999px; font-size:10px; padding:1px 6px; margin-left:4px;
   }
 
-  .tabpanel{display:none; padding:0 16px;}
+  .tabpanel{display:none; padding:0 16px; opacity:0; transform:translateY(8px); transition:opacity .28s ease, transform .28s cubic-bezier(.22,1,.36,1);}
   .tabpanel.active{display:block;}
+  .tabpanel.active.in{opacity:1; transform:translateY(0);}
 
   /* ---------- Compare (Showdown) ---------- */
   #showdown-progress{
@@ -177,6 +178,34 @@
     display:flex; align-items:center; justify-content:center; box-shadow:0 4px 0 rgba(0,0,0,0.10); margin:-4px 0;
   }
 
+  /* ---------- Tinder-style pick reaction ---------- */
+  .vcard{ position:relative; }
+  .vcard .stamp{
+    position:absolute; top:14px; z-index:5; opacity:0; pointer-events:none;
+    font-family:'Baloo 2',sans-serif; font-weight:800; font-size:19px; padding:5px 14px;
+    border-radius:10px; letter-spacing:1.5px; border:3px solid; background:var(--card);
+  }
+  .vcard .stamp-keep{ left:14px; color:var(--green-dk); border-color:var(--green-dk); }
+  .vcard .stamp-trash{ right:14px; color:var(--red-dk); border-color:var(--red-dk); }
+  @keyframes cardSwipeAway{ to{ transform:translateX(-130%) rotate(-16deg); opacity:0; } }
+  @keyframes cardKeepPop{ 0%{transform:scale(1);} 35%{transform:scale(1.045);} 100%{transform:scale(1.015);} }
+  @keyframes stampPop{
+    0%{ opacity:0; transform:rotate(var(--stamp-rot,0deg)) scale(0.6); }
+    55%{ opacity:1; transform:rotate(var(--stamp-rot,0deg)) scale(1.12); }
+    100%{ opacity:1; transform:rotate(var(--stamp-rot,0deg)) scale(1); }
+  }
+  .vcard.swipe-trash{ animation:cardSwipeAway .42s cubic-bezier(.55,0,1,.45) forwards; }
+  .vcard.swipe-trash .stamp-trash{ --stamp-rot:14deg; animation:stampPop .28s ease forwards; }
+  .vcard.swipe-keep{
+    animation:cardKeepPop .42s cubic-bezier(.34,1.56,.64,1) forwards;
+    border-color:var(--green); box-shadow:0 0 0 3px var(--green), 0 10px 24px rgba(80,40,140,0.10);
+  }
+  .vcard.swipe-keep .stamp-keep{ --stamp-rot:-14deg; animation:stampPop .28s .08s ease forwards; }
+
+  /* ---------- Matchup entrance ---------- */
+  .matchup{ opacity:0; transform:translateY(10px); transition:opacity .32s ease, transform .32s cubic-bezier(.22,1,.36,1); }
+  .matchup.in{ opacity:1; transform:translateY(0); }
+
   #showdown-picker .class-chips{display:flex; gap:8px; margin:10px 0 16px 0; overflow-x:auto;}
   #showdown-picker .class-chip{
     flex:0 0 auto; background:var(--card); border:2px solid var(--line); color:var(--dim);
@@ -200,6 +229,15 @@
   }
   #showdown-done .big{font-size:44px;}
   #showdown-done h2{color:var(--purple-dk); margin:10px 0 6px 0; font-size:22px;}
+  @keyframes celebrateIn{
+    0%{opacity:0; transform:scale(.6) translateY(10px);}
+    60%{opacity:1; transform:scale(1.08) translateY(0);}
+    100%{opacity:1; transform:scale(1) translateY(0);}
+  }
+  #showdown-done.show .big{animation:celebrateIn .5s cubic-bezier(.34,1.56,.64,1) both;}
+  #showdown-done.show h2, #showdown-done.show p, #showdown-done.show .btn{
+    animation:rowIn .35s ease both; animation-delay:.12s;
+  }
 
   /* ---------- Marked tab ---------- */
   .marked-item{
@@ -258,12 +296,16 @@
     padding:8px 10px; border-radius:999px;
   }
   .browse-item .xfer:disabled{opacity:0.3;}
+  @keyframes rowIn{ from{opacity:0; transform:translateY(7px);} to{opacity:1; transform:translateY(0);} }
+  .browse-item, .marked-item{ animation:rowIn .3s cubic-bezier(.22,1,.36,1) both; }
   .browse-item .note{font-size:10.5px; color:var(--dim); font-style:italic; margin-top:2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
   .fav-star{
     background:none; border:none; font-size:19px; padding:2px 6px; flex:0 0 auto; line-height:1;
-    filter:grayscale(1); opacity:0.35;
+    filter:grayscale(1); opacity:0.35; transition:filter .15s, opacity .15s;
   }
   .fav-star.active{filter:none; opacity:1;}
+  @keyframes starPop{ 0%{transform:scale(1);} 40%{transform:scale(1.5) rotate(-8deg);} 100%{transform:scale(1);} }
+  .fav-star.pop{animation:starPop .38s cubic-bezier(.34,1.56,.64,1);}
   #noteField{
     width:100%; border:2px solid var(--line); border-radius:14px; padding:10px 12px; font-family:'Nunito',sans-serif;
     font-size:13px; font-weight:600; color:var(--ink); resize:vertical; min-height:44px; margin-top:4px; background:var(--card);
@@ -282,11 +324,17 @@
   #loading span{font-weight:800; color:var(--purple-dk); font-size:13px;}
 
   /* ---------- Sheet ---------- */
-  #sheet-backdrop{position:fixed; inset:0; background:rgba(60,30,90,0.35); display:none; z-index:40;}
+  #sheet-backdrop{
+    position:fixed; inset:0; background:rgba(60,30,90,0.35); display:none; z-index:40;
+    opacity:0; transition:opacity .28s ease;
+  }
+  #sheet-backdrop.show{opacity:1;}
   #sheet{
     position:fixed; left:0; right:0; bottom:0; background:var(--card); border-radius:26px 26px 0 0;
     padding:20px 18px calc(20px + env(safe-area-inset-bottom)) 18px; display:none; z-index:41; max-height:70vh; overflow-y:auto;
+    transform:translateY(100%); transition:transform .32s cubic-bezier(.22,1,.36,1);
   }
+  #sheet.show{transform:translateY(0);}
   #sheet h3{font-size:16px; margin-bottom:12px; color:var(--purple-dk);}
   #sheet .opt{
     padding:14px; border:2px solid var(--line); border-radius:16px; margin-bottom:8px; font-weight:800;
@@ -365,7 +413,7 @@
     </div>
 
     <!-- ===== Browse tab ===== -->
-    <div class="tabpanel active" id="tab-browse">
+    <div class="tabpanel active in" id="tab-browse">
       <div style="display:flex; gap:8px; align-items:center; margin-top:4px;">
         <input type="text" id="search" placeholder="Search… try is:masterwork, tier:exotic" autocomplete="off" style="flex:1;">
         <button class="bracket-nav" id="sweepModeBtn" style="white-space:nowrap;">⚔️ Sweep</button>
@@ -917,13 +965,19 @@ function renderShowdownPicker(){
   }));
   $("#exitSweepBtn").addEventListener("click", exitComparisonScreen);
 }
+// Shared by the nav tabs, the Sweep entry point, and the exit-comparison flow so switching
+// panels always gets the same fade/slide-up entrance instead of an instant cut.
+function activateTabPanel(id){
+  document.querySelectorAll(".tabpanel").forEach(p=>p.classList.remove("active","in"));
+  const panel = document.getElementById(id);
+  panel.classList.add("active");
+  requestAnimationFrame(() => requestAnimationFrame(() => panel.classList.add("in")));
+}
 function enterComparisonScreen(){
-  document.querySelectorAll(".tabpanel").forEach(p=>p.classList.remove("active"));
-  $("#tab-showdown").classList.add("active");
+  activateTabPanel("tab-showdown");
 }
 function exitComparisonScreen(){
-  document.querySelectorAll(".tabpanel").forEach(p=>p.classList.remove("active"));
-  $("#tab-browse").classList.add("active");
+  activateTabPanel("tab-browse");
   document.querySelectorAll(".tab-btn").forEach(b=>b.classList.remove("active"));
   document.querySelector('[data-tab="browse"]').classList.add("active");
 }
@@ -942,7 +996,7 @@ function renderShowdown(){
 
   if(showdownMode === "picker"){
     picker.style.display = "block";
-    area.innerHTML = ""; empty.style.display="none"; done.style.display="none"; progress.style.display="none";
+    area.innerHTML = ""; empty.style.display="none"; done.style.display="none"; done.classList.remove("show"); progress.style.display="none";
     renderShowdownPicker();
     return;
   }
@@ -967,6 +1021,7 @@ function renderShowdown(){
 
   if(currentGroupIndex >= matchQueue.length){
     done.style.display = "block";
+    requestAnimationFrame(() => done.classList.add("show"));
     $("#doneSummary").textContent = marked.length
       ? `You marked ${marked.length} item${marked.length===1?'':'s'} for cleanup.`
       : `Nothing marked yet — check the Marked tab any time.`;
@@ -981,21 +1036,50 @@ function renderShowdown(){
   const group = matchQueue[currentGroupIndex];
   const challenger = group.pool[0];
   area.innerHTML = "";
-  area.appendChild(buildMatchupDOM(currentChampion, challenger));
+  const matchupEl = buildMatchupDOM(currentChampion, challenger);
+  area.appendChild(matchupEl);
+  // Starts at opacity:0/translateY(10px) per the .matchup base rule — double rAF makes sure
+  // that initial state actually paints before ".in" is added, otherwise the browser can
+  // coalesce both style changes into one frame and the transition never plays.
+  requestAnimationFrame(() => requestAnimationFrame(() => matchupEl.classList.add("in")));
 }
 
+// Guards the ~420ms swipe-reaction window so a fast double-tap can't fire two decisions
+// for the same matchup while the losing card is still animating off screen.
+let swipeInProgress = false;
 function buildMatchupDOM(a, b){
   const wrap = document.createElement("div");
   wrap.className = "matchup";
-  wrap.appendChild(vcardEl(a, () => resolveMatchup(a, b)));
+  const cardA = vcardEl(a);
+  const cardB = vcardEl(b);
+  cardA.addEventListener("click", () => handlePick(cardA, cardB, a, b));
+  cardB.addEventListener("click", () => handlePick(cardB, cardA, b, a));
+  wrap.appendChild(cardA);
   const vs = document.createElement("div");
   vs.className = "vs-badge"; vs.textContent = "VS";
   wrap.appendChild(vs);
-  wrap.appendChild(vcardEl(b, () => resolveMatchup(b, a)));
+  wrap.appendChild(cardB);
   return wrap;
 }
 
-function vcardEl(item, onPick){
+// Tinder-style reaction: the picked card pops with a green "KEEP" stamp, the other swipes
+// off to the side with a red "TRASH" stamp — THEN the actual state update (marking the loser,
+// advancing the bracket) happens, so the animation always gets to play out before the next
+// matchup replaces this one.
+function handlePick(winnerEl, loserEl, winner, loser){
+  if(swipeInProgress) return;
+  swipeInProgress = true;
+  winnerEl.style.pointerEvents = "none";
+  loserEl.style.pointerEvents = "none";
+  winnerEl.classList.add("swipe-keep");
+  loserEl.classList.add("swipe-trash");
+  setTimeout(() => {
+    swipeInProgress = false;
+    resolveMatchup(winner, loser);
+  }, 420);
+}
+
+function vcardEl(item){
   const el = document.createElement("div");
   el.className = "vcard";
   const color = TIER_COLORS[item.tier] || TIER_COLORS.Common;
@@ -1027,6 +1111,8 @@ function vcardEl(item, onPick){
     </div>`).join('');
 
   el.innerHTML = `
+    <div class="stamp stamp-keep">KEEP</div>
+    <div class="stamp stamp-trash">TRASH</div>
     <div class="top-row">
       <div class="icon" style="box-shadow:0 0 16px 1px ${color}66;">${iconImgHtml(item)}<div class="tier-dot" style="background:${color}"></div></div>
       <div class="info">
@@ -1038,7 +1124,6 @@ function vcardEl(item, onPick){
     ${statBarsHtml ? `<div class="stat-bars">${statBarsHtml}</div>` : ''}
     ${isArmor ? '' : '<div class="perk-row"><span class="perk-loading">loading roll…</span></div>'}
   `;
-  el.addEventListener("click", onPick);
 
   // Perks are a weapon concept in this app — armor mods/set bonuses work differently
   // and aren't reliably represented by this same endpoint, so skip the fetch for armor
@@ -1116,6 +1201,7 @@ function renderMarked(){
   marked.forEach((item, idx) => {
     const el = document.createElement("div");
     el.className = "marked-item";
+    el.style.animationDelay = `${Math.min(idx, 10) * 25}ms`; // cap so long lists don't feel sluggish to appear
     const note = getNote(item.itemInstanceId);
     el.innerHTML = `
       <div class="icon">${iconImgHtml(item)}</div>
@@ -1228,13 +1314,18 @@ function renderCapacityDash(){
       "Items here get auto-deleted once it fills up — pull them in-game."));
   });
   el.innerHTML = rows.join("");
+  // Bars are written into the DOM at width:0 (see capRowHtml) so this fill-to-target always
+  // has a real 0% starting point to transition from, rather than just snapping to place.
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    el.querySelectorAll(".cap-fill").forEach(bar => { bar.style.width = bar.dataset.pct + "%"; });
+  }));
 }
 function capRowHtml(label, count, cap, dangerNote){
   const pct = Math.min(100, Math.round((count/cap)*100));
   const state = pct >= 95 ? "danger" : pct >= 80 ? "warn" : "";
   return `<div class="cap-row ${state}">
     <div class="cap-top"><span>${label}${state==="danger" && dangerNote ? " — " + dangerNote : ""}</span><span class="cap-count">${count} / ${cap}</span></div>
-    <div class="cap-track"><div class="cap-fill" style="width:${pct}%"></div></div>
+    <div class="cap-track"><div class="cap-fill" data-pct="${pct}" style="width:0%"></div></div>
   </div>`;
 }
 
@@ -1294,9 +1385,10 @@ function renderBrowse(){
 
   const container = $("#browseList");
   container.innerHTML = "";
-  rows.forEach(({rep, items}) => {
+  rows.forEach(({rep, items}, idx) => {
     const el = document.createElement("div");
     el.className = "browse-item";
+    el.style.animationDelay = `${Math.min(idx, 10) * 25}ms`; // cap so long lists don't feel sluggish to appear
     const color = TIER_COLORS[rep.tier] || TIER_COLORS.Common;
 
     if(items.length > 1){
@@ -1326,6 +1418,8 @@ function renderBrowse(){
         toggleFavorite(item.itemInstanceId);
         item.favorite = isFavorite(item.itemInstanceId);
         starBtn.classList.toggle("active", item.favorite);
+        starBtn.classList.remove("pop"); void starBtn.offsetWidth; // restart the animation even on rapid re-clicks
+        starBtn.classList.add("pop");
       });
       el.addEventListener("click", () => openItemDetail(item));
     }
@@ -1458,8 +1552,27 @@ function transferPrompt(item){
   $("#sheetCancel").addEventListener("click", closeSheet);
 }
 
-function openSheet(){ $("#sheet").style.display="block"; $("#sheet-backdrop").style.display="block"; }
-function closeSheet(){ $("#sheet").style.display="none"; $("#sheet-backdrop").style.display="none"; }
+// Some flows call closeSheet() then immediately openSheet() again with new content (e.g.
+// "move to vault" swaps the sheet straight into a character picker) — a generation counter
+// stops the first call's delayed display:none from stomping on the second call's reopen.
+let sheetGen = 0;
+function openSheet(){
+  sheetGen++;
+  $("#sheet").style.display="block"; $("#sheet-backdrop").style.display="block";
+  // display:none → block must paint at translateY(100%) before ".show" is added, otherwise
+  // the browser can skip straight to the end state and the slide-up never plays.
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    $("#sheet").classList.add("show"); $("#sheet-backdrop").classList.add("show");
+  }));
+}
+function closeSheet(){
+  const gen = ++sheetGen;
+  $("#sheet").classList.remove("show"); $("#sheet-backdrop").classList.remove("show");
+  setTimeout(() => {
+    if(sheetGen !== gen) return; // a newer open/close already happened — don't hide its content
+    $("#sheet").style.display="none"; $("#sheet-backdrop").style.display="none";
+  }, 320);
+}
 function showLoading(label){ $("#loadingLabel").textContent = label; $("#loading").style.display="flex"; }
 function hideLoading(){ $("#loading").style.display="none"; }
 
@@ -1467,9 +1580,8 @@ function hideLoading(){ $("#loading").style.display="none"; }
 document.querySelectorAll(".tab-btn").forEach(btn => {
   btn.addEventListener("click", () => {
     document.querySelectorAll(".tab-btn").forEach(b=>b.classList.remove("active"));
-    document.querySelectorAll(".tabpanel").forEach(p=>p.classList.remove("active"));
     btn.classList.add("active");
-    $("#tab-"+btn.dataset.tab).classList.add("active");
+    activateTabPanel("tab-"+btn.dataset.tab);
   });
 });
 $("#backToPickerBtn").addEventListener("click", backToPicker);
