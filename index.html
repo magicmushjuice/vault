@@ -256,6 +256,17 @@
   #markedActions .btn{flex:1; font-size:13px; padding:12px;}
   #markedEmpty{text-align:center; padding:50px 20px; color:var(--dim); font-weight:700;}
 
+  /* ---------- Missing-item banner ---------- */
+  #missingItemsBanner{
+    background:#fff6e6; border:2px dashed var(--gold); border-radius:16px; padding:12px 14px;
+    margin:10px 0 4px 0; font-size:12.5px; font-weight:700; color:#9a5b12; display:flex;
+    align-items:center; gap:10px; justify-content:space-between;
+  }
+  #missingItemsBanner button{
+    flex:0 0 auto; background:#9a5b12; color:#fff; border:none; font-weight:800; font-size:11.5px;
+    padding:8px 12px; border-radius:999px; white-space:nowrap;
+  }
+
   /* ---------- Vault/Postmaster capacity dashboard ---------- */
   #capacityDash{display:flex; flex-direction:column; gap:8px; margin:10px 0 4px 0;}
   .cap-row{
@@ -415,7 +426,7 @@
     <!-- ===== Browse tab ===== -->
     <div class="tabpanel active in" id="tab-browse">
       <div style="display:flex; gap:8px; align-items:center; margin-top:4px;">
-        <input type="text" id="search" placeholder="Search… try is:masterwork, tier:exotic" autocomplete="off" style="flex:1;">
+        <input type="text" id="search" placeholder="Search name, type, or tier…" autocomplete="off" style="flex:1;">
         <button class="bracket-nav" id="sweepModeBtn" style="white-space:nowrap;">⚔️ Sweep</button>
       </div>
       <div class="chiprow" id="sortChips">
@@ -425,6 +436,7 @@
         <div class="chip" id="favFilterChip">⭐ Favorites</div>
         <div class="chip" id="locFilterChip">Location ▾</div>
       </div>
+      <div id="missingItemsBanner" style="display:none;"></div>
       <div id="capacityDash"></div>
       <div id="browseList"></div>
     </div>
@@ -679,6 +691,21 @@ async function loadEverything(){
   showLoading(`RESOLVING ${uniqueHashes.length} ITEMS…`);
   await resolveDefinitions(uniqueHashes);
 
+  // Each hash already gets 3 retries inside fetchDefinitionWithRetry, but on a big vault's
+  // first load (lots of concurrent chunks hitting Bungie's manifest endpoint back to back)
+  // it's possible for all 3 attempts to land inside the same rate-limit/blip window. When
+  // that happens the item doesn't just lose its icon — allItems.map below drops it entirely,
+  // which is exactly what "some of my weapons aren't showing up in Showdown" turns out to be.
+  // A short-delayed second sweep over just the hashes that failed clears almost all of these
+  // without the user ever noticing there was a hiccup.
+  if(diagDefResolveFailed.length){
+    const retryHashes = diagDefResolveFailed.map(d => d.hash);
+    diagDefResolveFailed = [];
+    showLoading(`RETRYING ${retryHashes.length} ITEM${retryHashes.length===1?'':'S'}…`);
+    await new Promise(r => setTimeout(r, 1200));
+    await resolveDefinitions(retryHashes);
+  }
+
   // Stat names (for both armor archetypes and weapon stat bars) come from a small, mostly-fixed
   // set of stat hashes shared across the whole game — resolving them is effectively a one-time
   // cost, not per-item, so it's done for the whole vault up front rather than lazily.
@@ -752,6 +779,7 @@ async function loadEverything(){
   renderShowdown();
   renderMarked();
   renderBrowse();
+  renderMissingItemsBanner();
   // Image loads kicked off by the render calls above are async — give them a few seconds
   // to settle (success or onerror) before printing the full diagnostic summary.
   setTimeout(logIconDiagnostics, 3000);
@@ -1296,6 +1324,21 @@ async function doStageAll(){
   alert(`Staged on ${characterClassById[cleanupCharacterId]}. Log in-game to dismantle them.`);
 }
 
+// ---------- Missing-item banner ----------
+// diagDefResolveFailed holds hashes that still failed manifest resolution after loadEverything's
+// built-in retry + one extra delayed sweep — those items are silently absent from allItems
+// entirely (not shown in Browse, not eligible for Showdown), so this is the one place that
+// actually tells the user instead of leaving it to a console log.
+function renderMissingItemsBanner(){
+  const el = $("#missingItemsBanner");
+  if(!el) return;
+  if(diagDefResolveFailed.length === 0){ el.style.display = "none"; return; }
+  const n = diagDefResolveFailed.length;
+  el.style.display = "flex";
+  el.innerHTML = `<span>⚠️ ${n} item${n===1?'':'s'} couldn't load from Bungie and won't show up until reloaded.</span><button id="reloadMissingBtn">Reload vault</button>`;
+  $("#reloadMissingBtn").addEventListener("click", () => loadEverything());
+}
+
 // ---------- Vault / Postmaster capacity dashboard ----------
 // Renders against the FULL profile inventory (not just weapons/armor, since materials, mods and
 // consumables count against the vault's general slots too) so the numbers match what the in-game
@@ -1335,12 +1378,18 @@ function capRowHtml(label, count, cap, dangerNote){
 //   tier:<rare|legendary|...>   type:<hand cannon|helmet|...> (substring match)
 // Unrecognized "word:value" tokens are left alone and matched as plain text instead, so this
 // degrades gracefully rather than breaking a search that happens to contain a colon.
+// "Loose" on purpose: a bare keyword like "exotic" or "smg" should just work without the user
+// needing to know the tier:/type: syntax exists at all. Each plain word only has to appear
+// SOMEWHERE across name/type/tier (not as one exact contiguous phrase in the name specifically),
+// and different words are independent (AND'd together, each matching its own field) rather than
+// requiring them adjacent — so "vex exotic" finds an exotic with "vex" in the name even though
+// the literal string "vex exotic" never appears anywhere on the item.
 function parseSearchQuery(q){
   const tokens = q.trim().split(/\s+/).filter(Boolean);
-  const filters = []; const nameWords = [];
+  const filters = []; const words = [];
   tokens.forEach(tok => {
     const m = tok.match(/^(is|tier|type):(.+)$/i);
-    if(!m){ nameWords.push(tok); return; }
+    if(!m){ words.push(tok.toLowerCase()); return; }
     const [, key, valRaw] = m; const val = valRaw.toLowerCase();
     const key_ = key.toLowerCase();
     if(key_ === "is"){
@@ -1348,23 +1397,31 @@ function parseSearchQuery(q){
         locked: i=>i.locked, masterwork: i=>i.masterwork, crafted: i=>i.crafted,
         exotic: i=>i.tier==="Exotic", favorite: i=>i.favorite, equipped: i=>i.equipped
       };
-      if(preds[val]) filters.push(preds[val]); else nameWords.push(tok);
+      // Recognized is:/tier:/type: operators stay exact (that's the point of typing one on
+      // purpose) — anything unrecognized just falls back to being matched as a loose keyword
+      // instead of silently doing nothing, e.g. "is:typo" still searches for "is:typo" as text.
+      if(preds[val]) filters.push(preds[val]); else words.push(tok.toLowerCase());
     } else if(key_ === "tier"){
       filters.push(i => (i.tier||"").toLowerCase() === val);
     } else if(key_ === "type"){
       filters.push(i => (i.type||"").toLowerCase().includes(val));
     }
   });
-  return { filters, name: nameWords.join(" ").toLowerCase() };
+  return { filters, words };
 }
 function renderBrowse(){
   renderCapacityDash();
   // Only weapons and armor — quest steps, bounties, consumables etc. aren't vault-cleanup
   // material and were just adding noise to a screen about deciding what gear to keep.
   let list = allItems.filter(i => i.itemType === 2 || i.itemType === 3);
-  const { filters, name } = parseSearchQuery(searchQuery);
+  const { filters, words } = parseSearchQuery(searchQuery);
   filters.forEach(f => { list = list.filter(f); });
-  if(name){ list = list.filter(i=>i.name.toLowerCase().includes(name)); }
+  if(words.length){
+    list = list.filter(i => {
+      const haystack = `${i.name} ${i.type} ${i.tier}`.toLowerCase();
+      return words.every(w => haystack.includes(w));
+    });
+  }
   if(favoritesOnly) list = list.filter(i => i.favorite);
   if(locationFilter) list = list.filter(i => i.location === locationFilter);
 
