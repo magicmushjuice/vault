@@ -58,7 +58,14 @@
   .disp{font-family:'Rajdhani',sans-serif;}
   .mono{font-family:'JetBrains Mono',monospace;}
   h1,h2,h3{font-family:'Rajdhani',sans-serif; margin:0;}
-  button{font-family:'Manrope',sans-serif;}
+  button{font-family:'Manrope',sans-serif; cursor:pointer;}
+  button:disabled{cursor:not-allowed;}
+  /* Anything the JS wires up as clickable but isn't a native <button> — cards, sheet rows,
+     picker chips — gets the same pointer cursor so a mouse user can tell it's interactive
+     before they ever move over it. Touch has no cursor, so this costs it nothing. */
+  .clickable, .browse-item, .vcard, .slot-row:not(.disabled), #showdown-picker .class-chip,
+  #sheet .opt, #sheet .cancel, .theme-opt{ cursor:pointer; }
+  .slot-row.disabled{ cursor:not-allowed; }
 
   /* ---------- Login ---------- */
   #login{
@@ -74,7 +81,7 @@
     clip-path: polygon(0 0, 100% 0, 100% 100%, 12px 100%, 0 calc(100% - 12px));
   }
   .btn:active{transform:translateY(2px); box-shadow:0 1px 6px rgba(0,0,0,0.28);}
-  @media (hover:hover){
+  @media (hover:hover) and (pointer:fine){
     .btn:hover:not(:disabled){ filter:brightness(1.1); transform:translateY(-1px); box-shadow:0 5px 16px rgba(0,0,0,0.32); }
   }
   .btn.primary{background:linear-gradient(135deg, var(--purple), var(--pink)); color:#fff;}
@@ -99,6 +106,10 @@
     padding:8px 14px; border-radius:0; box-shadow:0 2px 8px rgba(0,0,0,0.2);
     clip-path: polygon(0 0, 100% 0, 100% 100%, 8px 100%, 0 calc(100% - 8px));
   }
+  header button.icon:active{ background:var(--line); }
+  @media (hover:hover) and (pointer:fine){
+    header button.icon:hover{ color:var(--purple-dk); }
+  }
 
   main{flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; padding-bottom:90px;}
 
@@ -112,6 +123,10 @@
     display:flex; flex-direction:column; align-items:center; gap:2px; color:var(--dim); font-weight:800; font-size:11px;
   }
   nav.tabs button.active{color:var(--purple-dk); background:color-mix(in srgb, var(--purple) 16%, var(--card));}
+  nav.tabs button:active:not(.active){background:var(--line);}
+  @media (hover:hover) and (pointer:fine){
+    nav.tabs button:hover:not(.active){color:var(--ink);}
+  }
   nav.tabs button .emoji{font-size:19px;}
   nav.tabs .badge{
     background:var(--red); color:#fff; border-radius:0; font-size:10px; padding:1px 6px; margin-left:4px;
@@ -136,7 +151,7 @@
     clip-path: polygon(0 0, 100% 0, 100% 100%, 8px 100%, 0 calc(100% - 8px));
   }
   .bracket-nav:active{transform:translateY(2px); box-shadow:0 1px 3px rgba(0,0,0,0.18);}
-  @media (hover:hover){
+  @media (hover:hover) and (pointer:fine){
     .bracket-nav:hover:not(:disabled){ border-color:var(--purple); color:var(--purple); }
   }
   .bracket-nav:disabled{opacity:0.35; box-shadow:none;}
@@ -150,7 +165,7 @@
     clip-path: polygon(0 0, 100% 0, 100% calc(100% - 16px), calc(100% - 16px) 100%, 0 100%);
   }
   .vcard:active{transform:scale(0.97);}
-  @media (hover:hover){
+  @media (hover:hover) and (pointer:fine){
     .vcard:hover{ transform:translateY(-2px); box-shadow:0 14px 34px rgba(0,0,0,0.45); }
   }
   .vcard.winner{border-color:var(--green); background:color-mix(in srgb, var(--green) 12%, var(--card));}
@@ -239,10 +254,18 @@
     clip-path: polygon(0 0, 100% 0, 100% 100%, 8px 100%, 0 calc(100% - 8px));
   }
   #showdown-picker .class-chip.active{border-color:var(--purple); color:var(--purple-dk); background:color-mix(in srgb, var(--purple) 16%, var(--card));}
+  #showdown-picker .class-chip:active{background:var(--line);}
+  @media (hover:hover) and (pointer:fine){
+    #showdown-picker .class-chip:hover:not(.active){ border-color:var(--dim); color:var(--ink); }
+  }
   .slot-row{
     display:flex; align-items:center; gap:14px; background:var(--card); border-radius:0; padding:14px;
-    margin-bottom:10px; box-shadow:0 4px 14px rgba(0,0,0,0.28);
+    margin-bottom:10px; box-shadow:0 4px 14px rgba(0,0,0,0.28); transition:transform .12s, box-shadow .12s;
     clip-path: polygon(0 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%);
+  }
+  .slot-row:not(.disabled):active{ transform:translateX(2px); }
+  @media (hover:hover) and (pointer:fine){
+    .slot-row:not(.disabled):hover{ box-shadow:0 6px 18px rgba(0,0,0,0.34); }
   }
   .slot-row.disabled{opacity:0.45;}
   .slot-row .slot-icon{width:48px; height:48px; border-radius:0; background:var(--line); flex:0 0 auto; overflow:hidden; clip-path: polygon(0 0, 100% 0, 100% 100%, 8px 100%, 0 calc(100% - 8px));}
@@ -274,7 +297,7 @@
     clip-path: polygon(0 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%);
     transition:transform .12s;
   }
-  @media (hover:hover){ .marked-item:hover{ transform:translateX(2px); } }
+  @media (hover:hover) and (pointer:fine){ .marked-item:hover{ transform:translateX(2px); } }
   .marked-item .icon{
     width:44px; height:44px; background:var(--line); overflow:hidden; flex:0 0 auto;
     clip-path: polygon(0 0, 100% 0, 100% 100%, 8px 100%, 0 calc(100% - 8px));
@@ -321,6 +344,10 @@
     padding:4px 10px; border-radius:0; cursor:pointer; white-space:nowrap;
     clip-path: polygon(0 0, 100% 0, 100% 100%, 5px 100%, 0 calc(100% - 5px));
   }
+  .pull-all-btn:active{filter:brightness(0.85);}
+  @media (hover:hover) and (pointer:fine){
+    .pull-all-btn:hover{filter:brightness(1.12);}
+  }
 
   /* ---------- Tags ---------- */
   .tag-pill{font-size:12px; margin-right:1px;}
@@ -330,6 +357,10 @@
     clip-path: polygon(0 0, 100% 0, 100% 100%, 7px 100%, 0 calc(100% - 7px));
   }
   .tag-btn.active{border-color:var(--purple); color:var(--purple-dk); background:color-mix(in srgb, var(--purple) 16%, var(--card));}
+  .tag-btn:active{background:var(--line);}
+  @media (hover:hover) and (pointer:fine){
+    .tag-btn:hover:not(.active){ border-color:var(--dim); color:var(--ink); }
+  }
 
   /* ---------- Bulk select ---------- */
   .bulk-check{width:19px; height:19px; flex:0 0 auto;}
@@ -355,7 +386,8 @@
     clip-path: polygon(0 0, 100% 0, 100% 100%, 7px 100%, 0 calc(100% - 7px));
   }
   .chip.active{border-color:var(--purple); color:var(--purple-dk); background:color-mix(in srgb, var(--purple) 16%, var(--card));}
-  @media (hover:hover){
+  .chip:active{background:var(--line);}
+  @media (hover:hover) and (pointer:fine){
     .chip:hover:not(.active){ border-color:var(--dim); color:var(--ink); }
   }
   .browse-item{
@@ -364,7 +396,8 @@
     clip-path: polygon(0 0, 100% 0, 100% calc(100% - 9px), calc(100% - 9px) 100%, 0 100%);
     transition:transform .12s, box-shadow .12s;
   }
-  @media (hover:hover){
+  .browse-item:active{ transform:translateX(1px) scale(0.995); }
+  @media (hover:hover) and (pointer:fine){
     .browse-item:hover{ transform:translateX(2px); box-shadow:0 6px 16px rgba(0,0,0,0.32); }
   }
   .browse-item .icon{
@@ -387,7 +420,9 @@
     padding:8px 10px; border-radius:0; cursor:pointer; transition:border-color .12s, color .12s;
     clip-path: polygon(0 0, 100% 0, 100% 100%, 6px 100%, 0 calc(100% - 6px));
   }
-  @media (hover:hover){
+  .browse-item .xfer:active:not(:disabled){background:var(--line);}
+  .browse-item .xfer:disabled{cursor:not-allowed;}
+  @media (hover:hover) and (pointer:fine){
     .browse-item .xfer:hover:not(:disabled){ border-color:var(--purple); color:var(--purple); }
   }
   .browse-item .xfer:disabled{opacity:0.3;}
@@ -445,11 +480,18 @@
   #sheet h3{font-size:16px; margin-bottom:12px; color:var(--purple-dk); font-family:'Rajdhani',sans-serif; text-transform:uppercase; letter-spacing:0.03em;}
   #sheet .opt{
     padding:14px; border:2px solid var(--line); border-radius:0; margin-bottom:8px; font-weight:800;
-    display:flex; justify-content:space-between; align-items:center;
+    display:flex; justify-content:space-between; align-items:center; transition:border-color .12s, background .12s;
     clip-path: polygon(0 0, 100% 0, 100% 100%, 10px 100%, 0 calc(100% - 10px));
   }
   #sheet .opt:active{background:var(--line);}
-  #sheet .cancel{color:var(--dim); text-align:center; padding:12px; font-weight:800;}
+  @media (hover:hover) and (pointer:fine){
+    #sheet .opt:hover{ border-color:var(--purple); background:color-mix(in srgb, var(--purple) 8%, var(--card)); }
+  }
+  #sheet .cancel{color:var(--dim); text-align:center; padding:12px; font-weight:800; transition:color .12s;}
+  #sheet .cancel:active{color:var(--ink);}
+  @media (hover:hover) and (pointer:fine){
+    #sheet .cancel:hover{ color:var(--ink); }
+  }
   .theme-opt{display:flex; align-items:center; gap:12px;}
   .theme-opt .swatch{width:30px; height:30px; border-radius:0; flex:0 0 auto; box-shadow:inset 0 0 0 2px rgba(0,0,0,0.08); clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);}
 
