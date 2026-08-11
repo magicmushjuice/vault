@@ -302,6 +302,23 @@
   .cap-row.warn .cap-fill{background:var(--gold);}
   .cap-row.danger .cap-fill{background:linear-gradient(90deg, var(--red-dk), var(--red));}
   .cap-row.danger .cap-top{color:var(--red-dk);}
+  .pull-all-btn{
+    background:var(--purple); color:#fff; border:none; font-size:10px; font-weight:800;
+    padding:4px 10px; border-radius:999px; cursor:pointer; white-space:nowrap;
+  }
+
+  /* ---------- Tags ---------- */
+  .tag-pill{font-size:12px; margin-right:1px;}
+  .tag-btn{
+    flex:1; background:var(--card); border:2px solid var(--line); color:var(--dim); font-weight:800; font-size:11.5px;
+    padding:10px 4px; border-radius:14px; cursor:pointer;
+  }
+  .tag-btn.active{border-color:var(--purple); color:var(--purple-dk); background:color-mix(in srgb, var(--purple) 16%, var(--card));}
+
+  /* ---------- Bulk select ---------- */
+  .bulk-check{width:19px; height:19px; flex:0 0 auto;}
+  #bulkActions{gap:8px; margin:10px 0;}
+  #bulkActions .btn{flex:1; font-size:13px; padding:12px;}
 
   /* ---------- Browse tab ---------- */
   #searchBar{
@@ -474,7 +491,7 @@
     <!-- ===== Browse tab ===== -->
     <div class="tabpanel active in" id="tab-browse">
       <div id="searchBar" style="display:flex; gap:8px; align-items:center;">
-        <input type="text" id="search" placeholder="Search name, type, element, tier…" autocomplete="off" style="flex:1;">
+        <input type="text" id="search" placeholder="Search name, type, tag:, stat:…" autocomplete="off" style="flex:1;">
         <button class="bracket-nav" id="sweepModeBtn" style="white-space:nowrap;">⚔️ Sweep</button>
       </div>
       <div class="chiprow" id="sortChips">
@@ -482,10 +499,14 @@
         <div class="chip" data-sort="tier">Rarity</div>
         <div class="chip" data-sort="type">Type</div>
         <div class="chip" id="favFilterChip">⭐ Favorites</div>
+        <div class="chip" id="tagFilterChip">🏷️ Tag ▾</div>
         <div class="chip" id="locFilterChip">Location ▾</div>
+        <div class="chip" id="savedSearchChip">💾 Saved</div>
+        <div class="chip" id="selectModeChip">☑️ Select</div>
       </div>
       <div id="missingItemsBanner" style="display:none;"></div>
       <div id="capacityDash"></div>
+      <div id="bulkActions" style="display:none;"></div>
       <div id="browseList"></div>
     </div>
   </main>
@@ -617,6 +638,31 @@ function setNote(itemInstanceId, text){
   localStorage.setItem("vault_notes", JSON.stringify(itemNotes));
 }
 
+// DIM-style item tags, one per instance, independent of Favorite (which stays its own
+// permanent "never Showdown this" flag). Purely informational/filterable — tagging something
+// Junk doesn't auto-feed Showdown or Marked, the player still decides that explicitly.
+const TAG_DEFS = {
+  keep:   { label: "Keep",   emoji: "🛡️" },
+  junk:   { label: "Junk",   emoji: "🗑️" },
+  infuse: { label: "Infuse", emoji: "⬆️" }
+};
+let itemTags = JSON.parse(localStorage.getItem("vault_tags") || "{}"); // itemInstanceId -> "keep"|"junk"|"infuse"
+function getTag(itemInstanceId){ return itemInstanceId ? (itemTags[itemInstanceId] || null) : null; }
+function setTag(itemInstanceId, tag){
+  if(!itemInstanceId) return;
+  if(tag) itemTags[itemInstanceId] = tag;
+  else delete itemTags[itemInstanceId];
+  localStorage.setItem("vault_tags", JSON.stringify(itemTags));
+}
+
+// Searches the player has typed once and wants back without retyping the operators.
+let savedSearches = JSON.parse(localStorage.getItem("vault_saved_searches") || "[]"); // [{name, query}]
+
+// Browse's multi-select bulk-move mode — postmaster items are excluded (they need
+// PullFromPostmaster, not TransferItem, so they keep their own single-item Pull button instead).
+let selectModeOn = false;
+let selectedForBulk = new Set();
+
 // ---------- Showdown state ----------
 // "picker" = choosing a class/slot (or Weapons) to compare; "bracket" = actively running matchups
 let showdownMode = "picker";
@@ -650,7 +696,7 @@ let diagIconMissingInDef = [];
 let diagIconLoadFailed = [];
 
 // Browse state
-let searchQuery = "", sortMode = "name", locationFilter = null, favoritesOnly = false;
+let searchQuery = "", sortMode = "name", locationFilter = null, favoritesOnly = false, tagFilter = null;
 
 // ---------- PKCE ----------
 function b64url(bytes){ return btoa(String.fromCharCode(...bytes)).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,''); }
@@ -840,7 +886,8 @@ async function loadEverything(){
       archetype, statBreakdown,
       isPostmaster: typeof label === "string" && label.startsWith("Postmaster"),
       favorite: isFavorite(it.itemInstanceId),
-      note: getNote(it.itemInstanceId)
+      note: getNote(it.itemInstanceId),
+      tag: getTag(it.itemInstanceId)
     };
   }).filter(Boolean);
 
@@ -1400,6 +1447,190 @@ async function doStageAll(){
   alert(`Staged on ${characterClassById[cleanupCharacterId]}. Log in-game to dismantle them.`);
 }
 
+// ---------- Postmaster pull ----------
+// Pulling isn't a TransferItem call — items sitting in the postmaster bucket need the
+// dedicated PullFromPostmaster endpoint, which lands them in whichever real inventory bucket
+// their item type maps to. That destination bucket isn't something this app tracks locally,
+// so rather than guess at the item's new location/bucket, a full reload afterward re-derives
+// everything (location, capacity dash, browse list) straight from the profile response.
+async function pullFromPostmaster(item){
+  showLoading("PULLING FROM POSTMASTER…");
+  try{
+    const res = await apiPost("/Platform/Destiny2/Actions/Items/PullFromPostmaster/", {
+      itemReferenceHash: item.itemHash, itemId: item.itemInstanceId, stackSize: item.quantity,
+      characterId: item.characterId, membershipType: membership.membershipType
+    });
+    if(res?.ErrorCode !== 1){ hideLoading(); alert("Couldn't pull from postmaster: " + (res?.Message || "unknown error")); return; }
+  }catch(e){ hideLoading(); alert("Couldn't pull from postmaster: " + (e?.message || e)); return; }
+  await loadEverything();
+}
+
+async function pullAllPostmasterForCharacter(cid){
+  const items = allItems.filter(i => i.isPostmaster && i.characterId === cid);
+  if(items.length === 0) return;
+  bulkTransferInProgress = true;
+  showLoading(`PULLING ${items.length} ITEM${items.length===1?'':'S'}…`);
+  let failCount = 0;
+  for(const item of items){
+    try{
+      const res = await apiPost("/Platform/Destiny2/Actions/Items/PullFromPostmaster/", {
+        itemReferenceHash: item.itemHash, itemId: item.itemInstanceId, stackSize: item.quantity,
+        characterId: item.characterId, membershipType: membership.membershipType
+      });
+      if(res?.ErrorCode !== 1) throw new Error(res?.Message || "pull failed");
+    }catch(e){ console.warn("Pull failed for", item.name, e); failCount++; }
+  }
+  bulkTransferInProgress = false;
+  await loadEverything();
+  if(failCount) alert(`${failCount} item${failCount===1?'':'s'} couldn't be pulled — that character's real inventory may be full, or they need to be claimed in-game.`);
+}
+
+// ---------- Bulk multi-select transfer ----------
+function renderBulkBar(){
+  const bar = $("#bulkActions");
+  if(!bar) return;
+  if(!selectModeOn || selectedForBulk.size === 0){ bar.style.display = "none"; return; }
+  bar.style.display = "flex";
+  bar.innerHTML = `
+    <button class="btn primary" id="bulkMoveBtn">Move ${selectedForBulk.size} item${selectedForBulk.size===1?'':'s'}…</button>
+    <button class="btn ghost" id="bulkClearBtn">Clear</button>`;
+  $("#bulkMoveBtn").addEventListener("click", openBulkMoveSheet);
+  $("#bulkClearBtn").addEventListener("click", () => { selectedForBulk.clear(); renderBrowse(); });
+}
+
+function openBulkMoveSheet(){
+  const sheet = $("#sheet");
+  const opts = [`<div class="opt" data-dest="__vault__">Vault<span>›</span></div>`,
+    ...Object.entries(characterClassById).map(([cid,label]) => `<div class="opt" data-dest="${cid}">${label}<span>›</span></div>`)
+  ].join("");
+  sheet.innerHTML = `<h3>Move ${selectedForBulk.size} item${selectedForBulk.size===1?'':'s'} to</h3>${opts}<div class="cancel" id="sheetCancel">Cancel</div>`;
+  openSheet();
+  sheet.querySelectorAll(".opt").forEach(opt => opt.addEventListener("click", async () => {
+    closeSheet();
+    await bulkMoveSelected(opt.dataset.dest);
+  }));
+  $("#sheetCancel").addEventListener("click", closeSheet);
+}
+
+// Same two-hop-through-vault pattern as doStageAll — Bungie's API has no direct
+// character-to-character transfer, so a char-to-char move is really "to vault" then
+// "vault to target character" as two separate calls.
+async function bulkMoveSelected(dest){
+  const toVault = dest === "__vault__";
+  const items = allItems.filter(i => selectedForBulk.has(i.itemInstanceId));
+  bulkTransferInProgress = true;
+  showLoading(`MOVING ${items.length} ITEM${items.length===1?'':'S'}…`);
+  let failCount = 0;
+  for(const item of items){
+    try{
+      if(toVault){
+        if(item.location === "Vault") continue;
+        const res = await apiPost("/Platform/Destiny2/Actions/Items/TransferItem/", {
+          itemReferenceHash: item.itemHash, stackSize: item.quantity, transferToVault: true,
+          itemId: item.itemInstanceId, characterId: item.characterId,
+          membershipType: membership.membershipType
+        });
+        if(res?.ErrorCode !== 1) throw new Error(res?.Message || "transfer failed");
+        item.characterId = null; item.location = "Vault"; item.equipped = false;
+      } else {
+        if(item.characterId === dest) continue;
+        if(item.characterId){
+          const res1 = await apiPost("/Platform/Destiny2/Actions/Items/TransferItem/", {
+            itemReferenceHash: item.itemHash, stackSize: item.quantity, transferToVault: true,
+            itemId: item.itemInstanceId, characterId: item.characterId,
+            membershipType: membership.membershipType
+          });
+          if(res1?.ErrorCode !== 1) throw new Error(res1?.Message || "transfer to vault failed");
+        }
+        const res2 = await apiPost("/Platform/Destiny2/Actions/Items/TransferItem/", {
+          itemReferenceHash: item.itemHash, stackSize: item.quantity, transferToVault: false,
+          itemId: item.itemInstanceId, characterId: dest,
+          membershipType: membership.membershipType
+        });
+        if(res2?.ErrorCode !== 1) throw new Error(res2?.Message || "transfer to character failed");
+        item.characterId = dest; item.location = characterClassById[dest] || "Guardian"; item.equipped = false;
+      }
+    }catch(e){ console.warn("Bulk move failed for", item.name, e); failCount++; }
+  }
+  bulkTransferInProgress = false;
+  hideLoading();
+  selectedForBulk.clear();
+  renderBrowse();
+  if(failCount) alert(`${failCount} item${failCount===1?'':'s'} couldn't be moved.`);
+}
+
+// ---------- Export all tags/notes (not just Marked) as a DIM-importable CSV ----------
+function exportAllTagsAsDimCsv(){
+  const relevant = allItems.filter(i => i.itemInstanceId && (i.tag || i.favorite || i.note));
+  if(relevant.length === 0){ alert("Nothing tagged, favorited, or noted yet."); return; }
+  const rows = [["Id","Hash","Tag","Notes"]];
+  relevant.forEach(item => {
+    const tag = item.tag || (item.favorite ? "favorite" : "");
+    rows.push([item.itemInstanceId, item.itemHash, tag, item.note || ""]);
+  });
+  const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(",")).join("\r\n");
+  const blob = new Blob([csv], { type: "text/csv" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = "vault-showdown-all-tags.csv";
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+// ---------- Tag filter sheet ----------
+function openTagFilterSheet(){
+  const sheet = $("#sheet");
+  const opts = [{ key:"", label:"All" }, { key:"none", label:"Untagged" },
+    ...Object.entries(TAG_DEFS).map(([k,v]) => ({ key:k, label:`${v.emoji} ${v.label}` }))];
+  sheet.innerHTML = "<h3>Filter by tag</h3>" + opts.map(o =>
+    `<div class="opt" data-tag="${o.key}">${o.label}<span>${(tagFilter||"")===o.key?'✓':'›'}</span></div>`
+  ).join("") + `<div class="cancel" id="sheetCancel">Cancel</div>`;
+  openSheet();
+  sheet.querySelectorAll(".opt").forEach(opt => opt.addEventListener("click", () => {
+    tagFilter = opt.dataset.tag === "" ? null : opt.dataset.tag;
+    closeSheet(); renderBrowse();
+  }));
+  $("#sheetCancel").addEventListener("click", closeSheet);
+}
+
+// ---------- Saved searches ----------
+function openSavedSearchesSheet(){
+  const sheet = $("#sheet");
+  const rows = savedSearches.map((s, idx) => `
+    <div class="opt saved-search-opt" data-idx="${idx}">
+      <span style="flex:1;">${escapeHtml(s.name)}<div style="font-size:11px;color:var(--dim);font-weight:700;">${escapeHtml(s.query)}</div></span>
+      <button class="saved-search-del" data-idx="${idx}" style="background:none;border:none;color:var(--red-dk);font-size:16px;font-weight:800;padding:2px 8px;">✕</button>
+    </div>`).join("");
+  sheet.innerHTML = `<h3>Saved searches</h3>` +
+    (savedSearches.length ? rows : `<p style="color:var(--dim);font-weight:700;font-size:12.5px;">No saved searches yet.</p>`) +
+    (searchQuery.trim() ? `<div class="opt" id="saveCurrentSearchOpt">💾 Save current search<span>›</span></div>` : '') +
+    `<div class="cancel" id="sheetCancel">Close</div>`;
+  openSheet();
+  sheet.querySelectorAll(".saved-search-opt").forEach(opt => opt.addEventListener("click", (e) => {
+    if(e.target.closest(".saved-search-del")) return;
+    const s = savedSearches[Number(opt.dataset.idx)];
+    searchQuery = s.query;
+    $("#search").value = s.query;
+    closeSheet();
+    renderBrowse();
+  }));
+  sheet.querySelectorAll(".saved-search-del").forEach(btn => btn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    savedSearches.splice(Number(btn.dataset.idx), 1);
+    localStorage.setItem("vault_saved_searches", JSON.stringify(savedSearches));
+    openSavedSearchesSheet();
+  }));
+  const saveOpt = $("#saveCurrentSearchOpt");
+  if(saveOpt) saveOpt.addEventListener("click", () => {
+    const name = prompt("Name this search:", searchQuery);
+    if(!name || !name.trim()) return;
+    savedSearches.push({ name: name.trim(), query: searchQuery.trim() });
+    localStorage.setItem("vault_saved_searches", JSON.stringify(savedSearches));
+    openSavedSearchesSheet();
+  });
+  $("#sheetCancel").addEventListener("click", closeSheet);
+}
+
 // ---------- Missing-item banner ----------
 // diagDefResolveFailed holds hashes that still failed manifest resolution after loadEverything's
 // built-in retry + one extra delayed sweep — those items are silently absent from allItems
@@ -1430,20 +1661,30 @@ function renderCapacityDash(){
     const count = postmasterCounts[cid] || 0;
     if(count === 0) return; // don't clutter the dashboard with empty postmasters
     rows.push(capRowHtml(`${characterClassById[cid]}'s Postmaster`, count, POSTMASTER_CAPACITY,
-      "Items here get auto-deleted once it fills up — pull them in-game."));
+      "Items here get auto-deleted once it fills up.", cid));
   });
   el.innerHTML = rows.join("");
+  el.querySelectorAll(".pull-all-btn").forEach(btn => btn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    pullAllPostmasterForCharacter(btn.dataset.cid);
+  }));
   // Bars are written into the DOM at width:0 (see capRowHtml) so this fill-to-target always
   // has a real 0% starting point to transition from, rather than just snapping to place.
   requestAnimationFrame(() => requestAnimationFrame(() => {
     el.querySelectorAll(".cap-fill").forEach(bar => { bar.style.width = bar.dataset.pct + "%"; });
   }));
 }
-function capRowHtml(label, count, cap, dangerNote){
+function capRowHtml(label, count, cap, dangerNote, pullCid){
   const pct = Math.min(100, Math.round((count/cap)*100));
   const state = pct >= 95 ? "danger" : pct >= 80 ? "warn" : "";
   return `<div class="cap-row ${state}">
-    <div class="cap-top"><span>${label}${state==="danger" && dangerNote ? " — " + dangerNote : ""}</span><span class="cap-count">${count} / ${cap}</span></div>
+    <div class="cap-top">
+      <span>${label}${state==="danger" && dangerNote ? " — " + dangerNote : ""}</span>
+      <span style="display:flex; align-items:center; gap:8px;">
+        <span class="cap-count">${count} / ${cap}</span>
+        ${pullCid ? `<button class="pull-all-btn" data-cid="${pullCid}">Pull all</button>` : ''}
+      </span>
+    </div>
     <div class="cap-track"><div class="cap-fill" data-pct="${pct}" style="width:0%"></div></div>
   </div>`;
 }
@@ -1467,10 +1708,71 @@ function tokenMatches(haystack, token){
   const escaped = token.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   return new RegExp('\\b' + escaped, 'i').test(haystack);
 }
+// Shared by stat:/power: — "25" alone means ">=25" (DIM's own default), or an explicit
+// >, >=, <, <=, = prefix. Returns null for garbage so the caller can fall back to a keyword.
+function parseCompareExpr(expr){
+  const m = expr.match(/^(>=|<=|>|<|=)?(\d+)$/);
+  if(!m) return null;
+  return { op: m[1] || ">=", num: Number(m[2]) };
+}
+function compareOp(value, op, num){
+  switch(op){
+    case ">": return value > num;
+    case ">=": return value >= num;
+    case "<": return value < num;
+    case "<=": return value <= num;
+    case "=": return value === num;
+    default: return value >= num;
+  }
+}
+// Recognized DIM-style operators:
+//   is:locked / masterwork / crafted / exotic / favorite / equipped / tagged / postmaster
+//   is:keep / is:junk / is:infuse   (same as tag:keep etc.)
+//   tag:<keep|junk|infuse|none>     tier:<rare|legendary|...>     type:<hand cannon|...>
+//   element:<arc|solar|...>         class:<titan|hunter|warlock>  ammo:<primary|special|heavy>
+//   power:<op><n>  e.g. power:>1000, power:950         stat:<statname>:<op><n>  e.g. stat:recovery:>=25
 function parseSearchQuery(q){
   const tokens = q.trim().split(/\s+/).filter(Boolean);
   const filters = []; const words = [];
   tokens.forEach(tok => {
+    const statM = tok.match(/^stat:([a-z ]+):(.+)$/i);
+    if(statM){
+      const statNameLc = statM[1].toLowerCase().trim();
+      const parsed = parseCompareExpr(statM[2]);
+      if(parsed){
+        filters.push(i => {
+          const s = (i.statBreakdown||[]).find(s => s.name && s.name.toLowerCase() === statNameLc);
+          return !!s && compareOp(s.value, parsed.op, parsed.num);
+        });
+      } else words.push(tok.toLowerCase());
+      return;
+    }
+    const powerM = tok.match(/^power:(.+)$/i);
+    if(powerM){
+      const parsed = parseCompareExpr(powerM[1]);
+      if(parsed) filters.push(i => compareOp(i.power||0, parsed.op, parsed.num));
+      else words.push(tok.toLowerCase());
+      return;
+    }
+    const classM = tok.match(/^class:(.+)$/i);
+    if(classM){
+      const classIdx = { titan:0, hunter:1, warlock:2 }[classM[1].toLowerCase()];
+      if(classIdx !== undefined) filters.push(i => i.classType === classIdx || i.classType === 3);
+      else words.push(tok.toLowerCase());
+      return;
+    }
+    const ammoM = tok.match(/^ammo:(.+)$/i);
+    if(ammoM){
+      const val = ammoM[1].toLowerCase();
+      filters.push(i => (AMMO_NAMES[i.ammoType]||"").toLowerCase() === val);
+      return;
+    }
+    const tagM = tok.match(/^tag:(.+)$/i);
+    if(tagM){
+      const val = tagM[1].toLowerCase();
+      filters.push(val === "none" ? (i => !i.tag) : (i => i.tag === val));
+      return;
+    }
     const m = tok.match(/^(is|tier|type|element):(.+)$/i);
     if(!m){ words.push(tok.toLowerCase()); return; }
     const [, key, valRaw] = m; const val = valRaw.toLowerCase();
@@ -1478,7 +1780,9 @@ function parseSearchQuery(q){
     if(key_ === "is"){
       const preds = {
         locked: i=>i.locked, masterwork: i=>i.masterwork, crafted: i=>i.crafted,
-        exotic: i=>i.tier==="Exotic", favorite: i=>i.favorite, equipped: i=>i.equipped
+        exotic: i=>i.tier==="Exotic", favorite: i=>i.favorite, equipped: i=>i.equipped,
+        keep: i=>i.tag==="keep", junk: i=>i.tag==="junk", infuse: i=>i.tag==="infuse",
+        tagged: i=>!!i.tag, postmaster: i=>i.isPostmaster
       };
       // Recognized is:/tier:/type:/element: operators stay exact (that's the point of typing one on
       // purpose) — anything unrecognized just falls back to being matched as a loose keyword
@@ -1503,12 +1807,13 @@ function renderBrowse(){
   filters.forEach(f => { list = list.filter(f); });
   if(words.length){
     list = list.filter(i => {
-      const haystack = `${i.name} ${i.type} ${i.tier} ${i.element||''}`.toLowerCase();
+      const haystack = `${i.name} ${i.type} ${i.tier} ${i.element||''} ${i.note||''}`.toLowerCase();
       return words.every(w => tokenMatches(haystack, w));
     });
   }
   if(favoritesOnly) list = list.filter(i => i.favorite);
   if(locationFilter) list = list.filter(i => i.location === locationFilter);
+  if(tagFilter) list = list.filter(i => tagFilter === "none" ? !i.tag : i.tag === tagFilter);
 
   // Group exact duplicates into one row instead of one per copy — a stack of 6 identical
   // guns is a "how many do I have" fact worth surfacing, not 6 rows to scroll past.
@@ -1549,12 +1854,26 @@ function renderBrowse(){
     } else {
       const item = rep;
       const transferrable = (item.transferStatus & 0x1) === 0 && item.itemInstanceId;
+      // Postmaster items always get their own Pull button (they need PullFromPostmaster, not
+      // TransferItem) regardless of select mode; select mode itself skips them entirely.
+      const inSelectMode = selectModeOn && !item.isPostmaster;
+      const checked = selectedForBulk.has(item.itemInstanceId);
+      const actionHtml = item.isPostmaster
+        ? `<button class="xfer pull-btn">📥 PULL</button>`
+        : inSelectMode
+          ? `<input type="checkbox" class="bulk-check" ${checked?'checked':''}>`
+          : `${item.itemInstanceId ? `<button class="fav-star ${item.favorite?'active':''}">★</button>` : ''}<button class="xfer" ${transferrable?'':'disabled'}>${item.location==='Vault'?'TO CHAR':'TO VAULT'}</button>`;
       el.innerHTML = `
         <div class="icon" style="box-shadow:0 0 16px 1px ${color}66;">${iconImgHtml(item)}<div class="tier-dot" style="background:${color}"></div></div>
-        <div class="info"><div class="name">${escapeHtml(item.name)}</div><div class="sub">${elementGlyphInline(item)}${item.location}${item.quantity>1?' · x'+item.quantity:''}</div>${item.note ? `<div class="note">📝 ${escapeHtml(item.note)}</div>` : ''}</div>
-        ${item.itemInstanceId ? `<button class="fav-star ${item.favorite?'active':''}">★</button>` : ''}
-        <button class="xfer" ${transferrable?'':'disabled'}>${item.location==='Vault'?'TO CHAR':'TO VAULT'}</button>`;
-      el.querySelector(".xfer").addEventListener("click", (e) => { e.stopPropagation(); transferPrompt(item); });
+        <div class="info"><div class="name">${item.tag ? `<span class="tag-pill">${TAG_DEFS[item.tag].emoji}</span> ` : ''}${escapeHtml(item.name)}</div><div class="sub">${elementGlyphInline(item)}${item.location}${item.quantity>1?' · x'+item.quantity:''}</div>${item.note ? `<div class="note">📝 ${escapeHtml(item.note)}</div>` : ''}</div>
+        ${actionHtml}`;
+
+      const pullBtn = el.querySelector(".pull-btn");
+      if(pullBtn) pullBtn.addEventListener("click", (e) => { e.stopPropagation(); pullFromPostmaster(item); });
+
+      const xferBtn = el.querySelector(".xfer:not(.pull-btn)");
+      if(xferBtn) xferBtn.addEventListener("click", (e) => { e.stopPropagation(); transferPrompt(item); });
+
       const starBtn = el.querySelector(".fav-star");
       if(starBtn) starBtn.addEventListener("click", (e) => {
         e.stopPropagation();
@@ -1564,10 +1883,22 @@ function renderBrowse(){
         starBtn.classList.remove("pop"); void starBtn.offsetWidth; // restart the animation even on rapid re-clicks
         starBtn.classList.add("pop");
       });
-      el.addEventListener("click", () => openItemDetail(item));
+
+      const checkbox = el.querySelector(".bulk-check");
+      if(checkbox){
+        checkbox.addEventListener("click", e => e.stopPropagation());
+        checkbox.addEventListener("change", (e) => {
+          if(e.target.checked) selectedForBulk.add(item.itemInstanceId); else selectedForBulk.delete(item.itemInstanceId);
+          renderBulkBar();
+        });
+        el.addEventListener("click", () => { checkbox.checked = !checkbox.checked; checkbox.dispatchEvent(new Event("change")); });
+      } else {
+        el.addEventListener("click", () => openItemDetail(item));
+      }
     }
     container.appendChild(el);
   });
+  renderBulkBar();
 }
 function tierRank(t){ return {"Exotic":5,"Legendary":4,"Rare":3,"Uncommon":2,"Common":1}[t]||0; }
 function escapeHtml(s){ return s.replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
@@ -1618,10 +1949,15 @@ function openItemDetail(item){
       </div>
     </div>
     ${item.itemInstanceId ? `<textarea id="noteField" placeholder="Add a note (why you're keeping/marking this)…">${escapeHtml(item.note||'')}</textarea>` : ''}
+    ${item.itemInstanceId ? `<div style="display:flex;gap:8px;margin:10px 0;">${Object.entries(TAG_DEFS).map(([k,v]) =>
+      `<button class="tag-btn ${item.tag===k?'active':''}" data-tag="${k}">${v.emoji} ${v.label}</button>`).join('')}</div>` : ''}
     <div class="opt" id="detailCompareBtn">⚔️ Compare against similar<span>›</span></div>
     ${item.itemInstanceId ? `<div class="opt" id="detailFavBtn">${item.favorite ? '★ Unfavorite (allow in Showdown)' : '☆ Favorite (never suggest for cleanup)'}<span>›</span></div>` : ''}
     ${item.itemInstanceId ? `<div class="opt" id="detailLockBtn">${item.locked ? '🔓 Unlock item' : '🔒 Lock item'}<span>›</span></div>` : ''}
-    ${item.itemInstanceId ? `<div class="opt" id="detailTransferBtn">${item.location==='Vault'?'Move to a character':'Move to Vault'}<span>›</span></div>` : ''}
+    ${item.itemInstanceId ? (item.isPostmaster
+      ? `<div class="opt" id="detailPullBtn">📥 Pull from Postmaster<span>›</span></div>`
+      : `<div class="opt" id="detailTransferBtn">${item.location==='Vault'?'Move to a character':'Move to Vault'}<span>›</span></div>`
+    ) : ''}
     <div class="cancel" id="sheetCancel">Close</div>`;
   openSheet();
   const noteField = $("#noteField");
@@ -1630,6 +1966,14 @@ function openItemDetail(item){
     item.note = getNote(item.itemInstanceId);
     renderBrowse(); renderMarked();
   });
+  sheet.querySelectorAll(".tag-btn").forEach(btn => btn.addEventListener("click", () => {
+    const tag = btn.dataset.tag;
+    const newTag = item.tag === tag ? null : tag;
+    setTag(item.itemInstanceId, newTag);
+    item.tag = getTag(item.itemInstanceId);
+    openItemDetail(item); // re-render the sheet so the active tag button updates
+    renderBrowse();
+  }));
   const favBtn = $("#detailFavBtn");
   if(favBtn) favBtn.addEventListener("click", () => {
     toggleFavorite(item.itemInstanceId);
@@ -1637,6 +1981,8 @@ function openItemDetail(item){
     closeSheet();
     renderBrowse();
   });
+  const pullBtn = $("#detailPullBtn");
+  if(pullBtn) pullBtn.addEventListener("click", () => { closeSheet(); pullFromPostmaster(item); });
 
   $("#detailCompareBtn").addEventListener("click", () => {
     const others = findSimilarPool(item);
@@ -1765,12 +2111,17 @@ function openThemeSheet(){
       <div class="swatch" style="background:linear-gradient(135deg, ${t.dot1}, ${t.dot2})"></div>
       <span style="flex:1;">${t.label}</span>
       <span>${t.id === current ? '✓' : '›'}</span>
-    </div>`).join("") + `<div class="cancel" id="sheetCancel">Close</div>`;
+    </div>`).join("") +
+    `<div style="font-size:11px;color:var(--dim);font-weight:800;margin:14px 0 8px 0;">DATA</div>
+    <div class="opt" id="exportAllTagsBtn">Export all tags to DIM CSV<span>›</span></div>` +
+    `<div class="cancel" id="sheetCancel">Close</div>`;
   openSheet();
   sheet.querySelectorAll(".theme-opt").forEach(opt => opt.addEventListener("click", () => {
     applyTheme(opt.dataset.themeId);
     closeSheet();
   }));
+  const exportBtn = $("#exportAllTagsBtn");
+  if(exportBtn) exportBtn.addEventListener("click", () => { exportAllTagsAsDimCsv(); closeSheet(); });
   $("#sheetCancel").addEventListener("click", closeSheet);
 }
 $("#themeBtn").addEventListener("click", openThemeSheet);
@@ -1791,6 +2142,15 @@ $("#sortChips").addEventListener("click", e => {
   const chip = e.target.closest(".chip");
   if(!chip) return;
   if(chip.id === "locFilterChip"){ openLocationSheet(); return; }
+  if(chip.id === "tagFilterChip"){ openTagFilterSheet(); return; }
+  if(chip.id === "savedSearchChip"){ openSavedSearchesSheet(); return; }
+  if(chip.id === "selectModeChip"){
+    selectModeOn = !selectModeOn;
+    chip.classList.toggle("active", selectModeOn);
+    if(!selectModeOn) selectedForBulk.clear();
+    renderBrowse();
+    return;
+  }
   if(chip.id === "favFilterChip"){
     favoritesOnly = !favoritesOnly;
     chip.classList.toggle("active", favoritesOnly);
