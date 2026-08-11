@@ -448,6 +448,9 @@
   @keyframes rowIn{ from{opacity:0; transform:translateY(7px);} to{opacity:1; transform:translateY(0);} }
   .browse-item, .marked-item{ animation:rowIn .3s cubic-bezier(.22,1,.36,1) both; }
   .browse-item .note{font-size:10.5px; color:var(--dim); font-style:italic; margin-top:2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  /* Compact stat-chip row shared by Browse and Marked list rows */
+  .row-chips{display:flex; gap:4px; flex-wrap:wrap; margin-top:4px;}
+  .row-chips .stat-chip{font-size:10px; padding:3px 7px;}
   .fav-star{
     background:none; border:none; font-size:19px; padding:2px 6px; flex:0 0 auto; line-height:1;
     filter:grayscale(1); opacity:0.35; transition:filter .15s, opacity .15s;
@@ -687,6 +690,20 @@ function ammoChipHtml(ammoName){
   if(!ammoName) return '';
   const cls = AMMO_ICON_CLASS[ammoName];
   return `<span class="stat-chip">${cls ? `<i class="${cls}"></i> ` : ''}${ammoName}</span>`;
+}
+// Compact stat-chip row shared by every list row that shows a weapon or armor piece (Browse,
+// Marked) — the same power/RPM/element/ammo/archetype facts the item detail sheet and Showdown
+// vcard already surface, just trimmed to what fits on one line instead of a full breakdown.
+function rowChipsHtml(item){
+  if(!item) return '';
+  const powerChip = item.power ? `<span class="stat-chip">${item.power} PWR</span>` : '';
+  if(item.itemType === 3){
+    return [powerChip, item.rpm ? `<span class="stat-chip">${item.rpm} RPM</span>` : '', elementChipHtml(item.element), ammoChipHtml(AMMO_NAMES[item.ammoType])].filter(Boolean).join('');
+  }
+  if(item.itemType === 2){
+    return [powerChip, item.archetype ? `<span class="stat-chip">${escapeHtml(item.archetype)}</span>` : ''].filter(Boolean).join('');
+  }
+  return powerChip;
 }
 // Small inline glyph (no chip background) for list rows, colored to match the element.
 function elementGlyphInline(item){
@@ -1370,8 +1387,10 @@ function vcardEl(item){
       ].filter(Boolean).join('');
 
   // Real stat bars, like the in-game inspect screen — scaled against 100 since that's the
-  // usual ceiling for both weapon and armor stats in the current stat system.
-  const statBarsHtml = (item.statBreakdown || []).slice(0, 6).map(s => `
+  // usual ceiling for both weapon and armor stats in the current stat system. Unsliced (every
+  // resolved stat, not just the top few) to match the same full breakdown the item detail sheet
+  // shows — a matchup is exactly when you want the complete picture, not a summary.
+  const statBarsHtml = (item.statBreakdown || []).map(s => `
     <div class="stat-bar-row">
       <span class="stat-label">${escapeHtml(s.name)}</span>
       <div class="stat-track"><div class="stat-fill" style="width:${Math.min(100, s.value)}%"></div></div>
@@ -1473,9 +1492,14 @@ function renderMarked(){
     el.style.borderLeftColor = TIER_COLORS[item.tier] || TIER_COLORS.Common;
     el.style.animationDelay = `${Math.min(idx, 10) * 25}ms`; // cap so long lists don't feel sluggish to appear
     const note = getNote(item.itemInstanceId);
+    // The marked snapshot only ever stored a handful of fields (name/icon/location/power) — pull
+    // the live item for the fuller RPM/element/ammo/archetype chips when it's still owned, and
+    // fall back to just the snapshotted power if it's since been dismantled.
+    const live = allItems.find(i => i.itemInstanceId === item.itemInstanceId);
+    const chips = live ? rowChipsHtml(live) : (item.power ? `<span class="stat-chip">${item.power} PWR</span>` : '');
     el.innerHTML = `
       <div class="icon">${iconImgHtml(item)}</div>
-      <div class="info"><div class="name">${escapeHtml(item.name)}</div><div class="meta">${item.location} · ${item.power||'—'} power</div>${note ? `<div class="note">📝 ${escapeHtml(note)}</div>` : ''}</div>
+      <div class="info"><div class="name">${escapeHtml(item.name)}</div><div class="meta">${item.location}</div>${chips ? `<div class="row-chips">${chips}</div>` : ''}${note ? `<div class="note">📝 ${escapeHtml(note)}</div>` : ''}</div>
       <button data-idx="${idx}">✕</button>`;
     el.querySelector("button").addEventListener("click", () => {
       marked.splice(idx, 1);
@@ -2099,9 +2123,10 @@ function renderBrowse(){
     el.style.borderLeftColor = color;
 
     if(items.length > 1){
+      const groupChips = rowChipsHtml(rep);
       el.innerHTML = `
         <div class="icon" style="box-shadow:0 0 16px 1px ${color}66;">${iconImgHtml(rep)}<div class="tier-dot" style="background:${color}"></div></div>
-        <div class="info"><div class="name">${escapeHtml(rep.name)}</div><div class="sub">${elementGlyphInline(rep)}${items.length} copies owned</div></div>
+        <div class="info"><div class="name">${escapeHtml(rep.name)}</div><div class="sub">${elementGlyphInline(rep)}${items.length} copies owned</div>${groupChips ? `<div class="row-chips">${groupChips}</div>` : ''}</div>
         <button class="xfer">⚔️ Compare</button>`;
       el.querySelector(".xfer").addEventListener("click", (e) => {
         e.stopPropagation();
@@ -2122,9 +2147,10 @@ function renderBrowse(){
         : inSelectMode
           ? `<input type="checkbox" class="bulk-check" ${checked?'checked':''}>`
           : `${item.itemInstanceId ? `<button class="fav-star ${item.favorite?'active':''}">★</button>` : ''}<button class="xfer" ${transferrable?'':'disabled'}>${item.location==='Vault'?'TO CHAR':'TO VAULT'}</button>`;
+      const itemChips = rowChipsHtml(item);
       el.innerHTML = `
         <div class="icon" style="box-shadow:0 0 16px 1px ${color}66;">${iconImgHtml(item)}<div class="tier-dot" style="background:${color}"></div></div>
-        <div class="info"><div class="name">${item.tag ? `<span class="tag-pill">${TAG_DEFS[item.tag].emoji}</span> ` : ''}${escapeHtml(item.name)}</div><div class="sub">${elementGlyphInline(item)}${item.location}${item.quantity>1?' · x'+item.quantity:''}</div>${item.note ? `<div class="note">📝 ${escapeHtml(item.note)}</div>` : ''}</div>
+        <div class="info"><div class="name">${item.tag ? `<span class="tag-pill">${TAG_DEFS[item.tag].emoji}</span> ` : ''}${escapeHtml(item.name)}</div><div class="sub">${elementGlyphInline(item)}${item.location}${item.quantity>1?' · x'+item.quantity:''}</div>${itemChips ? `<div class="row-chips">${itemChips}</div>` : ''}${item.note ? `<div class="note">📝 ${escapeHtml(item.note)}</div>` : ''}</div>
         ${actionHtml}`;
 
       const pullBtn = el.querySelector(".pull-btn");
