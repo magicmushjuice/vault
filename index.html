@@ -4,49 +4,53 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Vault Showdown</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0a0a12">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Vault Showdown">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 <!-- Real Destiny 2 glyph icons (elements, ammo types) so these read the way the game itself renders them -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/justrealmilk/destiny-icons@master/css/destiny-icons.css">
 <style>
   :root{
-    --bg1:#efe7ff; --bg2:#ffe9dc;
-    --card:#ffffff;
-    --ink:#3a2e4d;
-    --dim:#8b7fa3;
-    --line:#ece4fb;
+    /* Blackout — the default and fallback. Every theme here is dark-first on purpose: the old
+       light pastel palettes (Bubblegum/Ocean/Sunset/Mint) put stat-bar fills so close in
+       lightness to their own track/card colors that the bars themselves got hard to read, on
+       top of just being visually loud. A near-black base guarantees a bright gradient fill
+       always reads clearly against its track regardless of which accent hue is picked. */
+    --bg1:#0a0a12; --bg2:#0d0c16;
+    --card:#14141f;
+    --ink:#f2f0f7;
+    --dim:#8f8aa3;
+    --line:#242233;
 
-    --purple:#8b5cf6; --purple-dk:#6d3fd6;
-    --pink:#f472b6;
+    --purple:#7c5cff; --purple-dk:#9c85ff;
+    --pink:#ff5ea8;
     --green:#34d399; --green-dk:#16a37a;
     --red:#fb7185; --red-dk:#e34d64;
     --gold:#f5b942;
 
     --common:#9ca3af; --uncommon:#3ddc84; --rare:#4f9dff; --legendary:#b45cff; --exotic:#ffcc33;
   }
-  /* ---------- Theme palettes — swap the "brand" colors, keep tier/status colors constant ---------- */
-  html[data-theme="ocean"]{
-    --bg1:#e0f7fa; --bg2:#e3f2ff; --card:#ffffff; --ink:#123b4f; --dim:#5c8aa0; --line:#d6eef7;
-    --purple:#0891b2; --purple-dk:#0e7490; --pink:#38bdf8;
+  /* ---------- Theme palettes — swap the accent + background, keep tier/status colors constant.
+     All three variants below (plus the :root/Blackout default) are dark-first for the same
+     bar-legibility reason noted above; only the accent hue and background tint change. ---------- */
+  html[data-theme="abyss"]{
+    --bg1:#050b14; --bg2:#081420; --card:#0d1a26; --ink:#eaf6fb; --dim:#7ba3bd; --line:#16273a;
+    --purple:#0ea5e9; --purple-dk:#38bdf8; --pink:#22d3ee;
   }
-  html[data-theme="sunset"]{
-    --bg1:#fff1e6; --bg2:#ffe0e0; --card:#ffffff; --ink:#5b2e1f; --dim:#a97a63; --line:#ffe3d1;
-    --purple:#f97316; --purple-dk:#ea580c; --pink:#fb7185;
+  html[data-theme="ember"]{
+    --bg1:#140905; --bg2:#1a0d08; --card:#221208; --ink:#fbeee6; --dim:#c2917a; --line:#3a2013;
+    --purple:#f97316; --purple-dk:#fb923c; --pink:#ef4444;
   }
-  html[data-theme="mint"]{
-    --bg1:#e8fff3; --bg2:#eafff0; --card:#ffffff; --ink:#0f3d2e; --dim:#5f9c82; --line:#d5f7e6;
-    --purple:#10b981; --purple-dk:#059669; --pink:#2dd4bf;
-  }
-  html[data-theme="midnight"]{
-    --bg1:#1b1230; --bg2:#241a3d; --card:#2a2045; --ink:#f1e9ff; --dim:#a897c9; --line:#3a2d5c;
-    --purple:#a78bfa; --purple-dk:#c4b5fd; --pink:#f472b6;
-  }
-  /* Default theme. Dark, modern base — bubbly comes through in shape (rounded cards, pill
-     buttons) rather than pastel color, and each card's glow is colored by its own item tier
-     (gold for Exotic, violet for Legendary...) the same way the game itself signals rarity. */
-  html[data-theme="blackout"]{
-    --bg1:#0a0a12; --bg2:#0d0c16; --card:#14141f; --ink:#f2f0f7; --dim:#8f8aa3; --line:#242233;
-    --purple:#7c5cff; --purple-dk:#9c85ff; --pink:#ff5ea8;
+  html[data-theme="verdant"]{
+    --bg1:#04120c; --bg2:#071a12; --card:#0c221a; --ink:#e8fbf2; --dim:#79b39d; --line:#163527;
+    --purple:#10b981; --purple-dk:#34d399; --pink:#2dd4bf;
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
   html,body{margin:0; height:100%; overflow-x:hidden;}
@@ -141,7 +145,7 @@
     text-align:center; font-weight:800; color:var(--purple-dk); font-size:13px; margin:4px 0 14px 0;
   }
   #showdown-progress .track{
-    height:6px; background:var(--line); border-radius:0; margin-top:6px; overflow:hidden;
+    height:9px; background:var(--line); border:1px solid rgba(255,255,255,0.08); border-radius:0; margin-top:6px; overflow:hidden;
   }
   #showdown-progress .fill{height:100%; background:linear-gradient(90deg, var(--purple), var(--pink)); border-radius:0; transition:width .3s;}
   .bracket-nav{
@@ -204,10 +208,10 @@
   }
   .perk-chip img{width:14px; height:14px; border-radius:0;}
   .perk-loading{font-size:11px; color:var(--dim); font-weight:700; font-style:italic;}
-  .stat-bars{display:flex; flex-direction:column; gap:4px;}
+  .stat-bars{display:flex; flex-direction:column; gap:6px;}
   .stat-bar-row{display:flex; align-items:center; gap:8px; font-size:10.5px;}
   .stat-bar-row .stat-label{width:64px; flex:0 0 auto; color:var(--dim); font-weight:800; text-align:right;}
-  .stat-bar-row .stat-track{flex:1; height:6px; background:var(--line); border-radius:0; overflow:hidden;}
+  .stat-bar-row .stat-track{flex:1; height:9px; background:var(--line); border:1px solid rgba(255,255,255,0.08); border-radius:0; overflow:hidden;}
   .stat-bar-row .stat-fill{height:100%; background:linear-gradient(90deg, var(--purple), var(--pink)); border-radius:0;}
   .stat-bar-row .stat-value{width:26px; flex:0 0 auto; font-family:'JetBrains Mono',monospace; font-weight:700; color:var(--ink);}
   .vcard .drop-link{font-size:11px; font-weight:800; color:var(--dim); text-decoration:none;}
@@ -353,7 +357,7 @@
   }
   .cap-row .cap-top{display:flex; justify-content:space-between; align-items:baseline; font-size:12px; font-weight:800; color:var(--dim); margin-bottom:5px;}
   .cap-row .cap-top .cap-count{color:var(--ink); font-family:'Rajdhani',sans-serif; font-size:13px;}
-  .cap-row .cap-track{height:7px; background:var(--line); border-radius:0; overflow:hidden;}
+  .cap-row .cap-track{height:9px; background:var(--line); border:1px solid rgba(255,255,255,0.08); border-radius:0; overflow:hidden;}
   .cap-row .cap-fill{height:100%; border-radius:0; background:linear-gradient(90deg, var(--purple), var(--pink)); transition:width .3s;}
   .cap-row.warn .cap-fill{background:var(--gold);}
   .cap-row.danger .cap-fill{background:linear-gradient(90deg, var(--red-dk), var(--red));}
@@ -517,7 +521,30 @@
   .theme-opt{display:flex; align-items:center; gap:12px;}
   .theme-opt .swatch{width:30px; height:30px; border-radius:0; flex:0 0 auto; box-shadow:inset 0 0 0 2px rgba(0,0,0,0.08); clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);}
 
+  /* ---------- Quick compare ---------- */
+  .qc-table{display:flex; flex-direction:column; gap:2px; overflow-x:auto;}
+  .qc-row{display:grid; grid-template-columns: 78px repeat(var(--qc-cols), minmax(64px,1fr)); gap:4px; align-items:center; padding:5px 0;}
+  .qc-row:not(.qc-header):nth-child(odd){background:var(--line);}
+  .qc-cell{font-size:11.5px; font-weight:700; text-align:center; color:var(--dim); padding:2px 4px;}
+  .qc-cell.qc-label{text-align:left; color:var(--ink); font-weight:800; font-size:11px;}
+  .qc-cell.qc-best{color:var(--green-dk); font-weight:800;}
+  .qc-item{display:flex; flex-direction:column; align-items:center; gap:4px;}
+  .qc-icon{width:36px; height:36px; background:var(--line); overflow:hidden; clip-path: polygon(0 0, 100% 0, 100% 100%, 6px 100%, 0 calc(100% - 6px));}
+  .qc-icon img{width:100%; height:100%; object-fit:cover;}
+  .qc-name{font-size:9.5px; font-weight:800; color:var(--ink); text-align:center; line-height:1.15; max-height:2.3em; overflow:hidden;}
+
   @media(prefers-reduced-motion:reduce){ *{transition:none !important; animation:none !important;} }
+
+  /* ---------- Desktop: every bar gets thicker and clearer with the room a wider viewport has to
+     spare — stat bars, capacity bars, and the Showdown progress bar all scale together. Mobile
+     keeps the slimmer sizes above since screen space is the scarce resource there. ---------- */
+  @media (min-width: 700px){
+    .stat-bar-row .stat-track, .cap-row .cap-track, #showdown-progress .track{ height:14px; }
+    .stat-bar-row{ font-size:12px; gap:10px; }
+    .stat-bar-row .stat-label{ width:80px; font-size:12px; }
+    .stat-bar-row .stat-value{ width:32px; font-size:12.5px; }
+    .stat-bars{ gap:8px; }
+  }
 </style>
 </head>
 <body>
@@ -2214,6 +2241,55 @@ function findSimilarPool(item){
   return [];
 }
 
+// ---------- Quick compare — a plain side-by-side stat table, distinct from the win/lose
+// Showdown bracket. Same similar-items pool as Showdown, just for "which of these 3 is best"
+// at a glance rather than a full duplicate-culling pass. ----------
+function openQuickCompare(item){
+  const others = findSimilarPool(item);
+  closeSheet();
+  if(others.length === 0){
+    alert(`Nothing else like this to compare — "${item.name}" is the only one of its kind right now.`);
+    return;
+  }
+  const items = [item, ...others].sort((a,b) => b.power - a.power).slice(0, 3);
+  renderQuickCompareSheet(items);
+}
+
+function renderQuickCompareSheet(items){
+  const sheet = $("#sheet");
+  const maxPower = Math.max(...items.map(i => i.power || 0));
+  // Union of stat names across the compared items, in first-seen order — armor within the same
+  // slot/class always shares the same 6 stats, weapons of the same type usually do too, but this
+  // stays correct even when they don't (a stat just shows "—" for whichever item lacks it).
+  const statNames = [];
+  items.forEach(it => (it.statBreakdown || []).forEach(s => { if(!statNames.includes(s.name)) statNames.push(s.name); }));
+  const maxForStat = {};
+  statNames.forEach(name => {
+    const vals = items.map(it => (it.statBreakdown || []).find(s => s.name === name)?.value).filter(v => v !== undefined);
+    maxForStat[name] = vals.length ? Math.max(...vals) : null;
+  });
+
+  const headerRow = `<div class="qc-row qc-header"><div class="qc-cell qc-label"></div>${items.map(it => `
+    <div class="qc-cell qc-item"><div class="qc-icon">${iconImgHtml(it)}</div><div class="qc-name">${escapeHtml(it.name)}</div></div>`).join('')}</div>`;
+  const powerRow = `<div class="qc-row"><div class="qc-cell qc-label">Power</div>${items.map(it => `
+    <div class="qc-cell ${maxPower > 0 && it.power === maxPower ? 'qc-best' : ''}">${it.power || '—'}</div>`).join('')}</div>`;
+  const statRows = statNames.map(name => {
+    const cells = items.map(it => {
+      const s = (it.statBreakdown || []).find(s => s.name === name);
+      const val = s ? s.value : null;
+      const isBest = val !== null && maxForStat[name] !== null && val === maxForStat[name];
+      return `<div class="qc-cell ${isBest ? 'qc-best' : ''}">${val ?? '—'}</div>`;
+    }).join('');
+    return `<div class="qc-row"><div class="qc-cell qc-label">${escapeHtml(name)}</div>${cells}</div>`;
+  }).join('');
+
+  sheet.innerHTML = `<h3>Quick compare</h3>
+    <div class="qc-table" style="--qc-cols:${items.length};">${headerRow}${powerRow}${statRows}</div>
+    <div class="cancel" id="sheetCancel">Close</div>`;
+  openSheet();
+  $("#sheetCancel").addEventListener("click", closeSheet);
+}
+
 function openItemDetail(item){
   const sheet = $("#sheet");
   const isArmor = item.itemType === 2;
@@ -2250,7 +2326,8 @@ function openItemDetail(item){
     ${item.itemInstanceId ? `<textarea id="noteField" placeholder="Add a note (why you're keeping/marking this)…">${escapeHtml(item.note||'')}</textarea>` : ''}
     ${item.itemInstanceId ? `<div style="display:flex;gap:8px;margin:10px 0;">${Object.entries(TAG_DEFS).map(([k,v]) =>
       `<button class="tag-btn ${item.tag===k?'active':''}" data-tag="${k}">${v.emoji} ${v.label}</button>`).join('')}</div>` : ''}
-    <div class="opt" id="detailCompareBtn">⚔️ Compare against similar<span>›</span></div>
+    <div class="opt" id="detailQuickCompareBtn">📊 Quick compare (side by side)<span>›</span></div>
+    <div class="opt" id="detailCompareBtn">⚔️ Showdown against similar<span>›</span></div>
     ${item.itemInstanceId ? `<div class="opt" id="detailFavBtn">${item.favorite ? '★ Unfavorite (allow in Showdown)' : '☆ Favorite (never suggest for cleanup)'}<span>›</span></div>` : ''}
     ${item.itemInstanceId ? `<div class="opt" id="detailLockBtn">${item.locked ? '🔓 Unlock item' : '🔒 Lock item'}<span>›</span></div>` : ''}
     ${item.itemInstanceId ? (item.isPostmaster
@@ -2292,6 +2369,7 @@ function openItemDetail(item){
   const pullBtn = $("#detailPullBtn");
   if(pullBtn) pullBtn.addEventListener("click", () => { closeSheet(); pullFromPostmaster(item); });
 
+  $("#detailQuickCompareBtn").addEventListener("click", () => openQuickCompare(item));
   $("#detailCompareBtn").addEventListener("click", () => {
     const others = findSimilarPool(item);
     closeSheet();
@@ -2400,16 +2478,17 @@ $("#logoutBtn").addEventListener("click", logout);
 $("#loginBtn").addEventListener("click", startLogin);
 
 // ---------- Settings (theme) ----------
+// All four dark-first, built from scratch to keep stat-bar fills legible against their track
+// regardless of accent — see the :root comment in <style> for why the old light pastel themes
+// got dropped entirely rather than kept alongside these.
 const THEMES = [
-  { id:"blackout",  label:"Blackout (true black)", dot1:"#a78bfa", dot2:"#000000" },
-  { id:"midnight",  label:"Midnight",  dot1:"#a78bfa", dot2:"#2a2045" },
-  { id:"bubblegum", label:"Bubblegum", dot1:"#8b5cf6", dot2:"#f472b6" },
-  { id:"ocean",     label:"Ocean",     dot1:"#0891b2", dot2:"#38bdf8" },
-  { id:"sunset",    label:"Sunset",    dot1:"#f97316", dot2:"#fb7185" },
-  { id:"mint",      label:"Mint",      dot1:"#10b981", dot2:"#2dd4bf" }
+  { id:"blackout", label:"Blackout", dot1:"#9c85ff", dot2:"#0a0a12" },
+  { id:"abyss",    label:"Abyss",    dot1:"#38bdf8", dot2:"#050b14" },
+  { id:"ember",    label:"Ember",    dot1:"#fb923c", dot2:"#140905" },
+  { id:"verdant",  label:"Verdant",  dot1:"#34d399", dot2:"#04120c" }
 ];
 function applyTheme(id){
-  document.documentElement.setAttribute("data-theme", id === "bubblegum" ? "" : id);
+  document.documentElement.setAttribute("data-theme", id === "blackout" ? "" : id);
   localStorage.setItem("vault_theme", id);
 }
 function openThemeSheet(){
@@ -2479,6 +2558,16 @@ function openLocationSheet(){
     closeSheet(); renderBrowse();
   }));
   $("#sheetCancel").addEventListener("click", closeSheet);
+}
+
+// ---------- PWA install/offline shell ----------
+// Registered unconditionally at load (not gated behind login) so the shell is cached and the
+// install prompt is eligible even before a Bungie session exists. Only caches this same-origin
+// shell (see sw.js) — never the Bungie API, so installing this never risks showing stale vault data.
+if("serviceWorker" in navigator){
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("sw.js").catch(e => console.warn("Service worker registration failed", e));
+  });
 }
 
 // ---------- Boot ----------
