@@ -313,6 +313,25 @@
   #markedActions .btn{flex:1; font-size:13px; padding:12px;}
   #markedEmpty{text-align:center; padding:50px 20px; color:var(--dim); font-weight:700;}
 
+  /* ---------- Loadouts tab ---------- */
+  #loadoutsEmpty{text-align:center; padding:50px 20px; color:var(--dim); font-weight:700;}
+  .loadout-row{
+    background:var(--card); padding:14px; margin-bottom:10px; box-shadow:0 4px 14px rgba(0,0,0,0.28);
+    clip-path: polygon(0 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%);
+    animation:rowIn .3s cubic-bezier(.22,1,.36,1) both;
+  }
+  .loadout-head{display:flex; justify-content:space-between; align-items:baseline; gap:8px; margin-bottom:9px;}
+  .loadout-name{font-weight:800; font-size:15px;}
+  .loadout-meta{font-size:11px; color:var(--dim); font-weight:700; white-space:nowrap; text-transform:uppercase; letter-spacing:0.02em;}
+  .loadout-thumbs{display:flex; gap:6px; flex-wrap:wrap; margin-bottom:12px;}
+  .loadout-thumb{
+    width:34px; height:34px; background:var(--line); overflow:hidden; flex:0 0 auto;
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 6px 100%, 0 calc(100% - 6px));
+  }
+  .loadout-thumb img{width:100%; height:100%; object-fit:cover;}
+  .loadout-actions{display:flex; gap:8px;}
+  .loadout-actions .btn{flex:1; font-size:13px; padding:10px;}
+
   /* ---------- Missing-item banner ---------- */
   #missingItemsBanner{
     background:#fff6e6; border:2px dashed var(--gold); border-radius:0; padding:12px 14px;
@@ -562,6 +581,17 @@
       <div id="markedEmpty">Nothing marked yet — losers from Showdown will land here.</div>
     </div>
 
+    <!-- ===== Loadouts tab ===== -->
+    <div class="tabpanel" id="tab-loadouts">
+      <h2 class="disp" style="font-size:18px; margin:12px 0 4px 0; color:var(--purple-dk);">Loadouts</h2>
+      <p style="color:var(--dim); font-weight:700; font-size:12.5px; margin:0 0 10px 0;">
+        Save whatever's equipped on a character right now, then put it all back on with one tap later.
+      </p>
+      <button class="btn primary" id="saveLoadoutBtn" style="width:100%; margin-bottom:16px;">+ Save current loadout</button>
+      <div id="loadoutsList"></div>
+      <div id="loadoutsEmpty">No loadouts saved yet.</div>
+    </div>
+
     <!-- ===== Browse tab ===== -->
     <div class="tabpanel active in" id="tab-browse">
       <div id="searchBar" style="display:flex; gap:8px; align-items:center;">
@@ -587,6 +617,7 @@
 
   <nav class="tabs">
     <button class="tab-btn active" data-tab="browse"><span class="emoji">🧳</span>Vault</button>
+    <button class="tab-btn" data-tab="loadouts"><span class="emoji">📦</span>Loadouts</button>
     <button class="tab-btn" data-tab="marked"><span class="emoji">🗑️</span>Marked<span class="badge" id="markedCountBadge" style="display:none;">0</span></button>
   </nav>
 </div>
@@ -678,6 +709,9 @@ let accessToken = localStorage.getItem("vault_access_token") || null;
 let membership = null;
 let allItems = [];
 let characterClassById = {};
+// Numeric classType (0 Titan/1 Hunter/2 Warlock) per character — characterClassById only holds
+// the display label, but loadouts need the real number to match against armor's classType field.
+let characterClassTypeById = {};
 // Bumped whenever trimDefinition()'s shape changes (a new field added, etc). Any cache saved
 // under an older version is missing that field and needs to be re-fetched fresh — otherwise
 // items cached before the change silently behave as if the new field doesn't exist forever.
@@ -736,6 +770,12 @@ let savedSearches = JSON.parse(localStorage.getItem("vault_saved_searches") || "
 // PullFromPostmaster, not TransferItem, so they keep their own single-item Pull button instead).
 let selectModeOn = false;
 let selectedForBulk = new Set();
+
+// Saved snapshots of "everything equipped on character X" — captured by itemInstanceId, so
+// applying one re-derives current location/hash from allItems at apply time rather than
+// trusting stale data. Tied to a numeric classType since armor only fits its own class.
+let loadouts = JSON.parse(localStorage.getItem("vault_loadouts") || "[]"); // [{id, name, classType, items:[{itemInstanceId, itemHash, name, icon, tier}]}]
+function persistLoadouts(){ localStorage.setItem("vault_loadouts", JSON.stringify(loadouts)); }
 
 // ---------- Showdown state ----------
 // "picker" = choosing a class/slot (or Weapons) to compare; "bracket" = actively running matchups
@@ -852,7 +892,11 @@ async function loadEverything(){
 
   const characters = r.characters?.data || {};
   characterClassById = {};
-  for(const id in characters) characterClassById[id] = classTypeName(characters[id].classType);
+  characterClassTypeById = {};
+  for(const id in characters){
+    characterClassById[id] = classTypeName(characters[id].classType);
+    characterClassTypeById[id] = characters[id].classType;
+  }
 
   const instanceStats = r.itemComponents?.instances?.data || {};
   const itemStats = r.itemComponents?.stats?.data || {};
@@ -971,6 +1015,7 @@ async function loadEverything(){
   renderShowdown();
   renderMarked();
   renderBrowse();
+  renderLoadouts();
   renderMissingItemsBanner();
   // Image loads kicked off by the render calls above are async — give them a few seconds
   // to settle (success or onerror) before printing the full diagnostic summary.
@@ -1633,6 +1678,146 @@ async function bulkMoveSelected(dest){
   if(failCount) alert(`${failCount} item${failCount===1?'':'s'} couldn't be moved.`);
 }
 
+// ---------- Loadouts ----------
+function renderLoadouts(){
+  const listEl = $("#loadoutsList");
+  const emptyEl = $("#loadoutsEmpty");
+  if(!listEl) return;
+  listEl.innerHTML = "";
+  if(loadouts.length === 0){ emptyEl.style.display = "block"; return; }
+  emptyEl.style.display = "none";
+  loadouts.forEach((lo, idx) => {
+    const el = document.createElement("div");
+    el.className = "loadout-row";
+    el.style.animationDelay = `${Math.min(idx, 10) * 25}ms`;
+    const thumbsHtml = lo.items.slice(0, 10).map(it =>
+      `<div class="loadout-thumb">${it.icon ? `<img src="${it.icon}" onerror="this.style.display='none'">` : ''}</div>`
+    ).join('');
+    el.innerHTML = `
+      <div class="loadout-head">
+        <div class="loadout-name">${escapeHtml(lo.name)}</div>
+        <div class="loadout-meta">${classTypeName(lo.classType)} · ${lo.items.length} item${lo.items.length===1?'':'s'}</div>
+      </div>
+      <div class="loadout-thumbs">${thumbsHtml}</div>
+      <div class="loadout-actions">
+        <button class="btn primary loadout-apply">Apply</button>
+        <button class="btn ghost loadout-delete">Delete</button>
+      </div>`;
+    el.querySelector(".loadout-apply").addEventListener("click", () => openApplyLoadoutSheet(lo));
+    el.querySelector(".loadout-delete").addEventListener("click", () => {
+      if(!confirm(`Delete "${lo.name}"?`)) return;
+      loadouts.splice(idx, 1);
+      persistLoadouts();
+      renderLoadouts();
+    });
+    listEl.appendChild(el);
+  });
+}
+
+function openSaveLoadoutSheet(){
+  const charIds = Object.keys(characterClassById);
+  if(charIds.length === 0) return;
+  const sheet = $("#sheet");
+  sheet.innerHTML = "<h3>Save current loadout from</h3>" +
+    charIds.map(cid => `<div class="opt" data-cid="${cid}">${characterClassById[cid]}<span>›</span></div>`).join("") +
+    `<div class="cancel" id="sheetCancel">Cancel</div>`;
+  openSheet();
+  sheet.querySelectorAll(".opt").forEach(opt => opt.addEventListener("click", () => {
+    const cid = opt.dataset.cid;
+    closeSheet();
+    captureLoadout(cid);
+  }));
+  $("#sheetCancel").addEventListener("click", closeSheet);
+}
+
+// Snapshots everything currently equipped on that character (weapons, armor, subclass, ghost,
+// sparrow, ship, emblem — whatever's flagged equipped), not just weapons+armor, so applying it
+// back later is a faithful "put me back exactly how I was" rather than a partial gear swap.
+function captureLoadout(cid){
+  const equipped = allItems.filter(i => i.characterId === cid && i.equipped && i.itemInstanceId);
+  if(equipped.length === 0){ alert("Nothing is equipped on that character right now."); return; }
+  const name = prompt("Name this loadout:", `${characterClassById[cid]} Loadout`);
+  if(!name || !name.trim()) return;
+  loadouts.push({
+    id: `lo_${Date.now()}_${Math.random().toString(36).slice(2,8)}`,
+    name: name.trim(),
+    classType: characterClassTypeById[cid],
+    items: equipped.map(i => ({ itemInstanceId: i.itemInstanceId, itemHash: i.itemHash, name: i.name, icon: i.icon, tier: i.tier }))
+  });
+  persistLoadouts();
+  renderLoadouts();
+}
+
+function openApplyLoadoutSheet(lo){
+  const matching = Object.keys(characterClassById).filter(cid => characterClassTypeById[cid] === lo.classType);
+  if(matching.length === 0){ alert("No character of that class to apply this loadout to."); return; }
+  if(matching.length === 1){ applyLoadout(lo, matching[0]); return; }
+  const sheet = $("#sheet");
+  sheet.innerHTML = `<h3>Apply "${escapeHtml(lo.name)}" to</h3>` +
+    matching.map(cid => `<div class="opt" data-cid="${cid}">${characterClassById[cid]}<span>›</span></div>`).join("") +
+    `<div class="cancel" id="sheetCancel">Cancel</div>`;
+  openSheet();
+  sheet.querySelectorAll(".opt").forEach(opt => opt.addEventListener("click", () => {
+    closeSheet();
+    applyLoadout(lo, opt.dataset.cid);
+  }));
+  $("#sheetCancel").addEventListener("click", closeSheet);
+}
+
+// Re-resolves each saved itemInstanceId against the live inventory rather than trusting the
+// snapshot — an item saved months ago may have been dismantled since, so those are counted as
+// "missing" and skipped instead of failing the whole loadout. Same vault-hop transfer pattern as
+// bulkMoveSelected/doStageAll, then one EquipItems call so Bungie resolves any slot conflicts
+// itself instead of this app guessing equip order.
+async function applyLoadout(lo, targetCid){
+  const liveItems = lo.items.map(entry => allItems.find(i => i.itemInstanceId === entry.itemInstanceId)).filter(Boolean);
+  const missing = lo.items.length - liveItems.length;
+  if(liveItems.length === 0){ alert("None of this loadout's items are still in your inventory."); return; }
+
+  bulkTransferInProgress = true;
+  showLoading("APPLYING LOADOUT…");
+  let transferFailCount = 0;
+  for(const item of liveItems){
+    if(item.characterId === targetCid) continue; // already on the target character
+    try{
+      if(item.characterId){
+        const res1 = await apiPost("/Platform/Destiny2/Actions/Items/TransferItem/", {
+          itemReferenceHash: item.itemHash, stackSize: item.quantity, transferToVault: true,
+          itemId: item.itemInstanceId, characterId: item.characterId,
+          membershipType: membership.membershipType
+        });
+        if(res1?.ErrorCode !== 1) throw new Error(res1?.Message || "transfer to vault failed");
+      }
+      const res2 = await apiPost("/Platform/Destiny2/Actions/Items/TransferItem/", {
+        itemReferenceHash: item.itemHash, stackSize: item.quantity, transferToVault: false,
+        itemId: item.itemInstanceId, characterId: targetCid,
+        membershipType: membership.membershipType
+      });
+      if(res2?.ErrorCode !== 1) throw new Error(res2?.Message || "transfer to character failed");
+    }catch(e){ console.warn("Loadout transfer failed for", item.name, e); transferFailCount++; }
+  }
+
+  let equipFailCount = 0;
+  try{
+    const res = await apiPost("/Platform/Destiny2/Actions/Items/EquipItems/", {
+      itemIds: liveItems.map(i => i.itemInstanceId), characterId: targetCid, membershipType: membership.membershipType
+    });
+    const results = res?.Response?.equipResults || [];
+    equipFailCount = results.filter(r => r.equipStatus !== 1).length;
+    if(res?.ErrorCode !== 1 && results.length === 0) equipFailCount = liveItems.length;
+  }catch(e){ console.warn("EquipItems failed", e); equipFailCount = liveItems.length; }
+
+  bulkTransferInProgress = false;
+  // A full reload re-derives every character's equipped state/location from the server instead
+  // of this app trying to guess which other items got auto-unequipped by the EquipItems call.
+  await loadEverything();
+  const parts = [];
+  if(missing) parts.push(`${missing} item${missing===1?'':'s'} no longer in your inventory`);
+  if(transferFailCount) parts.push(`${transferFailCount} couldn't be moved`);
+  if(equipFailCount) parts.push(`${equipFailCount} couldn't be equipped`);
+  alert(parts.length ? `Loadout applied with issues: ${parts.join(", ")}.` : `Loadout "${lo.name}" applied.`);
+}
+
 // ---------- Export all tags/notes (not just Marked) as a DIM-importable CSV ----------
 function exportAllTagsAsDimCsv(){
   const relevant = allItems.filter(i => i.itemInstanceId && (i.tag || i.favorite || i.note));
@@ -2178,6 +2363,7 @@ $("#goToMarkedBtn").addEventListener("click", () => document.querySelector('[dat
 $("#stageAllBtn").addEventListener("click", stageAllOnCharacter);
 $("#exportDimCsvBtn").addEventListener("click", exportMarkedAsDimCsv);
 $("#copyDimQueryBtn").addEventListener("click", copyMarkedAsDimQuery);
+$("#saveLoadoutBtn").addEventListener("click", openSaveLoadoutSheet);
 $("#sheet-backdrop").addEventListener("click", closeSheet);
 $("#sweepModeBtn").addEventListener("click", () => {
   showdownMode = "picker"; selectedClass = null;
