@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Vault Showdown</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@700;800&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 <!-- Real Destiny 2 glyph icons (elements, ammo types) so these read the way the game itself renders them -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/justrealmilk/destiny-icons@master/css/destiny-icons.css">
 <style>
@@ -55,9 +55,9 @@
     background:linear-gradient(160deg, var(--bg1), var(--bg2));
     min-height:100dvh; padding-bottom:env(safe-area-inset-bottom);
   }
-  .disp{font-family:'Baloo 2',sans-serif;}
+  .disp{font-family:'Rajdhani',sans-serif;}
   .mono{font-family:'JetBrains Mono',monospace;}
-  h1,h2,h3{font-family:'Baloo 2',sans-serif; margin:0;}
+  h1,h2,h3{font-family:'Rajdhani',sans-serif; margin:0;}
   button{font-family:'Manrope',sans-serif;}
 
   /* ---------- Login ---------- */
@@ -65,23 +65,25 @@
     height:100dvh; display:flex; flex-direction:column; align-items:center; justify-content:center;
     padding:28px; text-align:center; gap:16px;
   }
-  #login .mark{font-size:52px; line-height:1;}
+  #login .mark{font-size:52px; line-height:1; font-family:'Rajdhani',sans-serif; font-weight:700; background:linear-gradient(135deg, var(--purple), var(--pink)); -webkit-background-clip:text; background-clip:text; color:transparent;}
   #login h1{font-size:28px; color:var(--purple-dk);}
   #login p{color:var(--dim); font-size:15px; max-width:300px; line-height:1.5; margin:0; font-weight:600;}
   .btn{
-    appearance:none; border:none; font-family:'Baloo 2',sans-serif; font-weight:700; font-size:16px;
-    padding:15px 26px; border-radius:999px; cursor:pointer; box-shadow:0 6px 0 rgba(0,0,0,0.12);
+    appearance:none; border:none; font-family:'Rajdhani',sans-serif; font-weight:700; font-size:16px;
+    padding:15px 26px; border-radius:0; cursor:pointer; box-shadow:0 3px 12px rgba(0,0,0,0.28);
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 12px 100%, 0 calc(100% - 12px));
   }
-  .btn:active{transform:translateY(3px); box-shadow:0 3px 0 rgba(0,0,0,0.12);}
+  .btn:active{transform:translateY(2px); box-shadow:0 1px 6px rgba(0,0,0,0.28);}
   @media (hover:hover){
-    .btn:hover:not(:disabled){ filter:brightness(1.1); transform:translateY(-1px); box-shadow:0 7px 0 rgba(0,0,0,0.12); }
+    .btn:hover:not(:disabled){ filter:brightness(1.1); transform:translateY(-1px); box-shadow:0 5px 16px rgba(0,0,0,0.32); }
   }
   .btn.primary{background:linear-gradient(135deg, var(--purple), var(--pink)); color:#fff;}
   .btn.ghost{background:var(--card); color:var(--purple-dk); border:2px solid var(--line);}
   .btn:disabled{opacity:0.4;}
   #config-warning{
     display:none; margin-top:6px; font-size:12.5px; color:#9a5b12; max-width:300px;
-    border:2px dashed var(--gold); background:#fff6e6; padding:12px 14px; border-radius:16px; text-align:left; font-weight:700;
+    border:2px dashed var(--gold); background:#fff6e6; padding:12px 14px; border-radius:0; text-align:left; font-weight:700;
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 12px 100%, 0 calc(100% - 12px));
   }
 
   /* ---------- App shell ---------- */
@@ -91,9 +93,11 @@
     display:flex; align-items:center; justify-content:space-between;
   }
   header .brand{font-size:18px; color:var(--purple-dk); display:flex; align-items:center; gap:6px;}
+  header .brand .mark{background:linear-gradient(135deg, var(--purple), var(--pink)); -webkit-background-clip:text; background-clip:text; color:transparent;}
   header button.icon{
     background:var(--card); border:none; color:var(--dim); font-size:12px; font-weight:800;
-    padding:8px 14px; border-radius:999px; box-shadow:0 3px 0 var(--line);
+    padding:8px 14px; border-radius:0; box-shadow:0 2px 8px rgba(0,0,0,0.2);
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 8px 100%, 0 calc(100% - 8px));
   }
 
   main{flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; padding-bottom:90px;}
@@ -104,13 +108,13 @@
     box-shadow:0 -4px 16px rgba(0,0,0,0.35); z-index:30;
   }
   nav.tabs button{
-    flex:1; background:none; border:none; padding:8px 4px; border-radius:16px;
+    flex:1; background:none; border:none; padding:8px 4px; border-radius:0;
     display:flex; flex-direction:column; align-items:center; gap:2px; color:var(--dim); font-weight:800; font-size:11px;
   }
   nav.tabs button.active{color:var(--purple-dk); background:color-mix(in srgb, var(--purple) 16%, var(--card));}
   nav.tabs button .emoji{font-size:19px;}
   nav.tabs .badge{
-    background:var(--red); color:#fff; border-radius:999px; font-size:10px; padding:1px 6px; margin-left:4px;
+    background:var(--red); color:#fff; border-radius:0; font-size:10px; padding:1px 6px; margin-left:4px;
   }
 
   .tabpanel{display:none; padding:0 16px; opacity:0; transform:translateY(8px); transition:opacity .28s ease, transform .28s cubic-bezier(.22,1,.36,1);}
@@ -122,15 +126,16 @@
     text-align:center; font-weight:800; color:var(--purple-dk); font-size:13px; margin:4px 0 14px 0;
   }
   #showdown-progress .track{
-    height:6px; background:var(--line); border-radius:99px; margin-top:6px; overflow:hidden;
+    height:6px; background:var(--line); border-radius:0; margin-top:6px; overflow:hidden;
   }
-  #showdown-progress .fill{height:100%; background:linear-gradient(90deg, var(--purple), var(--pink)); border-radius:99px; transition:width .3s;}
+  #showdown-progress .fill{height:100%; background:linear-gradient(90deg, var(--purple), var(--pink)); border-radius:0; transition:width .3s;}
   .bracket-nav{
     appearance:none; border:2px solid var(--line); background:var(--card); color:var(--purple-dk);
-    font-family:'Baloo 2',sans-serif; font-weight:700; font-size:12px; padding:7px 14px;
-    border-radius:999px; box-shadow:0 3px 0 var(--line);
+    font-family:'Rajdhani',sans-serif; font-weight:700; font-size:12px; padding:7px 14px;
+    border-radius:0; box-shadow:0 2px 6px rgba(0,0,0,0.18);
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 8px 100%, 0 calc(100% - 8px));
   }
-  .bracket-nav:active{transform:translateY(2px); box-shadow:0 1px 0 var(--line);}
+  .bracket-nav:active{transform:translateY(2px); box-shadow:0 1px 3px rgba(0,0,0,0.18);}
   @media (hover:hover){
     .bracket-nav:hover:not(:disabled){ border-color:var(--purple); color:var(--purple); }
   }
@@ -155,7 +160,7 @@
     clip-path: polygon(0 0, 100% 0, 100% 100%, 10px 100%, 0 calc(100% - 10px));
   }
   .vcard .icon img{width:100%; height:100%; object-fit:cover;}
-  .vcard .icon .tier-dot{position:absolute; top:3px; right:3px; width:9px; height:9px; border-radius:50%; border:2px solid var(--card);}
+  .vcard .icon .tier-dot{position:absolute; top:4px; right:4px; width:8px; height:8px; border-radius:0; transform:rotate(45deg); border:2px solid var(--card);}
   .vcard .info{flex:1; min-width:0;}
   .vcard .eyebrow{
     font-family:'JetBrains Mono',monospace; font-size:9.5px; font-weight:700; letter-spacing:0.1em;
@@ -172,36 +177,40 @@
   .stat-chip{
     font-family:'JetBrains Mono',monospace;
     background:var(--line); color:var(--ink); font-size:11px; font-weight:700; padding:4px 9px;
-    border-radius:999px; white-space:nowrap;
+    border-radius:0; white-space:nowrap;
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 6px 100%, 0 calc(100% - 6px));
   }
   .vcard .perk-row{display:flex; gap:6px; flex-wrap:wrap; min-height:22px;}
   .perk-chip{
     display:inline-flex; align-items:center; gap:4px;
     background:transparent; border:1.5px solid var(--purple); color:var(--purple-dk); font-size:10.5px;
-    font-weight:700; padding:3px 9px; border-radius:999px; white-space:nowrap;
+    font-weight:700; padding:3px 9px; border-radius:0; white-space:nowrap;
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 6px 100%, 0 calc(100% - 6px));
   }
-  .perk-chip img{width:14px; height:14px; border-radius:3px;}
+  .perk-chip img{width:14px; height:14px; border-radius:0;}
   .perk-loading{font-size:11px; color:var(--dim); font-weight:700; font-style:italic;}
   .stat-bars{display:flex; flex-direction:column; gap:4px;}
   .stat-bar-row{display:flex; align-items:center; gap:8px; font-size:10.5px;}
   .stat-bar-row .stat-label{width:64px; flex:0 0 auto; color:var(--dim); font-weight:800; text-align:right;}
-  .stat-bar-row .stat-track{flex:1; height:6px; background:var(--line); border-radius:99px; overflow:hidden;}
-  .stat-bar-row .stat-fill{height:100%; background:linear-gradient(90deg, var(--purple), var(--pink)); border-radius:99px;}
+  .stat-bar-row .stat-track{flex:1; height:6px; background:var(--line); border-radius:0; overflow:hidden;}
+  .stat-bar-row .stat-fill{height:100%; background:linear-gradient(90deg, var(--purple), var(--pink)); border-radius:0;}
   .stat-bar-row .stat-value{width:26px; flex:0 0 auto; font-family:'JetBrains Mono',monospace; font-weight:700; color:var(--ink);}
   .vcard .drop-link{font-size:11px; font-weight:800; color:var(--dim); text-decoration:none;}
   .vcard .drop-link:active{color:var(--purple-dk);}
 
   .vs-badge{
-    width:44px; height:44px; border-radius:50%; background:linear-gradient(135deg, var(--purple), var(--pink));
-    color:#fff; font-family:'Baloo 2',sans-serif; font-weight:800; font-size:14px;
-    display:flex; align-items:center; justify-content:center; box-shadow:0 4px 0 rgba(0,0,0,0.10); margin:-4px 0;
+    width:42px; height:42px; border-radius:0; background:linear-gradient(135deg, var(--purple), var(--pink));
+    color:#fff; font-family:'Rajdhani',sans-serif; font-weight:800; font-size:14px;
+    display:flex; align-items:center; justify-content:center; box-shadow:0 3px 8px rgba(0,0,0,0.28); margin:-4px 0;
+    clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
   }
 
   /* ---------- Tinder-style pick reaction ---------- */
   .vcard .stamp{
     position:absolute; top:14px; z-index:5; opacity:0; pointer-events:none;
-    font-family:'Baloo 2',sans-serif; font-weight:800; font-size:19px; padding:5px 14px;
-    border-radius:10px; letter-spacing:1.5px; border:3px solid; background:var(--card);
+    font-family:'Rajdhani',sans-serif; font-weight:800; font-size:19px; padding:5px 14px;
+    border-radius:0; letter-spacing:1.5px; border:3px solid; background:var(--card);
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 8px 100%, 0 calc(100% - 8px));
   }
   .vcard .stamp-keep{ left:14px; color:var(--green-dk); border-color:var(--green-dk); }
   .vcard .stamp-trash{ right:14px; color:var(--red-dk); border-color:var(--red-dk); }
@@ -226,18 +235,20 @@
   #showdown-picker .class-chips{display:flex; gap:8px; margin:10px 0 16px 0; overflow-x:auto;}
   #showdown-picker .class-chip{
     flex:0 0 auto; background:var(--card); border:2px solid var(--line); color:var(--dim);
-    font-size:13px; font-weight:800; padding:9px 16px; border-radius:999px; white-space:nowrap;
+    font-size:13px; font-weight:800; padding:9px 16px; border-radius:0; white-space:nowrap;
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 8px 100%, 0 calc(100% - 8px));
   }
   #showdown-picker .class-chip.active{border-color:var(--purple); color:var(--purple-dk); background:color-mix(in srgb, var(--purple) 16%, var(--card));}
   .slot-row{
-    display:flex; align-items:center; gap:14px; background:var(--card); border-radius:20px; padding:14px;
+    display:flex; align-items:center; gap:14px; background:var(--card); border-radius:0; padding:14px;
     margin-bottom:10px; box-shadow:0 4px 14px rgba(0,0,0,0.28);
+    clip-path: polygon(0 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%);
   }
   .slot-row.disabled{opacity:0.45;}
-  .slot-row .slot-icon{width:48px; height:48px; border-radius:14px; background:var(--line); flex:0 0 auto; overflow:hidden;}
+  .slot-row .slot-icon{width:48px; height:48px; border-radius:0; background:var(--line); flex:0 0 auto; overflow:hidden; clip-path: polygon(0 0, 100% 0, 100% 100%, 8px 100%, 0 calc(100% - 8px));}
   .slot-row .slot-icon img{width:100%; height:100%; object-fit:cover;}
   .slot-row .slot-info{flex:1;}
-  .slot-row .slot-name{font-family:'Baloo 2',sans-serif; font-weight:700; font-size:15px;}
+  .slot-row .slot-name{font-family:'Rajdhani',sans-serif; font-weight:700; font-size:15px;}
   .slot-row .slot-count{font-size:12px; color:var(--dim); font-weight:700; margin-top:2px;}
   .slot-row .slot-arrow{font-size:20px; color:var(--purple-dk);}
 
@@ -281,37 +292,42 @@
 
   /* ---------- Missing-item banner ---------- */
   #missingItemsBanner{
-    background:#fff6e6; border:2px dashed var(--gold); border-radius:16px; padding:12px 14px;
+    background:#fff6e6; border:2px dashed var(--gold); border-radius:0; padding:12px 14px;
     margin:10px 0 4px 0; font-size:12.5px; font-weight:700; color:#9a5b12; display:flex;
     align-items:center; gap:10px; justify-content:space-between;
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 10px 100%, 0 calc(100% - 10px));
   }
   #missingItemsBanner button{
     flex:0 0 auto; background:#9a5b12; color:#fff; border:none; font-weight:800; font-size:11.5px;
-    padding:8px 12px; border-radius:999px; white-space:nowrap;
+    padding:8px 12px; border-radius:0; white-space:nowrap;
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 6px 100%, 0 calc(100% - 6px));
   }
 
   /* ---------- Vault/Postmaster capacity dashboard ---------- */
   #capacityDash{display:flex; flex-direction:column; gap:8px; margin:10px 0 4px 0;}
   .cap-row{
-    background:var(--card); border-radius:16px; padding:10px 12px; box-shadow:0 3px 10px rgba(0,0,0,0.22);
+    background:var(--card); border-radius:0; padding:10px 12px; box-shadow:0 3px 10px rgba(0,0,0,0.22);
+    clip-path: polygon(0 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%);
   }
   .cap-row .cap-top{display:flex; justify-content:space-between; align-items:baseline; font-size:12px; font-weight:800; color:var(--dim); margin-bottom:5px;}
-  .cap-row .cap-top .cap-count{color:var(--ink); font-family:'Baloo 2',sans-serif; font-size:13px;}
-  .cap-row .cap-track{height:7px; background:var(--line); border-radius:99px; overflow:hidden;}
-  .cap-row .cap-fill{height:100%; border-radius:99px; background:linear-gradient(90deg, var(--purple), var(--pink)); transition:width .3s;}
+  .cap-row .cap-top .cap-count{color:var(--ink); font-family:'Rajdhani',sans-serif; font-size:13px;}
+  .cap-row .cap-track{height:7px; background:var(--line); border-radius:0; overflow:hidden;}
+  .cap-row .cap-fill{height:100%; border-radius:0; background:linear-gradient(90deg, var(--purple), var(--pink)); transition:width .3s;}
   .cap-row.warn .cap-fill{background:var(--gold);}
   .cap-row.danger .cap-fill{background:linear-gradient(90deg, var(--red-dk), var(--red));}
   .cap-row.danger .cap-top{color:var(--red-dk);}
   .pull-all-btn{
     background:var(--purple); color:#fff; border:none; font-size:10px; font-weight:800;
-    padding:4px 10px; border-radius:999px; cursor:pointer; white-space:nowrap;
+    padding:4px 10px; border-radius:0; cursor:pointer; white-space:nowrap;
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 5px 100%, 0 calc(100% - 5px));
   }
 
   /* ---------- Tags ---------- */
   .tag-pill{font-size:12px; margin-right:1px;}
   .tag-btn{
     flex:1; background:var(--card); border:2px solid var(--line); color:var(--dim); font-weight:800; font-size:11.5px;
-    padding:10px 4px; border-radius:14px; cursor:pointer;
+    padding:10px 4px; border-radius:0; cursor:pointer;
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 7px 100%, 0 calc(100% - 7px));
   }
   .tag-btn.active{border-color:var(--purple); color:var(--purple-dk); background:color-mix(in srgb, var(--purple) 16%, var(--card));}
 
@@ -327,14 +343,16 @@
   }
   #search{
     width:100%; background:var(--card); border:2px solid var(--line); color:var(--ink);
-    padding:12px 16px; border-radius:999px; font-size:15px; font-weight:700;
+    padding:12px 16px; border-radius:0; font-size:15px; font-weight:700;
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 10px 100%, 0 calc(100% - 10px));
   }
   #search::placeholder{color:var(--dim); opacity:0.8;}
   .chiprow{display:flex; gap:8px; margin:10px 0; overflow-x:auto; padding-bottom:2px;}
   .chip{
     flex:0 0 auto; background:var(--card); border:2px solid var(--line); color:var(--dim);
-    font-size:12px; font-weight:800; padding:7px 14px; border-radius:999px; white-space:nowrap; cursor:pointer;
+    font-size:12px; font-weight:800; padding:7px 14px; border-radius:0; white-space:nowrap; cursor:pointer;
     transition:border-color .12s, color .12s;
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 7px 100%, 0 calc(100% - 7px));
   }
   .chip.active{border-color:var(--purple); color:var(--purple-dk); background:color-mix(in srgb, var(--purple) 16%, var(--card));}
   @media (hover:hover){
@@ -354,7 +372,7 @@
     clip-path: polygon(0 0, 100% 0, 100% 100%, 8px 100%, 0 calc(100% - 8px));
   }
   .browse-item .icon img{width:100%; height:100%; object-fit:cover;}
-  .browse-item .icon .tier-dot{position:absolute; bottom:2px; right:2px; width:9px; height:9px; border-radius:50%; border:2px solid var(--card);}
+  .browse-item .icon .tier-dot{position:absolute; bottom:3px; right:3px; width:8px; height:8px; border-radius:0; transform:rotate(45deg); border:2px solid var(--card);}
   .browse-item .info{flex:1; min-width:0;}
   .browse-item .name{font-weight:800; font-size:13.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
   .browse-item .sub{font-size:11px; color:var(--dim); font-weight:700; margin-top:1px; text-transform:uppercase; letter-spacing:0.02em;}
@@ -366,7 +384,8 @@
   .elem-glyph.elem-strand{color:#35e381;}
   .browse-item .xfer{
     background:var(--card); border:2px solid var(--line); color:var(--purple-dk); font-size:10px; font-weight:800;
-    padding:8px 10px; border-radius:999px; cursor:pointer; transition:border-color .12s, color .12s;
+    padding:8px 10px; border-radius:0; cursor:pointer; transition:border-color .12s, color .12s;
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 6px 100%, 0 calc(100% - 6px));
   }
   @media (hover:hover){
     .browse-item .xfer:hover:not(:disabled){ border-color:var(--purple); color:var(--purple); }
@@ -383,9 +402,20 @@
   @keyframes starPop{ 0%{transform:scale(1);} 40%{transform:scale(1.5) rotate(-8deg);} 100%{transform:scale(1);} }
   .fav-star.pop{animation:starPop .38s cubic-bezier(.34,1.56,.64,1);}
   #noteField{
-    width:100%; border:2px solid var(--line); border-radius:14px; padding:10px 12px; font-family:'Nunito',sans-serif;
+    width:100%; border:2px solid var(--line); border-radius:0; padding:10px 12px; font-family:'Manrope',sans-serif;
     font-size:13px; font-weight:600; color:var(--ink); resize:vertical; min-height:44px; margin-top:4px; background:var(--card);
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 8px 100%, 0 calc(100% - 8px));
   }
+
+  /* ---------- Item detail sheet ---------- */
+  .detail-icon{
+    width:84px; height:84px; background:var(--line); margin:0 auto 10px auto; overflow:hidden; position:relative;
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 14px 100%, 0 calc(100% - 14px));
+  }
+  .detail-icon img{width:100%; height:100%; object-fit:cover;}
+  .detail-power{font-family:'Rajdhani',sans-serif; font-size:26px; font-weight:800; color:var(--purple-dk);}
+  .detail-power .lbl{font-family:'Manrope',sans-serif; font-size:11px; color:var(--dim); font-weight:700;}
+  .chips-inline{display:flex; gap:6px; flex-wrap:wrap; justify-content:center;}
 
   /* ---------- Loading ---------- */
   #loading{
@@ -393,7 +423,7 @@
     display:none; align-items:center; justify-content:center; flex-direction:column; gap:14px; z-index:60;
   }
   #loading .spin{
-    width:46px; height:46px; border-radius:50%; border:5px solid var(--line); border-top-color:var(--purple);
+    width:38px; height:38px; border-radius:0; border:5px solid var(--line); border-top-color:var(--purple);
     animation:spin 0.9s linear infinite;
   }
   @keyframes spin{to{transform:rotate(360deg);}}
@@ -406,20 +436,22 @@
   }
   #sheet-backdrop.show{opacity:1;}
   #sheet{
-    position:fixed; left:0; right:0; bottom:0; background:var(--card); border-radius:26px 26px 0 0;
-    padding:20px 18px calc(20px + env(safe-area-inset-bottom)) 18px; display:none; z-index:41; max-height:70vh; overflow-y:auto;
+    position:fixed; left:0; right:0; bottom:0; background:var(--card); border-radius:0;
+    padding:24px 18px calc(20px + env(safe-area-inset-bottom)) 18px; display:none; z-index:41; max-height:70vh; overflow-y:auto;
     transform:translateY(100%); transition:transform .32s cubic-bezier(.22,1,.36,1);
+    clip-path: polygon(18px 0, calc(100% - 18px) 0, 100% 18px, 100% 100%, 0 100%, 0 18px);
   }
   #sheet.show{transform:translateY(0);}
-  #sheet h3{font-size:16px; margin-bottom:12px; color:var(--purple-dk);}
+  #sheet h3{font-size:16px; margin-bottom:12px; color:var(--purple-dk); font-family:'Rajdhani',sans-serif; text-transform:uppercase; letter-spacing:0.03em;}
   #sheet .opt{
-    padding:14px; border:2px solid var(--line); border-radius:16px; margin-bottom:8px; font-weight:800;
+    padding:14px; border:2px solid var(--line); border-radius:0; margin-bottom:8px; font-weight:800;
     display:flex; justify-content:space-between; align-items:center;
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 10px 100%, 0 calc(100% - 10px));
   }
   #sheet .opt:active{background:var(--line);}
   #sheet .cancel{color:var(--dim); text-align:center; padding:12px; font-weight:800;}
   .theme-opt{display:flex; align-items:center; gap:12px;}
-  .theme-opt .swatch{width:32px; height:32px; border-radius:50%; flex:0 0 auto; box-shadow:inset 0 0 0 2px rgba(0,0,0,0.08);}
+  .theme-opt .swatch{width:30px; height:30px; border-radius:0; flex:0 0 auto; box-shadow:inset 0 0 0 2px rgba(0,0,0,0.08); clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);}
 
   @media(prefers-reduced-motion:reduce){ *{transition:none !important; animation:none !important;} }
 </style>
@@ -427,7 +459,7 @@
 <body>
 
 <div id="login">
-  <div class="mark">🫧</div>
+  <div class="mark">◆</div>
   <h1 class="disp">Vault Showdown</h1>
   <p>Pick a winner between your duplicate gear, one matchup at a time — the app remembers who lost so you can clear them out.</p>
   <button class="btn primary" id="loginBtn">Sign in with Bungie.net</button>
@@ -438,7 +470,7 @@
 
 <div id="app">
   <header>
-    <div class="brand disp"><span>🫧</span> Vault Showdown</div>
+    <div class="brand disp"><span class="mark">◆</span> Vault Showdown</div>
     <div style="display:flex; gap:8px;">
       <button class="icon" id="themeBtn">⚙️ Settings</button>
       <button class="icon" id="logoutBtn">LOG OUT</button>
@@ -1932,22 +1964,36 @@ function findSimilarPool(item){
 function openItemDetail(item){
   const sheet = $("#sheet");
   const isArmor = item.itemType === 2;
-  const statLine = isArmor
-    ? [item.archetype ? `Archetype: ${item.archetype}` : '', ...(item.statBreakdown||[]).slice(0,2).map(s=>`${s.name} ${s.value}`)].filter(Boolean).join(' · ')
-    : [item.rpm ? `${item.rpm} RPM` : '', item.element || ''].filter(Boolean).join(' · ');
+  // Full stat breakdown as real bars (not just the top 2 crammed into a text line) — this is
+  // the same per-instance data the Showdown vcard already resolves, just given room to actually
+  // show every stat instead of being squeezed for space in a matchup card.
+  const headerChips = [
+    item.archetype ? `<span class="stat-chip">${escapeHtml(item.archetype)}</span>` : '',
+    !isArmor && item.rpm ? `<span class="stat-chip">${item.rpm} RPM</span>` : '',
+    !isArmor ? elementChipHtml(item.element) : '',
+    !isArmor ? ammoChipHtml(AMMO_NAMES[item.ammoType]) : ''
+  ].filter(Boolean).join('');
+  const statBarsHtml = (item.statBreakdown || []).map(s => `
+    <div class="stat-bar-row">
+      <span class="stat-label">${escapeHtml(s.name)}</span>
+      <div class="stat-track"><div class="stat-fill" style="width:${Math.min(100, s.value)}%"></div></div>
+      <span class="stat-value">${s.value}</span>
+    </div>`).join('');
   sheet.innerHTML = `
     <div style="text-align:center;">
-      <div style="width:80px;height:80px;border-radius:20px;background:var(--line);margin:0 auto 10px auto;overflow:hidden;">
-        ${item.icon ? `<img src="${item.icon}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'">` : ''}
+      <div class="detail-icon">
+        ${item.icon ? `<img src="${item.icon}" onerror="this.style.display='none'">` : ''}
       </div>
       <h3 style="margin-bottom:2px;">${escapeHtml(item.name)}</h3>
       <div style="color:var(--dim);font-weight:700;font-size:12px;margin-bottom:8px;">${item.type||item.tier} · ${item.location}</div>
-      <div style="font-family:'Baloo 2',sans-serif;font-size:26px;font-weight:800;color:var(--purple-dk);">${item.power||'—'} <span style="font-size:11px;color:var(--dim);">POWER</span></div>
-      ${statLine ? `<div style="margin-top:6px;font-size:12px;font-weight:800;color:var(--dim);">${statLine}</div>` : ''}
+      <div class="detail-power">${item.power||'—'} <span class="lbl">POWER</span></div>
+      ${headerChips ? `<div class="chips-inline" style="margin-top:8px;">${headerChips}</div>` : ''}
       <div style="margin:10px 0; font-size:12px; font-weight:800; color:var(--dim);">
         ${item.masterwork?'⭐ Masterwork &nbsp;':''}${item.crafted?'🛠️ Crafted &nbsp;':''}${item.equipped?'✅ Equipped &nbsp;':''}${item.locked?'🔒 Locked':''}
       </div>
     </div>
+    ${statBarsHtml ? `<div class="stat-bars" style="margin:8px 0 12px 0;">${statBarsHtml}</div>` : ''}
+    ${!isArmor && item.itemInstanceId ? `<div class="perk-row" id="detailPerkRow" style="display:flex;gap:6px;flex-wrap:wrap;margin:0 0 12px 0;"><span class="perk-loading">loading roll…</span></div>` : ''}
     ${item.itemInstanceId ? `<textarea id="noteField" placeholder="Add a note (why you're keeping/marking this)…">${escapeHtml(item.note||'')}</textarea>` : ''}
     ${item.itemInstanceId ? `<div style="display:flex;gap:8px;margin:10px 0;">${Object.entries(TAG_DEFS).map(([k,v]) =>
       `<button class="tag-btn ${item.tag===k?'active':''}" data-tag="${k}">${v.emoji} ${v.label}</button>`).join('')}</div>` : ''}
@@ -1960,6 +2006,15 @@ function openItemDetail(item){
     ) : ''}
     <div class="cancel" id="sheetCancel">Close</div>`;
   openSheet();
+  if(!isArmor && item.itemInstanceId){
+    fetchItemPerks(item).then(perks => {
+      const row = $("#detailPerkRow"); // sheet may have been re-rendered (e.g. a tag click) since the fetch started
+      if(!row) return;
+      row.innerHTML = perks.length
+        ? perks.map(p => `<span class="perk-chip">${p.icon ? `<img src="${p.icon}" onerror="this.style.display='none'">` : ''}${escapeHtml(p.name)}</span>`).join('')
+        : `<span class="perk-loading">no roll data</span>`;
+    });
+  }
   const noteField = $("#noteField");
   if(noteField) noteField.addEventListener("blur", () => {
     setNote(item.itemInstanceId, noteField.value);
