@@ -4,6 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Vault Showdown</title>
+<link rel="manifest" href="./manifest.json">
+<link rel="apple-touch-icon" href="./icons/icon-180.png">
+<link rel="icon" href="./icons/icon-192.png">
+<meta name="theme-color" content="#0a0a12">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
@@ -1799,6 +1803,11 @@ function openLocationSheet(){
   if(accessToken) showApp();
 })();
 function showApp(){ $("#login").style.display="none"; $("#app").style.display="flex"; loadEverything(); }
+
+// ---------- PWA install shell (offline caching of index.html/manifest/icons only — never API data) ----------
+if("serviceWorker" in navigator){
+  window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js").catch(e => console.warn("Service worker registration failed", e)));
+}
 </script>
 </body>
 </html>
