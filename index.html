@@ -4,97 +4,75 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Vault Showdown</title>
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#0a0a12">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Vault Showdown">
-<link rel="icon" href="icons/icon-192.png">
-<link rel="apple-touch-icon" href="icons/icon-180.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
-<!-- Real Destiny 2 glyph icons (elements, ammo types) so these read the way the game itself renders them -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/justrealmilk/destiny-icons@master/css/destiny-icons.css">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root{
-    /* Blackout — the default and fallback. Every theme here is dark-first on purpose: the old
-       light pastel palettes (Bubblegum/Ocean/Sunset/Mint) put stat-bar fills so close in
-       lightness to their own track/card colors that the bars themselves got hard to read, on
-       top of just being visually loud. A near-black base guarantees a bright gradient fill
-       always reads clearly against its track regardless of which accent hue is picked. */
-    --bg1:#0a0a12; --bg2:#0d0c16;
-    --card:#14141f;
-    --ink:#f2f0f7;
-    --dim:#8f8aa3;
-    --line:#242233;
+    --bg1:#efe7ff; --bg2:#ffe9dc;
+    --card:#ffffff;
+    --ink:#3a2e4d;
+    --dim:#8b7fa3;
+    --line:#ece4fb;
 
-    --purple:#7c5cff; --purple-dk:#9c85ff;
-    --pink:#ff5ea8;
+    --purple:#8b5cf6; --purple-dk:#6d3fd6;
+    --pink:#f472b6;
     --green:#34d399; --green-dk:#16a37a;
     --red:#fb7185; --red-dk:#e34d64;
     --gold:#f5b942;
 
-    --common:#9ca3af; --uncommon:#3ddc84; --rare:#4f9dff; --legendary:#b45cff; --exotic:#ffcc33;
+    --common:#9ca3af; --uncommon:#4ade80; --rare:#60a5fa; --legendary:#c084fc; --exotic:#f5b942;
   }
-  /* ---------- Theme palettes — swap the accent + background, keep tier/status colors constant.
-     All three variants below (plus the :root/Blackout default) are dark-first for the same
-     bar-legibility reason noted above; only the accent hue and background tint change. ---------- */
-  html[data-theme="abyss"]{
-    --bg1:#050b14; --bg2:#081420; --card:#0d1a26; --ink:#eaf6fb; --dim:#7ba3bd; --line:#16273a;
-    --purple:#0ea5e9; --purple-dk:#38bdf8; --pink:#22d3ee;
+  /* ---------- Theme palettes — swap the "brand" colors, keep tier/status colors constant ---------- */
+  html[data-theme="ocean"]{
+    --bg1:#e0f7fa; --bg2:#e3f2ff; --card:#ffffff; --ink:#123b4f; --dim:#5c8aa0; --line:#d6eef7;
+    --purple:#0891b2; --purple-dk:#0e7490; --pink:#38bdf8;
   }
-  html[data-theme="ember"]{
-    --bg1:#140905; --bg2:#1a0d08; --card:#221208; --ink:#fbeee6; --dim:#c2917a; --line:#3a2013;
-    --purple:#f97316; --purple-dk:#fb923c; --pink:#ef4444;
+  html[data-theme="sunset"]{
+    --bg1:#fff1e6; --bg2:#ffe0e0; --card:#ffffff; --ink:#5b2e1f; --dim:#a97a63; --line:#ffe3d1;
+    --purple:#f97316; --purple-dk:#ea580c; --pink:#fb7185;
   }
-  html[data-theme="verdant"]{
-    --bg1:#04120c; --bg2:#071a12; --card:#0c221a; --ink:#e8fbf2; --dim:#79b39d; --line:#163527;
-    --purple:#10b981; --purple-dk:#34d399; --pink:#2dd4bf;
+  html[data-theme="mint"]{
+    --bg1:#e8fff3; --bg2:#eafff0; --card:#ffffff; --ink:#0f3d2e; --dim:#5f9c82; --line:#d5f7e6;
+    --purple:#10b981; --purple-dk:#059669; --pink:#2dd4bf;
+  }
+  html[data-theme="midnight"]{
+    --bg1:#1b1230; --bg2:#241a3d; --card:#2a2045; --ink:#f1e9ff; --dim:#a897c9; --line:#3a2d5c;
+    --purple:#a78bfa; --purple-dk:#c4b5fd; --pink:#f472b6;
+  }
+  html[data-theme="blackout"]{
+    --bg1:#000000; --bg2:#050505; --card:#0d0d0d; --ink:#f5f5f5; --dim:#8a8a8a; --line:#1e1e1e;
+    --purple:#a78bfa; --purple-dk:#c9b8ff; --pink:#f472b6;
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
   html,body{margin:0; height:100%; overflow-x:hidden;}
   body{
-    font-family:'Manrope',sans-serif; color:var(--ink);
+    font-family:'Nunito',sans-serif; color:var(--ink);
     background:linear-gradient(160deg, var(--bg1), var(--bg2));
     min-height:100dvh; padding-bottom:env(safe-area-inset-bottom);
   }
-  .disp{font-family:'Rajdhani',sans-serif;}
-  .mono{font-family:'JetBrains Mono',monospace;}
-  h1,h2,h3{font-family:'Rajdhani',sans-serif; margin:0;}
-  button{font-family:'Manrope',sans-serif; cursor:pointer;}
-  button:disabled{cursor:not-allowed;}
-  /* Anything the JS wires up as clickable but isn't a native <button> — cards, sheet rows,
-     picker chips — gets the same pointer cursor so a mouse user can tell it's interactive
-     before they ever move over it. Touch has no cursor, so this costs it nothing. */
-  .clickable, .browse-item, .vcard, .slot-row:not(.disabled), #showdown-picker .class-chip,
-  #sheet .opt, #sheet .cancel, .theme-opt{ cursor:pointer; }
-  .slot-row.disabled{ cursor:not-allowed; }
+  .disp{font-family:'Baloo 2',sans-serif;}
+  h1,h2,h3{font-family:'Baloo 2',sans-serif; margin:0;}
+  button{font-family:'Nunito',sans-serif;}
 
   /* ---------- Login ---------- */
   #login{
     height:100dvh; display:flex; flex-direction:column; align-items:center; justify-content:center;
     padding:28px; text-align:center; gap:16px;
   }
-  #login .mark{font-size:52px; line-height:1; font-family:'Rajdhani',sans-serif; font-weight:700; background:linear-gradient(135deg, var(--purple), var(--pink)); -webkit-background-clip:text; background-clip:text; color:transparent;}
+  #login .mark{font-size:52px; line-height:1;}
   #login h1{font-size:28px; color:var(--purple-dk);}
   #login p{color:var(--dim); font-size:15px; max-width:300px; line-height:1.5; margin:0; font-weight:600;}
   .btn{
-    appearance:none; border:none; font-family:'Rajdhani',sans-serif; font-weight:700; font-size:16px;
-    padding:15px 26px; border-radius:0; cursor:pointer; box-shadow:0 3px 12px rgba(0,0,0,0.28);
-    clip-path: polygon(0 0, 100% 0, 100% 100%, 12px 100%, 0 calc(100% - 12px));
+    appearance:none; border:none; font-family:'Baloo 2',sans-serif; font-weight:700; font-size:16px;
+    padding:15px 26px; border-radius:999px; cursor:pointer; box-shadow:0 6px 0 rgba(0,0,0,0.12);
   }
-  .btn:active{transform:translateY(2px); box-shadow:0 1px 6px rgba(0,0,0,0.28);}
-  @media (hover:hover) and (pointer:fine){
-    .btn:hover:not(:disabled){ filter:brightness(1.1); transform:translateY(-1px); box-shadow:0 5px 16px rgba(0,0,0,0.32); }
-  }
+  .btn:active{transform:translateY(3px); box-shadow:0 3px 0 rgba(0,0,0,0.12);}
   .btn.primary{background:linear-gradient(135deg, var(--purple), var(--pink)); color:#fff;}
   .btn.ghost{background:var(--card); color:var(--purple-dk); border:2px solid var(--line);}
   .btn:disabled{opacity:0.4;}
   #config-warning{
     display:none; margin-top:6px; font-size:12.5px; color:#9a5b12; max-width:300px;
-    border:2px dashed var(--gold); background:#fff6e6; padding:12px 14px; border-radius:0; text-align:left; font-weight:700;
-    clip-path: polygon(0 0, 100% 0, 100% 100%, 12px 100%, 0 calc(100% - 12px));
+    border:2px dashed var(--gold); background:#fff6e6; padding:12px 14px; border-radius:16px; text-align:left; font-weight:700;
   }
 
   /* ---------- App shell ---------- */
@@ -104,15 +82,9 @@
     display:flex; align-items:center; justify-content:space-between;
   }
   header .brand{font-size:18px; color:var(--purple-dk); display:flex; align-items:center; gap:6px;}
-  header .brand .mark{background:linear-gradient(135deg, var(--purple), var(--pink)); -webkit-background-clip:text; background-clip:text; color:transparent;}
   header button.icon{
     background:var(--card); border:none; color:var(--dim); font-size:12px; font-weight:800;
-    padding:8px 14px; border-radius:0; box-shadow:0 2px 8px rgba(0,0,0,0.2);
-    clip-path: polygon(0 0, 100% 0, 100% 100%, 8px 100%, 0 calc(100% - 8px));
-  }
-  header button.icon:active{ background:var(--line); }
-  @media (hover:hover) and (pointer:fine){
-    header button.icon:hover{ color:var(--purple-dk); }
+    padding:8px 14px; border-radius:999px; box-shadow:0 3px 0 var(--line);
   }
 
   main{flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; padding-bottom:90px;}
@@ -120,20 +92,16 @@
   nav.tabs{
     position:fixed; left:0; right:0; bottom:0; background:var(--card);
     display:flex; padding:8px 10px calc(8px + env(safe-area-inset-bottom)) 10px;
-    box-shadow:0 -4px 16px rgba(0,0,0,0.35); z-index:30;
+    box-shadow:0 -4px 16px rgba(80,40,140,0.08); z-index:30;
   }
   nav.tabs button{
-    flex:1; background:none; border:none; padding:8px 4px; border-radius:0;
+    flex:1; background:none; border:none; padding:8px 4px; border-radius:16px;
     display:flex; flex-direction:column; align-items:center; gap:2px; color:var(--dim); font-weight:800; font-size:11px;
   }
-  nav.tabs button.active{color:var(--purple-dk); background:color-mix(in srgb, var(--purple) 16%, var(--card));}
-  nav.tabs button:active:not(.active){background:var(--line);}
-  @media (hover:hover) and (pointer:fine){
-    nav.tabs button:hover:not(.active){color:var(--ink);}
-  }
+  nav.tabs button.active{color:var(--purple-dk); background:#f3edff;}
   nav.tabs button .emoji{font-size:19px;}
   nav.tabs .badge{
-    background:var(--red); color:#fff; border-radius:0; font-size:10px; padding:1px 6px; margin-left:4px;
+    background:var(--red); color:#fff; border-radius:999px; font-size:10px; padding:1px 6px; margin-left:4px;
   }
 
   .tabpanel{display:none; padding:0 16px; opacity:0; transform:translateY(8px); transition:opacity .28s ease, transform .28s cubic-bezier(.22,1,.36,1);}
@@ -145,91 +113,71 @@
     text-align:center; font-weight:800; color:var(--purple-dk); font-size:13px; margin:4px 0 14px 0;
   }
   #showdown-progress .track{
-    height:9px; background:var(--line); border:1px solid rgba(255,255,255,0.08); border-radius:0; margin-top:6px; overflow:hidden;
+    height:6px; background:var(--line); border-radius:99px; margin-top:6px; overflow:hidden;
   }
-  #showdown-progress .fill{height:100%; background:linear-gradient(90deg, var(--purple), var(--pink)); border-radius:0; transition:width .3s;}
+  #showdown-progress .fill{height:100%; background:linear-gradient(90deg, var(--purple), var(--pink)); border-radius:99px; transition:width .3s;}
   .bracket-nav{
     appearance:none; border:2px solid var(--line); background:var(--card); color:var(--purple-dk);
-    font-family:'Rajdhani',sans-serif; font-weight:700; font-size:12px; padding:7px 14px;
-    border-radius:0; box-shadow:0 2px 6px rgba(0,0,0,0.18);
-    clip-path: polygon(0 0, 100% 0, 100% 100%, 8px 100%, 0 calc(100% - 8px));
+    font-family:'Baloo 2',sans-serif; font-weight:700; font-size:12px; padding:7px 14px;
+    border-radius:999px; box-shadow:0 3px 0 var(--line);
   }
-  .bracket-nav:active{transform:translateY(2px); box-shadow:0 1px 3px rgba(0,0,0,0.18);}
-  @media (hover:hover) and (pointer:fine){
-    .bracket-nav:hover:not(:disabled){ border-color:var(--purple); color:var(--purple); }
-  }
+  .bracket-nav:active{transform:translateY(2px); box-shadow:0 1px 0 var(--line);}
   .bracket-nav:disabled{opacity:0.35; box-shadow:none;}
 
-  .matchup{display:flex; flex-direction:column; gap:14px; align-items:center; opacity:0; transform:translateY(10px); transition:opacity .32s ease, transform .32s cubic-bezier(.22,1,.36,1);}
+  .matchup{display:flex; flex-direction:column; gap:14px; align-items:center;}
+  .matchup{ opacity:0; transform:translateY(10px); transition:opacity .32s ease, transform .32s cubic-bezier(.22,1,.36,1); }
+  .matchup.in{ opacity:1; transform:translateY(0); }
   .vcard{
-    width:100%; max-width:360px; background:var(--card); padding:18px 18px 18px 16px;
-    box-shadow:0 10px 28px rgba(0,0,0,0.35); border:2px solid var(--line); border-left-width:4px; cursor:pointer;
-    display:flex; flex-direction:column; align-items:stretch; gap:10px; position:relative;
-    transition:transform .15s, border-color .15s, box-shadow .15s;
-    clip-path: polygon(0 0, 100% 0, 100% calc(100% - 16px), calc(100% - 16px) 100%, 0 100%);
+    width:100%; max-width:360px; background:var(--card); border-radius:26px; padding:18px;
+    box-shadow:0 10px 24px rgba(80,40,140,0.10); border:3px solid transparent; cursor:grab;
+    display:flex; gap:14px; align-items:center; transition:transform .15s, border-color .15s;
+    position:relative; touch-action:none; user-select:none;
   }
   .vcard:active{transform:scale(0.97);}
-  @media (hover:hover) and (pointer:fine){
-    .vcard:hover{ transform:translateY(-2px); box-shadow:0 14px 34px rgba(0,0,0,0.45); }
-  }
-  .vcard.winner{border-color:var(--green); background:color-mix(in srgb, var(--green) 12%, var(--card));}
-  .vcard.loser{opacity:0.35; filter:grayscale(0.4);}
-  .vcard .icon{
-    width:64px; height:64px; flex:0 0 auto; background:var(--line); overflow:hidden; position:relative;
-    clip-path: polygon(0 0, 100% 0, 100% 100%, 10px 100%, 0 calc(100% - 10px));
-  }
+  .vcard.dragging{ cursor:grabbing; transition:none !important; z-index:2; }
+  .vcard .icon{width:64px; height:64px; border-radius:16px; flex:0 0 auto; background:var(--line); overflow:hidden; position:relative;}
   .vcard .icon img{width:100%; height:100%; object-fit:cover;}
-  .vcard .icon .tier-dot{position:absolute; top:4px; right:4px; width:8px; height:8px; border-radius:0; transform:rotate(45deg); border:2px solid var(--card);}
+  .vcard .icon .tier-dot{position:absolute; top:4px; right:4px; width:10px; height:10px; border-radius:50%; border:2px solid #fff;}
   .vcard .info{flex:1; min-width:0;}
-  .vcard .eyebrow{
-    font-family:'JetBrains Mono',monospace; font-size:9.5px; font-weight:700; letter-spacing:0.1em;
-    text-transform:uppercase; margin-bottom:2px;
-  }
-  .vcard .name{font-family:'Manrope',sans-serif; font-size:15px; font-weight:800; line-height:1.2;}
-  .vcard .meta{font-size:11.5px; color:var(--dim); font-weight:700; margin-top:3px; text-transform:uppercase; letter-spacing:0.03em;}
-  .vcard .power{
-    font-family:'JetBrains Mono',monospace; font-size:22px; font-weight:700; color:var(--purple-dk); margin-top:2px;
-  }
-  .vcard .power .lbl{font-family:'Manrope',sans-serif; font-size:10px; color:var(--dim); font-weight:700; margin-left:3px;}
+  .vcard .name{font-family:'Baloo 2',sans-serif; font-size:15px; font-weight:700; line-height:1.2;}
+  .vcard .meta{font-size:12px; color:var(--dim); font-weight:700; margin-top:3px;}
+  .vcard{flex-direction:column; align-items:stretch; gap:10px;}
   .vcard .top-row{display:flex; gap:14px; align-items:center;}
   .vcard .stat-row{display:flex; gap:6px; flex-wrap:wrap;}
   .stat-chip{
-    font-family:'JetBrains Mono',monospace;
-    background:var(--line); color:var(--ink); font-size:11px; font-weight:700; padding:4px 9px;
-    border-radius:0; white-space:nowrap;
-    clip-path: polygon(0 0, 100% 0, 100% 100%, 6px 100%, 0 calc(100% - 6px));
+    background:var(--line); color:var(--ink); font-size:11px; font-weight:800; padding:4px 9px;
+    border-radius:999px; white-space:nowrap;
   }
   .vcard .perk-row{display:flex; gap:6px; flex-wrap:wrap; min-height:22px;}
   .perk-chip{
-    display:inline-flex; align-items:center; gap:4px;
     background:transparent; border:1.5px solid var(--purple); color:var(--purple-dk); font-size:10.5px;
-    font-weight:700; padding:3px 9px; border-radius:0; white-space:nowrap;
-    clip-path: polygon(0 0, 100% 0, 100% 100%, 6px 100%, 0 calc(100% - 6px));
+    font-weight:700; padding:3px 9px; border-radius:999px; white-space:nowrap;
+    display:inline-flex; align-items:center; gap:4px; cursor:pointer; touch-action:manipulation;
   }
-  .perk-chip img{width:14px; height:14px; border-radius:0;}
+  .perk-chip.fav{ background:#ffd76a2b; border-color:#c9971f; color:#946c0d; }
+  .stat-total-chip{ background:var(--purple); color:#fff; }
   .perk-loading{font-size:11px; color:var(--dim); font-weight:700; font-style:italic;}
-  .stat-bars{display:flex; flex-direction:column; gap:6px;}
+  .stat-bars{display:flex; flex-direction:column; gap:4px;}
   .stat-bar-row{display:flex; align-items:center; gap:8px; font-size:10.5px;}
   .stat-bar-row .stat-label{width:64px; flex:0 0 auto; color:var(--dim); font-weight:800; text-align:right;}
-  .stat-bar-row .stat-track{flex:1; height:9px; background:var(--line); border:1px solid rgba(255,255,255,0.08); border-radius:0; overflow:hidden;}
-  .stat-bar-row .stat-fill{height:100%; background:linear-gradient(90deg, var(--purple), var(--pink)); border-radius:0;}
-  .stat-bar-row .stat-value{width:26px; flex:0 0 auto; font-family:'JetBrains Mono',monospace; font-weight:700; color:var(--ink);}
+  .stat-bar-row .stat-track{flex:1; height:6px; background:var(--line); border-radius:99px; overflow:hidden;}
+  .stat-bar-row .stat-fill{height:100%; background:linear-gradient(90deg, var(--purple), var(--pink)); border-radius:99px;}
+  .stat-bar-row .stat-value{width:24px; flex:0 0 auto; font-weight:800; color:var(--ink);}
+  .perk-chip img{width:14px; height:14px; border-radius:3px;}
   .vcard .drop-link{font-size:11px; font-weight:800; color:var(--dim); text-decoration:none;}
   .vcard .drop-link:active{color:var(--purple-dk);}
 
   .vs-badge{
-    width:42px; height:42px; border-radius:0; background:linear-gradient(135deg, var(--purple), var(--pink));
-    color:#fff; font-family:'Rajdhani',sans-serif; font-weight:800; font-size:14px;
-    display:flex; align-items:center; justify-content:center; box-shadow:0 3px 8px rgba(0,0,0,0.28); margin:-4px 0;
-    clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+    width:44px; height:44px; border-radius:50%; background:linear-gradient(135deg, var(--purple), var(--pink));
+    color:#fff; font-family:'Baloo 2',sans-serif; font-weight:800; font-size:14px;
+    display:flex; align-items:center; justify-content:center; box-shadow:0 4px 0 rgba(0,0,0,0.10); margin:-4px 0;
   }
 
   /* ---------- Tinder-style pick reaction ---------- */
   .vcard .stamp{
     position:absolute; top:14px; z-index:5; opacity:0; pointer-events:none;
-    font-family:'Rajdhani',sans-serif; font-weight:800; font-size:19px; padding:5px 14px;
-    border-radius:0; letter-spacing:1.5px; border:3px solid; background:var(--card);
-    clip-path: polygon(0 0, 100% 0, 100% 100%, 8px 100%, 0 calc(100% - 8px));
+    font-family:'Baloo 2',sans-serif; font-weight:800; font-size:19px; padding:5px 14px;
+    border-radius:10px; letter-spacing:1.5px; border:3px solid; background:var(--card);
   }
   .vcard .stamp-keep{ left:14px; color:var(--green-dk); border-color:var(--green-dk); }
   .vcard .stamp-trash{ right:14px; color:var(--red-dk); border-color:var(--red-dk); }
@@ -244,38 +192,25 @@
   .vcard.swipe-trash .stamp-trash{ --stamp-rot:14deg; animation:stampPop .28s ease forwards; }
   .vcard.swipe-keep{
     animation:cardKeepPop .42s cubic-bezier(.34,1.56,.64,1) forwards;
-    border-color:var(--green); box-shadow:0 0 0 3px var(--green), 0 10px 24px rgba(0,0,0,0.35);
+    border-color:var(--green); box-shadow:0 0 0 3px var(--green), 0 10px 24px rgba(80,40,140,0.10);
   }
   .vcard.swipe-keep .stamp-keep{ --stamp-rot:-14deg; animation:stampPop .28s .08s ease forwards; }
-
-  /* ---------- Matchup entrance ---------- */
-  .matchup.in{ opacity:1; transform:translateY(0); }
 
   #showdown-picker .class-chips{display:flex; gap:8px; margin:10px 0 16px 0; overflow-x:auto;}
   #showdown-picker .class-chip{
     flex:0 0 auto; background:var(--card); border:2px solid var(--line); color:var(--dim);
-    font-size:13px; font-weight:800; padding:9px 16px; border-radius:0; white-space:nowrap;
-    clip-path: polygon(0 0, 100% 0, 100% 100%, 8px 100%, 0 calc(100% - 8px));
+    font-size:13px; font-weight:800; padding:9px 16px; border-radius:999px; white-space:nowrap;
   }
-  #showdown-picker .class-chip.active{border-color:var(--purple); color:var(--purple-dk); background:color-mix(in srgb, var(--purple) 16%, var(--card));}
-  #showdown-picker .class-chip:active{background:var(--line);}
-  @media (hover:hover) and (pointer:fine){
-    #showdown-picker .class-chip:hover:not(.active){ border-color:var(--dim); color:var(--ink); }
-  }
+  #showdown-picker .class-chip.active{border-color:var(--purple); color:var(--purple-dk); background:#f3edff;}
   .slot-row{
-    display:flex; align-items:center; gap:14px; background:var(--card); border-radius:0; padding:14px;
-    margin-bottom:10px; box-shadow:0 4px 14px rgba(0,0,0,0.28); transition:transform .12s, box-shadow .12s;
-    clip-path: polygon(0 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%);
-  }
-  .slot-row:not(.disabled):active{ transform:translateX(2px); }
-  @media (hover:hover) and (pointer:fine){
-    .slot-row:not(.disabled):hover{ box-shadow:0 6px 18px rgba(0,0,0,0.34); }
+    display:flex; align-items:center; gap:14px; background:var(--card); border-radius:20px; padding:14px;
+    margin-bottom:10px; box-shadow:0 4px 12px rgba(80,40,140,0.06);
   }
   .slot-row.disabled{opacity:0.45;}
-  .slot-row .slot-icon{width:48px; height:48px; border-radius:0; background:var(--line); flex:0 0 auto; overflow:hidden; clip-path: polygon(0 0, 100% 0, 100% 100%, 8px 100%, 0 calc(100% - 8px));}
+  .slot-row .slot-icon{width:48px; height:48px; border-radius:14px; background:var(--line); flex:0 0 auto; overflow:hidden;}
   .slot-row .slot-icon img{width:100%; height:100%; object-fit:cover;}
   .slot-row .slot-info{flex:1;}
-  .slot-row .slot-name{font-family:'Rajdhani',sans-serif; font-weight:700; font-size:15px;}
+  .slot-row .slot-name{font-family:'Baloo 2',sans-serif; font-weight:700; font-size:15px;}
   .slot-row .slot-count{font-size:12px; color:var(--dim); font-weight:700; margin-top:2px;}
   .slot-row .slot-arrow{font-size:20px; color:var(--purple-dk);}
 
@@ -296,16 +231,10 @@
 
   /* ---------- Marked tab ---------- */
   .marked-item{
-    display:flex; align-items:center; gap:12px; background:var(--card); padding:12px 12px 12px 10px;
-    margin-bottom:10px; box-shadow:0 4px 14px rgba(0,0,0,0.28); border-left:3px solid var(--line);
-    clip-path: polygon(0 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%);
-    transition:transform .12s;
+    display:flex; align-items:center; gap:12px; background:var(--card); border-radius:20px; padding:12px;
+    margin-bottom:10px; box-shadow:0 4px 12px rgba(80,40,140,0.06);
   }
-  @media (hover:hover) and (pointer:fine){ .marked-item:hover{ transform:translateX(2px); } }
-  .marked-item .icon{
-    width:44px; height:44px; background:var(--line); overflow:hidden; flex:0 0 auto;
-    clip-path: polygon(0 0, 100% 0, 100% 100%, 8px 100%, 0 calc(100% - 8px));
-  }
+  .marked-item .icon{width:44px; height:44px; border-radius:12px; background:var(--line); overflow:hidden; flex:0 0 auto;}
   .marked-item .icon img{width:100%; height:100%; object-fit:cover;}
   .marked-item .info{flex:1; min-width:0;}
   .marked-item .name{font-weight:800; font-size:14px;}
@@ -317,144 +246,61 @@
   #markedActions .btn{flex:1; font-size:13px; padding:12px;}
   #markedEmpty{text-align:center; padding:50px 20px; color:var(--dim); font-weight:700;}
 
-  /* ---------- Loadouts tab ---------- */
-  #loadoutsEmpty{text-align:center; padding:50px 20px; color:var(--dim); font-weight:700;}
-  .loadout-row{
-    background:var(--card); padding:14px; margin-bottom:10px; box-shadow:0 4px 14px rgba(0,0,0,0.28);
-    clip-path: polygon(0 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%);
-    animation:rowIn .3s cubic-bezier(.22,1,.36,1) both;
-  }
-  .loadout-head{display:flex; justify-content:space-between; align-items:baseline; gap:8px; margin-bottom:9px;}
-  .loadout-name{font-weight:800; font-size:15px;}
-  .loadout-meta{font-size:11px; color:var(--dim); font-weight:700; white-space:nowrap; text-transform:uppercase; letter-spacing:0.02em;}
-  .loadout-thumbs{display:flex; gap:6px; flex-wrap:wrap; margin-bottom:12px;}
-  .loadout-thumb{
-    width:34px; height:34px; background:var(--line); overflow:hidden; flex:0 0 auto;
-    clip-path: polygon(0 0, 100% 0, 100% 100%, 6px 100%, 0 calc(100% - 6px));
-  }
-  .loadout-thumb img{width:100%; height:100%; object-fit:cover;}
-  .loadout-actions{display:flex; gap:8px;}
-  .loadout-actions .btn{flex:1; font-size:13px; padding:10px;}
-
   /* ---------- Missing-item banner ---------- */
   #missingItemsBanner{
-    background:#fff6e6; border:2px dashed var(--gold); border-radius:0; padding:12px 14px;
-    margin:10px 0 4px 0; font-size:12.5px; font-weight:700; color:#9a5b12; display:flex;
+    display:none; background:#fff6e6; border:2px dashed var(--gold); border-radius:16px; padding:12px 14px;
+    margin:10px 0 4px 0; font-size:12.5px; font-weight:700; color:#9a5b12;
     align-items:center; gap:10px; justify-content:space-between;
-    clip-path: polygon(0 0, 100% 0, 100% 100%, 10px 100%, 0 calc(100% - 10px));
   }
   #missingItemsBanner button{
     flex:0 0 auto; background:#9a5b12; color:#fff; border:none; font-weight:800; font-size:11.5px;
-    padding:8px 12px; border-radius:0; white-space:nowrap;
-    clip-path: polygon(0 0, 100% 0, 100% 100%, 6px 100%, 0 calc(100% - 6px));
+    padding:8px 12px; border-radius:999px; white-space:nowrap;
   }
 
   /* ---------- Vault/Postmaster capacity dashboard ---------- */
   #capacityDash{display:flex; flex-direction:column; gap:8px; margin:10px 0 4px 0;}
   .cap-row{
-    background:var(--card); border-radius:0; padding:10px 12px; box-shadow:0 3px 10px rgba(0,0,0,0.22);
-    clip-path: polygon(0 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%);
+    background:var(--card); border-radius:16px; padding:10px 12px; box-shadow:0 3px 10px rgba(80,40,140,0.05);
   }
   .cap-row .cap-top{display:flex; justify-content:space-between; align-items:baseline; font-size:12px; font-weight:800; color:var(--dim); margin-bottom:5px;}
-  .cap-row .cap-top .cap-count{color:var(--ink); font-family:'Rajdhani',sans-serif; font-size:13px;}
-  .cap-row .cap-track{height:9px; background:var(--line); border:1px solid rgba(255,255,255,0.08); border-radius:0; overflow:hidden;}
-  .cap-row .cap-fill{height:100%; border-radius:0; background:linear-gradient(90deg, var(--purple), var(--pink)); transition:width .3s;}
+  .cap-row .cap-top .cap-count{color:var(--ink); font-family:'Baloo 2',sans-serif; font-size:13px;}
+  .cap-row .cap-track{height:7px; background:var(--line); border-radius:99px; overflow:hidden;}
+  .cap-row .cap-fill{height:100%; border-radius:99px; background:linear-gradient(90deg, var(--purple), var(--pink)); transition:width .3s;}
   .cap-row.warn .cap-fill{background:var(--gold);}
   .cap-row.danger .cap-fill{background:linear-gradient(90deg, var(--red-dk), var(--red));}
   .cap-row.danger .cap-top{color:var(--red-dk);}
-  .pull-all-btn{
-    background:var(--purple); color:#fff; border:none; font-size:10px; font-weight:800;
-    padding:4px 10px; border-radius:0; cursor:pointer; white-space:nowrap;
-    clip-path: polygon(0 0, 100% 0, 100% 100%, 5px 100%, 0 calc(100% - 5px));
-  }
-  .pull-all-btn:active{filter:brightness(0.85);}
-  @media (hover:hover) and (pointer:fine){
-    .pull-all-btn:hover{filter:brightness(1.12);}
-  }
-
-  /* ---------- Tags ---------- */
-  .tag-pill{font-size:12px; margin-right:1px;}
-  .tag-btn{
-    flex:1; background:var(--card); border:2px solid var(--line); color:var(--dim); font-weight:800; font-size:11.5px;
-    padding:10px 4px; border-radius:0; cursor:pointer;
-    clip-path: polygon(0 0, 100% 0, 100% 100%, 7px 100%, 0 calc(100% - 7px));
-  }
-  .tag-btn.active{border-color:var(--purple); color:var(--purple-dk); background:color-mix(in srgb, var(--purple) 16%, var(--card));}
-  .tag-btn:active{background:var(--line);}
-  @media (hover:hover) and (pointer:fine){
-    .tag-btn:hover:not(.active){ border-color:var(--dim); color:var(--ink); }
-  }
-
-  /* ---------- Bulk select ---------- */
-  .bulk-check{width:19px; height:19px; flex:0 0 auto;}
-  #bulkActions{gap:8px; margin:10px 0;}
-  #bulkActions .btn{flex:1; font-size:13px; padding:12px;}
 
   /* ---------- Browse tab ---------- */
-  #searchBar{
-    position:sticky; top:0; z-index:10; padding:10px 0 8px 0; margin-top:-4px;
-    background:linear-gradient(180deg, var(--bg1) 85%, transparent);
-  }
   #search{
     width:100%; background:var(--card); border:2px solid var(--line); color:var(--ink);
-    padding:12px 16px; border-radius:0; font-size:15px; font-weight:700;
-    clip-path: polygon(0 0, 100% 0, 100% 100%, 10px 100%, 0 calc(100% - 10px));
+    padding:12px 16px; border-radius:999px; font-size:15px; font-weight:700; margin-top:6px;
   }
-  #search::placeholder{color:var(--dim); opacity:0.8;}
+  #search::placeholder{color:#c3b8de;}
   .chiprow{display:flex; gap:8px; margin:10px 0; overflow-x:auto; padding-bottom:2px;}
   .chip{
     flex:0 0 auto; background:var(--card); border:2px solid var(--line); color:var(--dim);
-    font-size:12px; font-weight:800; padding:7px 14px; border-radius:0; white-space:nowrap; cursor:pointer;
-    transition:border-color .12s, color .12s;
-    clip-path: polygon(0 0, 100% 0, 100% 100%, 7px 100%, 0 calc(100% - 7px));
+    font-size:12px; font-weight:800; padding:7px 14px; border-radius:999px; white-space:nowrap;
   }
-  .chip.active{border-color:var(--purple); color:var(--purple-dk); background:color-mix(in srgb, var(--purple) 16%, var(--card));}
-  .chip:active{background:var(--line);}
-  @media (hover:hover) and (pointer:fine){
-    .chip:hover:not(.active){ border-color:var(--dim); color:var(--ink); }
-  }
+  .chip.active{border-color:var(--purple); color:var(--purple-dk); background:#f3edff;}
   .browse-item{
-    display:flex; align-items:center; gap:12px; background:var(--card); padding:10px 12px 10px 10px;
-    margin-bottom:8px; box-shadow:0 3px 10px rgba(0,0,0,0.22); border-left:3px solid var(--line); cursor:pointer;
-    clip-path: polygon(0 0, 100% 0, 100% calc(100% - 9px), calc(100% - 9px) 100%, 0 100%);
-    transition:transform .12s, box-shadow .12s;
+    display:flex; align-items:center; gap:12px; background:var(--card); border-radius:18px; padding:10px 12px;
+    margin-bottom:8px; box-shadow:0 3px 10px rgba(80,40,140,0.05);
   }
-  .browse-item:active{ transform:translateX(1px) scale(0.995); }
-  @media (hover:hover) and (pointer:fine){
-    .browse-item:hover{ transform:translateX(2px); box-shadow:0 6px 16px rgba(0,0,0,0.32); }
-  }
-  .browse-item .icon{
-    width:44px; height:44px; background:var(--line); flex:0 0 auto; overflow:hidden; position:relative;
-    clip-path: polygon(0 0, 100% 0, 100% 100%, 8px 100%, 0 calc(100% - 8px));
-  }
+  .browse-item .icon{width:44px; height:44px; border-radius:12px; background:var(--line); flex:0 0 auto; overflow:hidden; position:relative;}
   .browse-item .icon img{width:100%; height:100%; object-fit:cover;}
-  .browse-item .icon .tier-dot{position:absolute; bottom:3px; right:3px; width:8px; height:8px; border-radius:0; transform:rotate(45deg); border:2px solid var(--card);}
+  .browse-item .icon .tier-dot{position:absolute; bottom:2px; right:2px; width:9px; height:9px; border-radius:50%; border:2px solid #fff;}
   .browse-item .info{flex:1; min-width:0;}
   .browse-item .name{font-weight:800; font-size:13.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
-  .browse-item .sub{font-size:11px; color:var(--dim); font-weight:700; margin-top:1px; text-transform:uppercase; letter-spacing:0.02em;}
-  .elem-glyph{font-size:11px; vertical-align:-1px;}
-  .elem-glyph.elem-arc{color:#79b2e6;}
-  .elem-glyph.elem-solar{color:#f27212;}
-  .elem-glyph.elem-void{color:#b182e0;}
-  .elem-glyph.elem-stasis{color:#4d88ff;}
-  .elem-glyph.elem-strand{color:#35e381;}
+  .browse-item .sub{font-size:11px; color:var(--dim); font-weight:700; margin-top:1px;}
+  .browse-item .note{font-size:10.5px; color:var(--dim); font-style:italic; margin-top:2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
   .browse-item .xfer{
     background:var(--card); border:2px solid var(--line); color:var(--purple-dk); font-size:10px; font-weight:800;
-    padding:8px 10px; border-radius:0; cursor:pointer; transition:border-color .12s, color .12s;
-    clip-path: polygon(0 0, 100% 0, 100% 100%, 6px 100%, 0 calc(100% - 6px));
-  }
-  .browse-item .xfer:active:not(:disabled){background:var(--line);}
-  .browse-item .xfer:disabled{cursor:not-allowed;}
-  @media (hover:hover) and (pointer:fine){
-    .browse-item .xfer:hover:not(:disabled){ border-color:var(--purple); color:var(--purple); }
+    padding:8px 10px; border-radius:999px;
   }
   .browse-item .xfer:disabled{opacity:0.3;}
   @keyframes rowIn{ from{opacity:0; transform:translateY(7px);} to{opacity:1; transform:translateY(0);} }
   .browse-item, .marked-item{ animation:rowIn .3s cubic-bezier(.22,1,.36,1) both; }
-  .browse-item .note{font-size:10.5px; color:var(--dim); font-style:italic; margin-top:2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
-  /* Compact stat-chip row shared by Browse and Marked list rows */
-  .row-chips{display:flex; gap:4px; flex-wrap:wrap; margin-top:4px;}
-  .row-chips .stat-chip{font-size:10px; padding:3px 7px;}
+
   .fav-star{
     background:none; border:none; font-size:19px; padding:2px 6px; flex:0 0 auto; line-height:1;
     filter:grayscale(1); opacity:0.35; transition:filter .15s, opacity .15s;
@@ -463,20 +309,9 @@
   @keyframes starPop{ 0%{transform:scale(1);} 40%{transform:scale(1.5) rotate(-8deg);} 100%{transform:scale(1);} }
   .fav-star.pop{animation:starPop .38s cubic-bezier(.34,1.56,.64,1);}
   #noteField{
-    width:100%; border:2px solid var(--line); border-radius:0; padding:10px 12px; font-family:'Manrope',sans-serif;
+    width:100%; border:2px solid var(--line); border-radius:14px; padding:10px 12px; font-family:'Nunito',sans-serif;
     font-size:13px; font-weight:600; color:var(--ink); resize:vertical; min-height:44px; margin-top:4px; background:var(--card);
-    clip-path: polygon(0 0, 100% 0, 100% 100%, 8px 100%, 0 calc(100% - 8px));
   }
-
-  /* ---------- Item detail sheet ---------- */
-  .detail-icon{
-    width:84px; height:84px; background:var(--line); margin:0 auto 10px auto; overflow:hidden; position:relative;
-    clip-path: polygon(0 0, 100% 0, 100% 100%, 14px 100%, 0 calc(100% - 14px));
-  }
-  .detail-icon img{width:100%; height:100%; object-fit:cover;}
-  .detail-power{font-family:'Rajdhani',sans-serif; font-size:26px; font-weight:800; color:var(--purple-dk);}
-  .detail-power .lbl{font-family:'Manrope',sans-serif; font-size:11px; color:var(--dim); font-weight:700;}
-  .chips-inline{display:flex; gap:6px; flex-wrap:wrap; justify-content:center;}
 
   /* ---------- Loading ---------- */
   #loading{
@@ -484,73 +319,53 @@
     display:none; align-items:center; justify-content:center; flex-direction:column; gap:14px; z-index:60;
   }
   #loading .spin{
-    width:38px; height:38px; border-radius:0; border:5px solid var(--line); border-top-color:var(--purple);
+    width:46px; height:46px; border-radius:50%; border:5px solid var(--line); border-top-color:var(--purple);
     animation:spin 0.9s linear infinite;
   }
   @keyframes spin{to{transform:rotate(360deg);}}
   #loading span{font-weight:800; color:var(--purple-dk); font-size:13px;}
 
   /* ---------- Sheet ---------- */
-  #sheet-backdrop{
-    position:fixed; inset:0; background:rgba(60,30,90,0.35); display:none; z-index:40;
-    opacity:0; transition:opacity .28s ease;
-  }
+  #sheet-backdrop{position:fixed; inset:0; background:rgba(60,30,90,0.35); display:none; z-index:40; opacity:0; transition:opacity .28s ease;}
   #sheet-backdrop.show{opacity:1;}
   #sheet{
-    position:fixed; left:0; right:0; bottom:0; background:var(--card); border-radius:0;
-    padding:24px 18px calc(20px + env(safe-area-inset-bottom)) 18px; display:none; z-index:41; max-height:70vh; overflow-y:auto;
+    position:fixed; left:0; right:0; bottom:0; background:var(--card); border-radius:26px 26px 0 0;
+    padding:20px 18px calc(20px + env(safe-area-inset-bottom)) 18px; display:none; z-index:41; max-height:70vh; overflow-y:auto;
     transform:translateY(100%); transition:transform .32s cubic-bezier(.22,1,.36,1);
-    clip-path: polygon(18px 0, calc(100% - 18px) 0, 100% 18px, 100% 100%, 0 100%, 0 18px);
   }
   #sheet.show{transform:translateY(0);}
-  #sheet h3{font-size:16px; margin-bottom:12px; color:var(--purple-dk); font-family:'Rajdhani',sans-serif; text-transform:uppercase; letter-spacing:0.03em;}
+  #sheet h3{font-size:16px; margin-bottom:12px; color:var(--purple-dk);}
   #sheet .opt{
-    padding:14px; border:2px solid var(--line); border-radius:0; margin-bottom:8px; font-weight:800;
-    display:flex; justify-content:space-between; align-items:center; transition:border-color .12s, background .12s;
-    clip-path: polygon(0 0, 100% 0, 100% 100%, 10px 100%, 0 calc(100% - 10px));
+    padding:14px; border:2px solid var(--line); border-radius:16px; margin-bottom:8px; font-weight:800;
+    display:flex; justify-content:space-between; align-items:center;
   }
-  #sheet .opt:active{background:var(--line);}
-  @media (hover:hover) and (pointer:fine){
-    #sheet .opt:hover{ border-color:var(--purple); background:color-mix(in srgb, var(--purple) 8%, var(--card)); }
-  }
-  #sheet .cancel{color:var(--dim); text-align:center; padding:12px; font-weight:800; transition:color .12s;}
-  #sheet .cancel:active{color:var(--ink);}
-  @media (hover:hover) and (pointer:fine){
-    #sheet .cancel:hover{ color:var(--ink); }
-  }
+  #sheet .opt:active{background:#f3edff;}
+  #sheet .cancel{color:var(--dim); text-align:center; padding:12px; font-weight:800;}
   .theme-opt{display:flex; align-items:center; gap:12px;}
-  .theme-opt .swatch{width:30px; height:30px; border-radius:0; flex:0 0 auto; box-shadow:inset 0 0 0 2px rgba(0,0,0,0.08); clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);}
+  .theme-opt .swatch{width:32px; height:32px; border-radius:50%; flex:0 0 auto; box-shadow:inset 0 0 0 2px rgba(0,0,0,0.08);}
 
-  /* ---------- Quick compare ---------- */
-  .qc-table{display:flex; flex-direction:column; gap:2px; overflow-x:auto;}
-  .qc-row{display:grid; grid-template-columns: 78px repeat(var(--qc-cols), minmax(64px,1fr)); gap:4px; align-items:center; padding:5px 0;}
-  .qc-row:not(.qc-header):nth-child(odd){background:var(--line);}
-  .qc-cell{font-size:11.5px; font-weight:700; text-align:center; color:var(--dim); padding:2px 4px;}
-  .qc-cell.qc-label{text-align:left; color:var(--ink); font-weight:800; font-size:11px;}
-  .qc-cell.qc-best{color:var(--green-dk); font-weight:800;}
-  .qc-item{display:flex; flex-direction:column; align-items:center; gap:4px;}
-  .qc-icon{width:36px; height:36px; background:var(--line); overflow:hidden; clip-path: polygon(0 0, 100% 0, 100% 100%, 6px 100%, 0 calc(100% - 6px));}
-  .qc-icon img{width:100%; height:100%; object-fit:cover;}
-  .qc-name{font-size:9.5px; font-weight:800; color:var(--ink); text-align:center; line-height:1.15; max-height:2.3em; overflow:hidden;}
+  /* ---------- Custom color picker ---------- */
+  .color-row{
+    display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 4px;
+    border-bottom:1px solid var(--line);
+  }
+  .color-row:last-of-type{border-bottom:none;}
+  .color-row label{font-weight:800; font-size:13.5px;}
+  .color-row input[type="color"]{
+    width:44px; height:44px; border-radius:12px; border:2px solid var(--line); background:none; padding:2px; cursor:pointer;
+  }
+  #customColorPreview{
+    height:54px; border-radius:16px; margin:4px 0 14px 0; display:flex; align-items:center; justify-content:center;
+    font-family:'Baloo 2',sans-serif; font-weight:800; font-size:13px; box-shadow:0 4px 12px rgba(80,40,140,0.08);
+  }
 
   @media(prefers-reduced-motion:reduce){ *{transition:none !important; animation:none !important;} }
-
-  /* ---------- Desktop: every bar gets thicker and clearer with the room a wider viewport has to
-     spare — stat bars, capacity bars, and the Showdown progress bar all scale together. Mobile
-     keeps the slimmer sizes above since screen space is the scarce resource there. ---------- */
-  @media (min-width: 700px){
-    .stat-bar-row .stat-track, .cap-row .cap-track, #showdown-progress .track{ height:14px; }
-    .stat-bar-row{ font-size:12px; gap:10px; }
-    .stat-bar-row .stat-label{ width:80px; font-size:12px; }
-    .stat-bar-row .stat-value{ width:32px; font-size:12.5px; }
-    .stat-bars{ gap:8px; }
-  }
 </style>
 </head>
 <body>
 
 <div id="login">
-  <div class="mark">◆</div>
+  <div class="mark">🫧</div>
   <h1 class="disp">Vault Showdown</h1>
   <p>Pick a winner between your duplicate gear, one matchup at a time — the app remembers who lost so you can clear them out.</p>
   <button class="btn primary" id="loginBtn">Sign in with Bungie.net</button>
@@ -561,7 +376,7 @@
 
 <div id="app">
   <header>
-    <div class="brand disp"><span class="mark">◆</span> Vault Showdown</div>
+    <div class="brand disp"><span>🫧</span> Vault Showdown</div>
     <div style="display:flex; gap:8px;">
       <button class="icon" id="themeBtn">⚙️ Settings</button>
       <button class="icon" id="logoutBtn">LOG OUT</button>
@@ -569,8 +384,8 @@
   </header>
 
   <main>
-    <!-- ===== Showdown tab ===== -->
-    <div class="tabpanel" id="tab-showdown">
+    <!-- ===== Showdown tab (home) ===== -->
+    <div class="tabpanel active in" id="tab-showdown">
       <div id="showdown-picker"></div>
       <div id="showdown-progress" style="display:none;">
         <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
@@ -611,43 +426,27 @@
       <div id="markedEmpty">Nothing marked yet — losers from Showdown will land here.</div>
     </div>
 
-    <!-- ===== Loadouts tab ===== -->
-    <div class="tabpanel" id="tab-loadouts">
-      <h2 class="disp" style="font-size:18px; margin:12px 0 4px 0; color:var(--purple-dk);">Loadouts</h2>
-      <p style="color:var(--dim); font-weight:700; font-size:12.5px; margin:0 0 10px 0;">
-        Save whatever's equipped on a character right now, then put it all back on with one tap later.
-      </p>
-      <button class="btn primary" id="saveLoadoutBtn" style="width:100%; margin-bottom:16px;">+ Save current loadout</button>
-      <div id="loadoutsList"></div>
-      <div id="loadoutsEmpty">No loadouts saved yet.</div>
-    </div>
-
     <!-- ===== Browse tab ===== -->
-    <div class="tabpanel active in" id="tab-browse">
-      <div id="searchBar" style="display:flex; gap:8px; align-items:center;">
-        <input type="text" id="search" placeholder="Search name, type, tag:, stat:…" autocomplete="off" style="flex:1;">
-        <button class="bracket-nav" id="sweepModeBtn" style="white-space:nowrap;">⚔️ Sweep</button>
+    <div class="tabpanel" id="tab-browse">
+      <div style="display:flex; gap:8px; align-items:center; margin-top:4px;">
+        <input type="text" id="search" placeholder="Search name, type, or tier…" autocomplete="off" style="flex:1;">
       </div>
       <div class="chiprow" id="sortChips">
         <div class="chip active" data-sort="name">Name</div>
         <div class="chip" data-sort="tier">Rarity</div>
         <div class="chip" data-sort="type">Type</div>
         <div class="chip" id="favFilterChip">⭐ Favorites</div>
-        <div class="chip" id="tagFilterChip">🏷️ Tag ▾</div>
         <div class="chip" id="locFilterChip">Location ▾</div>
-        <div class="chip" id="savedSearchChip">💾 Saved</div>
-        <div class="chip" id="selectModeChip">☑️ Select</div>
       </div>
-      <div id="missingItemsBanner" style="display:none;"></div>
+      <div id="missingItemsBanner"></div>
       <div id="capacityDash"></div>
-      <div id="bulkActions" style="display:none;"></div>
       <div id="browseList"></div>
     </div>
   </main>
 
   <nav class="tabs">
-    <button class="tab-btn active" data-tab="browse"><span class="emoji">🧳</span>Vault</button>
-    <button class="tab-btn" data-tab="loadouts"><span class="emoji">📦</span>Loadouts</button>
+    <button class="tab-btn active" data-tab="showdown"><span class="emoji">🔥</span>Compare</button>
+    <button class="tab-btn" data-tab="browse"><span class="emoji">🧳</span>Vault</button>
     <button class="tab-btn" data-tab="marked"><span class="emoji">🗑️</span>Marked<span class="badge" id="markedCountBadge" style="display:none;">0</span></button>
   </nav>
 </div>
@@ -673,16 +472,11 @@ const TIER_COLORS = { "Common":"var(--common)","Uncommon":"var(--uncommon)","Rar
 // Current known caps (per Bungie's Renegades-era vault/postmaster rework) — these are the two
 // numbers the community actually loses gear over ("why is my postmaster eating my drops",
 // "why can't I pick this up, vault's full") without any in-game warning until it's too late.
-// Kept as named constants (not buried in the render code) so they're a one-line fix if Bungie
-// changes them again.
 const VAULT_CAPACITY = 1300;
 const POSTMASTER_CAPACITY = 63;
 const POSTMASTER_BUCKET_HASH = 215593132;
 const RPM_STAT_HASH = 4284893193; // "Rounds Per Minute" — well-known stable community-documented hash
-const statDefCache = JSON.parse(localStorage.getItem("vault_stat_def_cache") || "{}"); // DestinyStatDefinition lookups, by hash — static, safe to persist
-// Armor 3.0 archetypes (confirmed from Bungie's official Update 9.7.0 patch notes, June 2026).
-// Keyed by "Primary/Secondary" using the stat's real display NAME (resolved from the manifest,
-// not a hardcoded hash) so this can't silently mislabel gear if a hash assumption were wrong.
+const statDefCache = JSON.parse(localStorage.getItem("vault_stat_def_cache") || "{}");
 const ARCHETYPES = {
   "Super/Melee":"Paragon", "Grenade/Super":"Grenadier", "Class/Weapons":"Specialist",
   "Melee/Health":"Brawler", "Health/Class":"Bulwark", "Weapons/Grenade":"Gunner",
@@ -703,63 +497,20 @@ async function resolveStatDefinitions(hashes){
 }
 function statName(hash){ return statDefCache[hash]?.displayProperties?.name || null; }
 const ELEMENT_NAMES = { 1:"Kinetic", 2:"Arc", 3:"Solar", 4:"Void", 6:"Stasis", 7:"Strand" };
-const AMMO_NAMES = { 1:"Primary", 2:"Special", 3:"Heavy" };
-// Real Destiny glyph classes from the icon font — Kinetic has no distinct glyph in this set
-// (the game shows it as "no element"), so it's intentionally left out and falls back to text-only.
-const ELEMENT_ICON_CLASS = { Arc:"e-arc", Solar:"e-solar", Void:"e-void", Stasis:"e-stasis", Strand:"e-strand" };
-const AMMO_ICON_CLASS = { Primary:"i-primary", Special:"i-special", Heavy:"i-heavy" };
-function elementChipHtml(element){
-  if(!element) return '';
-  const cls = ELEMENT_ICON_CLASS[element];
-  return `<span class="stat-chip">${cls ? `<i class="${cls}"></i> ` : ''}${element}</span>`;
-}
-function ammoChipHtml(ammoName){
-  if(!ammoName) return '';
-  const cls = AMMO_ICON_CLASS[ammoName];
-  return `<span class="stat-chip">${cls ? `<i class="${cls}"></i> ` : ''}${ammoName}</span>`;
-}
-// Compact stat-chip row shared by every list row that shows a weapon or armor piece (Browse,
-// Marked) — the same power/RPM/element/ammo/archetype facts the item detail sheet and Showdown
-// vcard already surface, just trimmed to what fits on one line instead of a full breakdown.
-function rowChipsHtml(item){
-  if(!item) return '';
-  const powerChip = item.power ? `<span class="stat-chip">${item.power} PWR</span>` : '';
-  if(item.itemType === 3){
-    return [powerChip, item.rpm ? `<span class="stat-chip">${item.rpm} RPM</span>` : '', elementChipHtml(item.element), ammoChipHtml(AMMO_NAMES[item.ammoType])].filter(Boolean).join('');
-  }
-  if(item.itemType === 2){
-    return [powerChip, item.archetype ? `<span class="stat-chip">${escapeHtml(item.archetype)}</span>` : ''].filter(Boolean).join('');
-  }
-  return powerChip;
-}
-// Small inline glyph (no chip background) for list rows, colored to match the element.
-function elementGlyphInline(item){
-  if(item.itemType !== 3 || !item.element) return '';
-  const cls = ELEMENT_ICON_CLASS[item.element];
-  if(!cls) return '';
-  return `<i class="${cls} elem-glyph elem-${item.element.toLowerCase()}"></i> `;
-}
-// Same staleness issue as the item-definition cache: bump this whenever what's stored per perk changes.
 const PERK_CACHE_VERSION = "2";
 if(localStorage.getItem("vault_perk_cache_version") !== PERK_CACHE_VERSION){
   localStorage.removeItem("vault_perk_def_cache");
   localStorage.setItem("vault_perk_cache_version", PERK_CACHE_VERSION);
 }
-const perkDefCache = JSON.parse(localStorage.getItem("vault_perk_def_cache") || "{}"); // SandboxPerkDefinition lookups — static, safe to persist
-const itemPerksCache = new Map(); // itemInstanceId -> resolved perk list for THIS session (rolls are per-instance, not safe to persist long-term)
-let bulkTransferInProgress = false; // guard so perk lookups don't compete with a bulk stage-for-cleanup transfer
+const perkDefCache = JSON.parse(localStorage.getItem("vault_perk_def_cache") || "{}");
+const itemPerksCache = new Map();
+let bulkTransferInProgress = false;
 
 let accessToken = localStorage.getItem("vault_access_token") || null;
 let membership = null;
 let allItems = [];
 let characterClassById = {};
-// Numeric classType (0 Titan/1 Hunter/2 Warlock) per character — characterClassById only holds
-// the display label, but loadouts need the real number to match against armor's classType field.
-let characterClassTypeById = {};
-// Bumped whenever trimDefinition()'s shape changes (a new field added, etc). Any cache saved
-// under an older version is missing that field and needs to be re-fetched fresh — otherwise
-// items cached before the change silently behave as if the new field doesn't exist forever.
-const DEF_CACHE_VERSION = "3";
+const DEF_CACHE_VERSION = "2";
 if(localStorage.getItem("vault_def_cache_version") !== DEF_CACHE_VERSION){
   localStorage.removeItem("vault_def_cache");
   localStorage.setItem("vault_def_cache_version", DEF_CACHE_VERSION);
@@ -768,19 +519,22 @@ let defCache = JSON.parse(localStorage.getItem("vault_def_cache") || "{}");
 let cleanupCharacterId = localStorage.getItem("vault_cleanup_char") || null;
 
 let marked = JSON.parse(localStorage.getItem("vault_marked") || "[]");
-// Favorites are a deliberate, permanent "never suggest this for cleanup" flag — distinct from
-// in-game Lock, which a lot of players reserve for temporary use (current loadout, etc.) and
-// reflag every session. This is the "no really, don't ever put this in a Showdown" list.
 let favorites = JSON.parse(localStorage.getItem("vault_favorites") || "[]");
-// Free-text notes per item instance, the same "why did I keep/mark this" memory aid DIM offers —
-// persisted independently of the marked list so a note survives even after an item is unmarked.
 let itemNotes = JSON.parse(localStorage.getItem("vault_notes") || "{}");
+let favoritePerks = JSON.parse(localStorage.getItem("vault_favorite_perks") || "[]");
 function isFavorite(itemInstanceId){ return !!itemInstanceId && favorites.includes(itemInstanceId); }
 function toggleFavorite(itemInstanceId){
   if(!itemInstanceId) return;
   const idx = favorites.indexOf(itemInstanceId);
   if(idx === -1) favorites.push(itemInstanceId); else favorites.splice(idx, 1);
   localStorage.setItem("vault_favorites", JSON.stringify(favorites));
+}
+function isFavoritePerk(perkHash){ return !!perkHash && favoritePerks.includes(perkHash); }
+function toggleFavoritePerk(perkHash){
+  if(!perkHash) return;
+  const idx = favoritePerks.indexOf(perkHash);
+  if(idx === -1) favoritePerks.push(perkHash); else favoritePerks.splice(idx, 1);
+  localStorage.setItem("vault_favorite_perks", JSON.stringify(favoritePerks));
 }
 function getNote(itemInstanceId){ return itemInstanceId ? (itemNotes[itemInstanceId] || "") : ""; }
 function setNote(itemInstanceId, text){
@@ -790,71 +544,30 @@ function setNote(itemInstanceId, text){
   localStorage.setItem("vault_notes", JSON.stringify(itemNotes));
 }
 
-// DIM-style item tags, one per instance, independent of Favorite (which stays its own
-// permanent "never Showdown this" flag). Purely informational/filterable — tagging something
-// Junk doesn't auto-feed Showdown or Marked, the player still decides that explicitly.
-const TAG_DEFS = {
-  keep:   { label: "Keep",   emoji: "🛡️" },
-  junk:   { label: "Junk",   emoji: "🗑️" },
-  infuse: { label: "Infuse", emoji: "⬆️" }
-};
-let itemTags = JSON.parse(localStorage.getItem("vault_tags") || "{}"); // itemInstanceId -> "keep"|"junk"|"infuse"
-function getTag(itemInstanceId){ return itemInstanceId ? (itemTags[itemInstanceId] || null) : null; }
-function setTag(itemInstanceId, tag){
-  if(!itemInstanceId) return;
-  if(tag) itemTags[itemInstanceId] = tag;
-  else delete itemTags[itemInstanceId];
-  localStorage.setItem("vault_tags", JSON.stringify(itemTags));
-}
-
-// Searches the player has typed once and wants back without retyping the operators.
-let savedSearches = JSON.parse(localStorage.getItem("vault_saved_searches") || "[]"); // [{name, query}]
-
-// Browse's multi-select bulk-move mode — postmaster items are excluded (they need
-// PullFromPostmaster, not TransferItem, so they keep their own single-item Pull button instead).
-let selectModeOn = false;
-let selectedForBulk = new Set();
-
-// Saved snapshots of "everything equipped on character X" — captured by itemInstanceId, so
-// applying one re-derives current location/hash from allItems at apply time rather than
-// trusting stale data. Tied to a numeric classType since armor only fits its own class.
-let loadouts = JSON.parse(localStorage.getItem("vault_loadouts") || "[]"); // [{id, name, classType, items:[{itemInstanceId, itemHash, name, icon, tier}]}]
-function persistLoadouts(){ localStorage.setItem("vault_loadouts", JSON.stringify(loadouts)); }
-
-// ---------- Showdown state ----------
-// "picker" = choosing a class/slot (or Weapons) to compare; "bracket" = actively running matchups
 let showdownMode = "picker";
-let selectedClass = null; // 0=Titan, 1=Hunter, 2=Warlock, or null while on the class-chip row
-let matchQueue = []; // array of {pool:[items remaining to face champion]} — one group for weapon dupes-by-hash, one single group for an armor slot
+let selectedClass = null;
+let matchQueue = [];
 let currentGroupIndex = 0;
 let currentChampion = null;
 let totalMatchups = 0;
 let matchupsDone = 0;
-let matchupHistory = []; // stack of past decisions in the current bracket, for Undo
+let matchupHistory = [];
+let swipeInProgress = false;
 
 const ARMOR_SLOTS = ["Helmet", "Gauntlets", "Chest Armor", "Leg Armor", "Class Item"];
-// Classified from itemTypeDisplayName — the real string Bungie's manifest already gives us —
-// rather than guessing numeric bucket-hash constants, which would silently misfile gear if wrong.
 function armorSlotName(item){
   if(item.itemType !== 2) return null;
   if(ARMOR_SLOTS.includes(item.type)) return item.type;
-  if(/cloak|bond|mark/i.test(item.type)) return "Class Item"; // per-class naming for the same slot
+  if(/cloak|bond|mark/i.test(item.type)) return "Class Item";
   return null;
 }
-// classType 3 = class-agnostic (some exotic class items work for any class)
 function fitsClass(item, classType){ return item.classType === classType || item.classType === 3; }
 
-// ---------- Icon diagnostics ----------
-// Three distinct failure modes get tracked separately so we stop guessing:
-//   1) diagDefResolveFailed  — manifest lookup for this hash never succeeded (item is dropped from allItems entirely, not just icon-less)
-//   2) diagIconMissingInDef  — the manifest definition resolved fine, but displayProperties.icon is empty/null (genuine manifest gap)
-//   3) diagIconLoadFailed    — displayProperties.icon had a path, we built a URL, but the <img> itself failed to load (bad/expired URL, CDN issue, etc.)
 let diagDefResolveFailed = [];
 let diagIconMissingInDef = [];
 let diagIconLoadFailed = [];
 
-// Browse state
-let searchQuery = "", sortMode = "name", locationFilter = null, favoritesOnly = false, tagFilter = null;
+let searchQuery = "", sortMode = "name", locationFilter = null, favoritesOnly = false;
 
 // ---------- PKCE ----------
 function b64url(bytes){ return btoa(String.fromCharCode(...bytes)).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,''); }
@@ -915,8 +628,6 @@ function logout(){ localStorage.removeItem("vault_access_token"); localStorage.r
 // ---------- Data loading ----------
 async function loadEverything(){
  try{
-  // Reset diagnostics each load — cached-but-icon-less defs get re-flagged every time from defCache,
-  // resolve failures get a fresh chance to succeed or fail again.
   diagDefResolveFailed = [];
   diagIconMissingInDef = [];
   diagIconLoadFailed = [];
@@ -936,11 +647,7 @@ async function loadEverything(){
 
   const characters = r.characters?.data || {};
   characterClassById = {};
-  characterClassTypeById = {};
-  for(const id in characters){
-    characterClassById[id] = classTypeName(characters[id].classType);
-    characterClassTypeById[id] = characters[id].classType;
-  }
+  for(const id in characters) characterClassById[id] = classTypeName(characters[id].classType);
 
   const instanceStats = r.itemComponents?.instances?.data || {};
   const itemStats = r.itemComponents?.stats?.data || {};
@@ -949,10 +656,6 @@ async function loadEverything(){
   (r.profileInventory?.data?.items || []).forEach(it => raw.push([it, null, "Vault", false]));
   const invByChar = r.characterInventories?.data || {};
   for(const cid in invByChar){
-    // Postmaster items live inside this same characterInventories component, mixed in with
-    // regular inventory — Bungie tells them apart only by bucketHash, so a per-character
-    // "label" isn't right for them: they need their own location so the capacity dashboard
-    // (and Browse's location filter) can single them out before they get auto-deleted.
     const label = characterClassById[cid] || "Guardian";
     invByChar[cid].items.forEach(it => {
       const loc = it.bucketHash === POSTMASTER_BUCKET_HASH ? `Postmaster (${label})` : label;
@@ -970,12 +673,10 @@ async function loadEverything(){
   await resolveDefinitions(uniqueHashes);
 
   // Each hash already gets 3 retries inside fetchDefinitionWithRetry, but on a big vault's
-  // first load (lots of concurrent chunks hitting Bungie's manifest endpoint back to back)
-  // it's possible for all 3 attempts to land inside the same rate-limit/blip window. When
-  // that happens the item doesn't just lose its icon — allItems.map below drops it entirely,
+  // first load it's possible for all 3 to land inside the same rate-limit/blip window. When
+  // that happens the item doesn't just lose its icon — it's dropped from allItems entirely,
   // which is exactly what "some of my weapons aren't showing up in Showdown" turns out to be.
-  // A short-delayed second sweep over just the hashes that failed clears almost all of these
-  // without the user ever noticing there was a hiccup.
+  // A short-delayed second sweep over just the hashes that failed clears almost all of these.
   if(diagDefResolveFailed.length){
     const retryHashes = diagDefResolveFailed.map(d => d.hash);
     diagDefResolveFailed = [];
@@ -984,9 +685,6 @@ async function loadEverything(){
     await resolveDefinitions(retryHashes);
   }
 
-  // Stat names (for both armor archetypes and weapon stat bars) come from a small, mostly-fixed
-  // set of stat hashes shared across the whole game — resolving them is effectively a one-time
-  // cost, not per-item, so it's done for the whole vault up front rather than lazily.
   const statHashesToResolve = new Set();
   raw.forEach(([it]) => {
     const def = defCache[it.itemHash];
@@ -999,7 +697,7 @@ async function loadEverything(){
   allItems = raw.map(([it, cid, label, equipped]) => {
     const def = defCache[it.itemHash];
     if(!def) return null;
-   const power = it.itemInstanceId ? (instanceStats[it.itemInstanceId]?.primaryStat?.value || 0) : 0;
+    const power = it.itemInstanceId ? (instanceStats[it.itemInstanceId]?.primaryStat?.value || 0) : 0;
     const state = it.state || 0;
     const hasIconPath = !!def.displayProperties.icon;
     if(!hasIconPath){
@@ -1009,16 +707,9 @@ async function loadEverything(){
         tier: def.inventory?.tierTypeName || "", redacted: !!def.redacted
       });
     }
-    // RPM and element are static per-weapon facts already sitting in the definition
-    // we fetch anyway — free to surface, no extra network calls.
     const rpm = def.stats?.stats?.[RPM_STAT_HASH]?.value || null;
     const damageType = it.itemInstanceId ? (instanceStats[it.itemInstanceId]?.damageType || 0) : 0;
 
-    // Armor archetype — top 2 stats by value, named via the manifest lookup above,
-    // matched against the confirmed 12-archetype table. Falls back to just showing the
-    // raw stat names if it's an older piece using a stat set that predates archetypes.
-    // Weapons get the same stat lookup minus archetype-matching, just for the stat bars —
-    // RPM is excluded here since it's already shown as its own chip.
     let archetype = null, statBreakdown = null;
     if(it.itemInstanceId && itemStats[it.itemInstanceId] && (def.itemType === 2 || def.itemType === 3)){
       const entries = Object.entries(itemStats[it.itemInstanceId].stats || {})
@@ -1044,25 +735,19 @@ async function loadEverything(){
       locked: !!(state & 1), masterwork: !!(state & 4), crafted: !!(state & 8),
       characterId: cid, location: label, equipped, power,
       rpm, element: ELEMENT_NAMES[damageType] || null,
-      ammoType: def.ammoType,
       archetype, statBreakdown,
       isPostmaster: typeof label === "string" && label.startsWith("Postmaster"),
       favorite: isFavorite(it.itemInstanceId),
-      note: getNote(it.itemInstanceId),
-      tag: getTag(it.itemInstanceId)
+      note: getNote(it.itemInstanceId)
     };
   }).filter(Boolean);
-
 
   hideLoading();
   showdownMode = "picker"; selectedClass = null;
   renderShowdown();
   renderMarked();
   renderBrowse();
-  renderLoadouts();
   renderMissingItemsBanner();
-  // Image loads kicked off by the render calls above are async — give them a few seconds
-  // to settle (success or onerror) before printing the full diagnostic summary.
   setTimeout(logIconDiagnostics, 3000);
  }catch(e){
   console.error("Failed to load vault:", e);
@@ -1081,15 +766,9 @@ async function resolveDefinitions(hashes){
     await Promise.all(chunk.map(h => fetchDefinitionWithRetry(h)));
     await sleep(100);
   }
-  // Persist for next time — item definitions basically never change.
   try{ localStorage.setItem("vault_def_cache", JSON.stringify(defCache)); }
   catch(e){ console.warn("Definition cache too big for localStorage, skipping save", e); }
 }
-// Full item definitions from Bungie are heavy — stats, sockets, flavor text, screenshots,
-// translated strings, etc. Caching the whole thing per item blows past localStorage's quota
-// almost immediately (a few thousand items = many MB), which silently fails every save and
-// means the cache never actually helps. Trimming to just what this app reads keeps each
-// entry under ~300 bytes instead of 5-20KB, so the whole vault's worth genuinely fits.
 function trimDefinition(full){
   return {
     displayProperties: { name: full.displayProperties?.name, icon: full.displayProperties?.icon },
@@ -1098,7 +777,6 @@ function trimDefinition(full){
     itemType: full.itemType,
     classType: full.classType,
     redacted: full.redacted,
-    ammoType: full.equippingBlock?.ammoType,
     stats: full.stats?.stats?.[RPM_STAT_HASH] ? { stats: { [RPM_STAT_HASH]: { value: full.stats.stats[RPM_STAT_HASH].value } } } : undefined
   };
 }
@@ -1115,19 +793,12 @@ async function fetchDefinitionWithRetry(hash, attempt=1){
 }
 function classTypeName(n){ return n===0?"Titan":n===1?"Hunter":n===2?"Warlock":"Guardian"; }
 
-// ---------- Perks — fetched lazily, only for items actually on screen in a Showdown matchup ----------
-// This is deliberately NOT part of the initial vault load: pulling perk data for every item up
-// front would mean one extra API call per weapon/armor piece owned, on top of the per-hash
-// definition lookups that are already the slowest part of loading. Instead we fetch it one
-// matchup's worth (2 items) at a time, right when that matchup renders, and cache by
-// itemInstanceId so re-showing the same item later in the session is free.
 async function fetchItemPerks(item){
   if(!item.itemInstanceId) return [];
   if(itemPerksCache.has(item.itemInstanceId)) return itemPerksCache.get(item.itemInstanceId);
   if(bulkTransferInProgress){
-    // Don't compete with an in-flight bulk stage-for-cleanup transfer for API budget.
     await new Promise(r => setTimeout(r, 400));
-    if(bulkTransferInProgress) return []; // still busy — just skip for this render, card shows without perks
+    if(bulkTransferInProgress) return [];
   }
   try{
     const res = await apiGet(`/Platform/Destiny2/${membership.membershipType}/Profile/${membership.membershipId}/Item/${item.itemInstanceId}/?components=302`);
@@ -1137,7 +808,7 @@ async function fetchItemPerks(item){
     await resolvePerkDefinitions(hashes);
     const resolved = visible.map(p => {
       const def = perkDefCache[p.perkHash]?.displayProperties;
-      return def?.name ? { name: def.name, icon: def.icon ? BASE + def.icon : null } : null;
+      return def?.name ? { name: def.name, icon: def.icon ? BASE + def.icon : null, perkHash: p.perkHash } : null;
     }).filter(Boolean);
     itemPerksCache.set(item.itemInstanceId, resolved);
     return resolved;
@@ -1159,10 +830,7 @@ async function resolvePerkDefinitions(hashes){
   catch(e){ console.warn("Perk definition cache too big for localStorage, skipping save", e); }
 }
 
-
 // ---------- Icon rendering + diagnostics ----------
-// Single shared place that builds an item's <img>, so every list (Showdown, Marked, Browse)
-// reports load failures the same way instead of three separate silent onerror handlers.
 function iconImgHtml(item){
   if(!item.icon) return '';
   return `<img src="${item.icon}" data-hash="${item.itemHash}" data-name="${escapeHtml(item.name || '')}" onerror="handleIconLoadError(this)">`;
@@ -1174,38 +842,30 @@ function handleIconLoadError(imgEl){
 function logIconDiagnostics(){
   const totalFlagged = diagDefResolveFailed.length + diagIconMissingInDef.length + diagIconLoadFailed.length;
   console.group(`%cVault Showdown icon diagnostics — ${totalFlagged} flagged item(s)`, "color:#6d3fd6;font-weight:bold;");
-
-  console.log(`(1) Manifest lookup never resolved — item dropped from the whole app, not just missing an icon: ${diagDefResolveFailed.length}`);
+  console.log(`(1) Manifest lookup never resolved — item dropped from the whole app: ${diagDefResolveFailed.length}`);
   if(diagDefResolveFailed.length) console.table(diagDefResolveFailed);
-
-  console.log(`(2) Manifest definition resolved but has NO icon path at all (genuine manifest gap): ${diagIconMissingInDef.length}`);
+  console.log(`(2) Manifest definition resolved but has NO icon path at all: ${diagIconMissingInDef.length}`);
   if(diagIconMissingInDef.length) console.table(diagIconMissingInDef);
-
-  console.log(`(3) Icon path existed and a URL was built, but the <img> failed to load: ${diagIconLoadFailed.length}`);
+  console.log(`(3) Icon path existed but the <img> failed to load: ${diagIconLoadFailed.length}`);
   if(diagIconLoadFailed.length) console.table(diagIconLoadFailed);
-
   console.groupEnd();
   console.log("Re-run this summary any time with: vaultIconDiagnostics()");
 }
 window.vaultIconDiagnostics = logIconDiagnostics;
 
 // ---------- Showdown (duplicate comparison game) ----------
-// Weapon duplicates: grouped by exact itemHash, same as before — this stays a "you own two
-// of the literal same gun" comparison since that's an unambiguous keep/trash call.
 function buildWeaponDuplicateGroups(){
   const groups = {};
   allItems.forEach(it => {
     if(!it.itemInstanceId || it.itemType !== 3) return;
-    if(it.locked) return; // you've already told the game "keep this" by locking it
-    if(it.favorite) return; // permanently protected — never put a favorite up for a showdown
-    if(marked.some(m => m.itemInstanceId === it.itemInstanceId)) return; // already dealt with
+    if(it.locked) return;
+    if(it.favorite) return;
+    if(marked.some(m => m.itemInstanceId === it.itemInstanceId)) return;
     (groups[it.itemHash] = groups[it.itemHash] || []).push(it);
   });
   return Object.values(groups).filter(g => g.length > 1)
     .map(g => ({ pool: g.slice().sort((a,b) => b.power - a.power || (b.masterwork - a.masterwork) || (b.crafted - a.crafted)) }));
 }
-// Armor for a slot: EVERY piece you own in that slot for that class, not just exact duplicates —
-// the point here is "which Helmet do I actually keep using", not just literal copies.
 function armorForSlot(classType, slotName){
   const pool = allItems.filter(it =>
     it.itemInstanceId && it.itemType === 2 && !it.locked && !it.favorite &&
@@ -1230,7 +890,10 @@ function renderShowdownPicker(){
   const classes = [
     { id: 0, label: "Titan" }, { id: 1, label: "Hunter" }, { id: 2, label: "Warlock" }, { id: "weapons", label: "⚔️ Weapons" }
   ];
-  let html = `<button class="bracket-nav" id="exitSweepBtn" style="margin-bottom:10px;">← Vault</button>`;
+  let html = `
+    <h2 class="disp" style="font-size:20px; margin:12px 0 2px 0; color:var(--purple-dk);">What are we comparing?</h2>
+    <p style="color:var(--dim); font-weight:700; font-size:12.5px; margin:0 0 10px 0;">Pick a class or weapons, then swipe through matchups one at a time.</p>
+  `;
   html += `<div class="class-chips">` + classes.map(c =>
     `<div class="class-chip ${selectedClass === c.id ? 'active' : ''}" data-class-id="${c.id}">${c.label}</div>`
   ).join("") + `</div>`;
@@ -1273,27 +936,26 @@ function renderShowdownPicker(){
   el.querySelectorAll(".slot-row[data-slot]:not([data-slot=''])").forEach(row => row.addEventListener("click", () => {
     startBracket(armorForSlot(selectedClass, row.dataset.slot), `No comparable ${row.dataset.slot} for this class right now.`);
   }));
-  $("#exitSweepBtn").addEventListener("click", exitComparisonScreen);
 }
-// Shared by the nav tabs, the Sweep entry point, and the exit-comparison flow so switching
-// panels always gets the same fade/slide-up entrance instead of an instant cut.
+
+// Shared by every tab switch (nav taps, and jumping here programmatically from a "Compare"
+// button elsewhere) so switching panels always gets the same fade/slide-up entrance instead
+// of an instant cut, and the nav highlight always matches whatever's actually showing.
 function activateTabPanel(id){
   document.querySelectorAll(".tabpanel").forEach(p=>p.classList.remove("active","in"));
   const panel = document.getElementById(id);
   panel.classList.add("active");
   requestAnimationFrame(() => requestAnimationFrame(() => panel.classList.add("in")));
+  const tabName = id.replace("tab-", "");
+  document.querySelectorAll(".tab-btn").forEach(b => b.classList.toggle("active", b.dataset.tab === tabName));
 }
-function enterComparisonScreen(){
-  activateTabPanel("tab-showdown");
-}
-function exitComparisonScreen(){
-  activateTabPanel("tab-browse");
-  document.querySelectorAll(".tab-btn").forEach(b=>b.classList.remove("active"));
-  document.querySelector('[data-tab="browse"]').classList.add("active");
-}
+// Compare is home now, reached like any other tab — this just jumps there programmatically
+// for the "Compare" actions that live inside Browse/item-detail rather than the nav bar.
+function goToCompareTab(){ activateTabPanel("tab-showdown"); }
 function backToPicker(){
   showdownMode = "picker";
   $("#showdown-done").style.display = "none";
+  $("#showdown-done").classList.remove("show");
   renderShowdown();
 }
 
@@ -1311,11 +973,10 @@ function renderShowdown(){
     return;
   }
   picker.style.display = "none";
-  area.innerHTML = ""; empty.style.display="none"; done.style.display="none"; progress.style.display="none";
+  area.innerHTML = ""; empty.style.display="none"; done.style.display="none"; done.classList.remove("show"); progress.style.display="none";
 
   if(totalMatchups === 0){ empty.style.display="block"; return; }
 
-  // advance to next group with items left to compare
   while(currentGroupIndex < matchQueue.length){
     const group = matchQueue[currentGroupIndex];
     if(!currentChampion){
@@ -1348,76 +1009,132 @@ function renderShowdown(){
   area.innerHTML = "";
   const matchupEl = buildMatchupDOM(currentChampion, challenger);
   area.appendChild(matchupEl);
-  // Starts at opacity:0/translateY(10px) per the .matchup base rule — double rAF makes sure
-  // that initial state actually paints before ".in" is added, otherwise the browser can
-  // coalesce both style changes into one frame and the transition never plays.
   requestAnimationFrame(() => requestAnimationFrame(() => matchupEl.classList.add("in")));
 }
 
-// Guards the ~420ms swipe-reaction window so a fast double-tap can't fire two decisions
-// for the same matchup while the losing card is still animating off screen.
-let swipeInProgress = false;
 function buildMatchupDOM(a, b){
   const wrap = document.createElement("div");
   wrap.className = "matchup";
   const cardA = vcardEl(a);
   const cardB = vcardEl(b);
-  cardA.addEventListener("click", () => handlePick(cardA, cardB, a, b));
-  cardB.addEventListener("click", () => handlePick(cardB, cardA, b, a));
   wrap.appendChild(cardA);
   const vs = document.createElement("div");
   vs.className = "vs-badge"; vs.textContent = "VS";
   wrap.appendChild(vs);
   wrap.appendChild(cardB);
+
+  // Dragging a card away rejects THAT card (the other one wins) — literal Tinder toss physics.
+  // Tapping a card (no real movement) picks it directly as the winner. Both paths are always
+  // live at once so however someone naturally reaches for the app, it just works.
+  attachDrag(cardA, cardB, () => handleDragReject(cardB, cardA, b, a), () => handleTapPick(cardA, cardB, a, b));
+  attachDrag(cardB, cardA, () => handleDragReject(cardA, cardB, a, b), () => handleTapPick(cardB, cardA, b, a));
   return wrap;
 }
 
-// Tinder-style reaction: the picked card pops with a green "KEEP" stamp, the other swipes
-// off to the side with a red "TRASH" stamp — THEN the actual state update (marking the loser,
-// advancing the bracket) happens, so the animation always gets to play out before the next
-// matchup replaces this one.
-function handlePick(winnerEl, loserEl, winner, loser){
-  if(swipeInProgress) return;
+// Common tail end for every decision, however it was made: the winner gets the "KEEP" pop,
+// then after `delay` (long enough for whatever animation is already playing) the actual
+// state update happens.
+function commitPick(winnerEl, loserEl, winner, loser, delay){
   swipeInProgress = true;
-  winnerEl.style.pointerEvents = "none";
-  loserEl.style.pointerEvents = "none";
   winnerEl.classList.add("swipe-keep");
-  loserEl.classList.add("swipe-trash");
   setTimeout(() => {
     swipeInProgress = false;
     resolveMatchup(winner, loser);
-  }, 420);
+  }, delay);
+}
+// Tap path: no drag happened, so the loser still needs its own swipe-away animation (the
+// CSS-keyframe version — see .vcard.swipe-trash).
+function handleTapPick(winnerEl, loserEl, winner, loser){
+  if(swipeInProgress) return;
+  loserEl.classList.add("swipe-trash");
+  commitPick(winnerEl, loserEl, winner, loser, 420);
+}
+// Drag path: the rejected card's fling-off was already animated live in endDrag (inline
+// transform/transition, not the CSS class), so this just needs to wait that out and commit.
+function handleDragReject(winnerEl, loserEl, winner, loser){
+  commitPick(winnerEl, loserEl, winner, loser, 350);
+}
+
+// ---------- Drag-to-swipe (Pointer Events cover mouse + touch + pen with one code path) ----------
+let dragState = null; // { pointerId, card, other, startX, startY, dx, dy, moved }
+const DRAG_COMMIT_PX = 100; // drag past this far to reject the card
+const DRAG_TAP_PX = 6;      // under this, it's a tap, not a drag
+
+function attachDrag(cardEl, otherEl, onReject, onTap){
+  cardEl.style.touchAction = "none"; // we're handling the gesture ourselves — don't let the page scroll fight it
+  cardEl.addEventListener("pointerdown", (e) => {
+    if(swipeInProgress || dragState || e.target.closest(".perk-chip")) return; // let perk-chip taps (favoriting) through untouched
+    cardEl.setPointerCapture(e.pointerId);
+    cardEl.classList.add("dragging");
+    dragState = { pointerId: e.pointerId, card: cardEl, other: otherEl, startX: e.clientX, startY: e.clientY, dx: 0, dy: 0, moved: false };
+  });
+  cardEl.addEventListener("pointermove", (e) => {
+    if(!dragState || dragState.card !== cardEl || dragState.pointerId !== e.pointerId) return;
+    const dx = e.clientX - dragState.startX, dy = e.clientY - dragState.startY;
+    dragState.dx = dx; dragState.dy = dy;
+    if(!dragState.moved && (Math.abs(dx) > DRAG_TAP_PX || Math.abs(dy) > DRAG_TAP_PX)) dragState.moved = true;
+    if(!dragState.moved) return;
+    cardEl.style.transform = `translate(${dx}px, ${dy*0.3}px) rotate(${dx/18}deg)`;
+    const frac = Math.min(1, Math.abs(dx) / DRAG_COMMIT_PX);
+    cardEl.querySelector(".stamp-trash").style.opacity = frac;
+    otherEl.querySelector(".stamp-keep").style.opacity = frac * 0.85;
+  });
+  const end = (e) => {
+    if(!dragState || dragState.card !== cardEl || dragState.pointerId !== e.pointerId) return;
+    const { dx, dy, moved, other } = dragState;
+    dragState = null;
+    cardEl.classList.remove("dragging");
+    const trashStamp = cardEl.querySelector(".stamp-trash");
+    const keepStampOther = other.querySelector(".stamp-keep");
+
+    if(!moved){ onTap(); return; } // just a tap — hand off to the normal pick flow untouched
+
+    if(Math.abs(dx) > DRAG_COMMIT_PX){
+      if(swipeInProgress) return;
+      const flingX = (dx > 0 ? 1 : -1) * (window.innerWidth || 800);
+      cardEl.style.transition = "transform .35s cubic-bezier(.55,0,1,.45)";
+      cardEl.style.transform = `translate(${flingX}px, ${dy}px) rotate(${dx/10}deg)`;
+      trashStamp.style.opacity = 1;
+      keepStampOther.style.opacity = 1;
+      onReject();
+    } else {
+      cardEl.style.transition = "transform .3s cubic-bezier(.34,1.56,.64,1)";
+      cardEl.style.transform = "";
+      trashStamp.style.opacity = "";
+      keepStampOther.style.opacity = "";
+      setTimeout(() => { cardEl.style.transition = ""; }, 300);
+    }
+  };
+  cardEl.addEventListener("pointerup", end);
+  cardEl.addEventListener("pointercancel", end);
 }
 
 function vcardEl(item){
   const el = document.createElement("div");
   el.className = "vcard";
   const color = TIER_COLORS[item.tier] || TIER_COLORS.Common;
-  el.style.borderLeftColor = color;
   const badges = [
     item.masterwork ? '⭐ Masterwork' : '',
     item.crafted ? '🛠️ Crafted' : '',
     item.equipped ? '✅ Equipped' : ''
   ].filter(Boolean).join(' · ');
   const isArmor = item.itemType === 2;
+  const statTotal = (item.statBreakdown || []).reduce((sum, s) => sum + s.value, 0) || null;
 
   const headerChips = isArmor
     ? [
         item.power ? `<span class="stat-chip">${item.power} PWR</span>` : '',
-        item.archetype ? `<span class="stat-chip">${item.archetype}</span>` : ''
+        item.archetype ? `<span class="stat-chip">${item.archetype}</span>` : '',
+        statTotal ? `<span class="stat-chip stat-total-chip">Total ${statTotal}</span>` : ''
       ].filter(Boolean).join('')
     : [
         item.power ? `<span class="stat-chip">${item.power} PWR</span>` : '',
         item.rpm ? `<span class="stat-chip">${item.rpm} RPM</span>` : '',
-        elementChipHtml(item.element),
-        ammoChipHtml(AMMO_NAMES[item.ammoType])
+        item.element ? `<span class="stat-chip">${item.element}</span>` : '',
+        statTotal ? `<span class="stat-chip stat-total-chip">Total ${statTotal}</span>` : ''
       ].filter(Boolean).join('');
 
-  // Real stat bars, like the in-game inspect screen — scaled against 100 since that's the
-  // usual ceiling for both weapon and armor stats in the current stat system. Unsliced (every
-  // resolved stat, not just the top few) to match the same full breakdown the item detail sheet
-  // shows — a matchup is exactly when you want the complete picture, not a summary.
-  const statBarsHtml = (item.statBreakdown || []).map(s => `
+  const statBarsHtml = (item.statBreakdown || []).slice(0, isArmor ? 6 : 4).map(s => `
     <div class="stat-bar-row">
       <span class="stat-label">${escapeHtml(s.name)}</span>
       <div class="stat-track"><div class="stat-fill" style="width:${Math.min(100, s.value)}%"></div></div>
@@ -1430,7 +1147,6 @@ function vcardEl(item){
     <div class="top-row">
       <div class="icon" style="box-shadow:0 0 16px 1px ${color}66;">${iconImgHtml(item)}<div class="tier-dot" style="background:${color}"></div></div>
       <div class="info">
-        <div class="eyebrow" style="color:${color};">${item.tier}${item.type ? ' · ' + item.type : ''}</div>
         <div class="name">${escapeHtml(item.name)}</div>
         <div class="meta">${item.location}${badges ? ' · ' + badges : ''}</div>
       </div>
@@ -1440,18 +1156,26 @@ function vcardEl(item){
     ${isArmor ? '' : '<div class="perk-row"><span class="perk-loading">loading roll…</span></div>'}
   `;
 
-  // Perks are a weapon concept in this app — armor mods/set bonuses work differently
-  // and aren't reliably represented by this same endpoint, so skip the fetch for armor
-  // rather than show something potentially misleading.
   if(!isArmor){
     const perkRow = el.querySelector(".perk-row");
     fetchItemPerks(item).then(perks => {
       perkRow.innerHTML = perks.length
-        ? perks.map(p => `<span class="perk-chip">${p.icon ? `<img src="${p.icon}" onerror="this.style.display='none'">` : ''}${escapeHtml(p.name)}</span>`).join('')
+        ? perks.map(p => `<span class="perk-chip${isFavoritePerk(p.perkHash) ? ' fav' : ''}" data-perk-hash="${p.perkHash}">${p.icon ? `<img src="${p.icon}" onerror="this.style.display='none'">` : ''}${escapeHtml(p.name)}${isFavoritePerk(p.perkHash) ? ' ★' : ''}</span>`).join('')
         : `<span class="perk-loading">no roll data</span>`;
+      perkRow.querySelectorAll(".perk-chip").forEach(chip => {
+        chip.addEventListener("pointerdown", (e) => e.stopPropagation());
+        chip.addEventListener("click", (e) => {
+          e.stopPropagation();
+          const hash = Number(chip.dataset.perkHash);
+          toggleFavoritePerk(hash);
+          const nowFav = isFavoritePerk(hash);
+          chip.classList.toggle("fav", nowFav);
+          const perk = perks.find(p => p.perkHash === hash);
+          chip.innerHTML = `${perk?.icon ? `<img src="${perk.icon}" onerror="this.style.display='none'">` : ''}${escapeHtml(perk?.name || '')}${nowFav ? ' ★' : ''}`;
+        });
+      });
     });
   }
-
 
   return el;
 }
@@ -1516,17 +1240,11 @@ function renderMarked(){
   marked.forEach((item, idx) => {
     const el = document.createElement("div");
     el.className = "marked-item";
-    el.style.borderLeftColor = TIER_COLORS[item.tier] || TIER_COLORS.Common;
-    el.style.animationDelay = `${Math.min(idx, 10) * 25}ms`; // cap so long lists don't feel sluggish to appear
+    el.style.animationDelay = `${Math.min(idx, 10) * 25}ms`;
     const note = getNote(item.itemInstanceId);
-    // The marked snapshot only ever stored a handful of fields (name/icon/location/power) — pull
-    // the live item for the fuller RPM/element/ammo/archetype chips when it's still owned, and
-    // fall back to just the snapshotted power if it's since been dismantled.
-    const live = allItems.find(i => i.itemInstanceId === item.itemInstanceId);
-    const chips = live ? rowChipsHtml(live) : (item.power ? `<span class="stat-chip">${item.power} PWR</span>` : '');
     el.innerHTML = `
       <div class="icon">${iconImgHtml(item)}</div>
-      <div class="info"><div class="name">${escapeHtml(item.name)}</div><div class="meta">${item.location}</div>${chips ? `<div class="row-chips">${chips}</div>` : ''}${note ? `<div class="note">📝 ${escapeHtml(note)}</div>` : ''}</div>
+      <div class="info"><div class="name">${escapeHtml(item.name)}</div><div class="meta">${item.location} · ${item.power||'—'} power</div>${note ? `<div class="note">📝 ${escapeHtml(note)}</div>` : ''}</div>
       <button data-idx="${idx}">✕</button>`;
     el.querySelector("button").addEventListener("click", () => {
       marked.splice(idx, 1);
@@ -1558,11 +1276,6 @@ async function stageAllOnCharacter(){
   await doStageAll();
 }
 
-// DIM's documented search syntax doesn't currently list an "id:" filter for matching a
-// specific item instance (there's a long-standing feature request for one, unclear if it
-// shipped) — so this is a best-effort convenience, not a guaranteed-working mechanism.
-// If it doesn't filter correctly in DIM, use "Export for DIM (CSV)" instead, which
-// references items unambiguously by their exact instance ID.
 function copyMarkedAsDimQuery(){
   if(marked.length === 0) return;
   const query = marked.map(item => `id:${item.itemInstanceId}`).join(" or ");
@@ -1573,10 +1286,6 @@ function copyMarkedAsDimQuery(){
   });
 }
 
-// DIM's Settings page has an "Import tags/notes from CSV" tool that expects columns
-// exactly named Id, Hash, Tag, Notes (extra columns are ignored, and this OVERWRITES
-// existing tags/notes for any item listed — so only what's actually marked goes in here).
-// "junk" is DIM's own internal tag keyword for what it calls the Junk tag.
 function exportMarkedAsDimCsv(){
   if(marked.length === 0) return;
   const rows = [["Id","Hash","Tag","Notes"]];
@@ -1594,17 +1303,15 @@ async function doStageAll(){
   bulkTransferInProgress = true;
   showLoading("MOVING ITEMS…");
   for(const item of marked){
-    if(item.characterId === cleanupCharacterId) continue; // already on the cleanup character
+    if(item.characterId === cleanupCharacterId) continue;
     try{
       if(item.characterId){
-        // Currently on a different character: send to vault first.
         await apiPost("/Platform/Destiny2/Actions/Items/TransferItem/", {
           itemReferenceHash: item.itemHash, stackSize: 1, transferToVault: true,
           itemId: item.itemInstanceId, characterId: item.characterId,
           membershipType: membership.membershipType
         });
       }
-      // Now in the vault (either already was, or just arrived): send to the cleanup character.
       await apiPost("/Platform/Destiny2/Actions/Items/TransferItem/", {
         itemReferenceHash: item.itemHash, stackSize: 1, transferToVault: false,
         itemId: item.itemInstanceId, characterId: cleanupCharacterId,
@@ -1617,335 +1324,7 @@ async function doStageAll(){
   alert(`Staged on ${characterClassById[cleanupCharacterId]}. Log in-game to dismantle them.`);
 }
 
-// ---------- Postmaster pull ----------
-// Pulling isn't a TransferItem call — items sitting in the postmaster bucket need the
-// dedicated PullFromPostmaster endpoint, which lands them in whichever real inventory bucket
-// their item type maps to. That destination bucket isn't something this app tracks locally,
-// so rather than guess at the item's new location/bucket, a full reload afterward re-derives
-// everything (location, capacity dash, browse list) straight from the profile response.
-async function pullFromPostmaster(item){
-  showLoading("PULLING FROM POSTMASTER…");
-  try{
-    const res = await apiPost("/Platform/Destiny2/Actions/Items/PullFromPostmaster/", {
-      itemReferenceHash: item.itemHash, itemId: item.itemInstanceId, stackSize: item.quantity,
-      characterId: item.characterId, membershipType: membership.membershipType
-    });
-    if(res?.ErrorCode !== 1){ hideLoading(); alert("Couldn't pull from postmaster: " + (res?.Message || "unknown error")); return; }
-  }catch(e){ hideLoading(); alert("Couldn't pull from postmaster: " + (e?.message || e)); return; }
-  await loadEverything();
-}
-
-async function pullAllPostmasterForCharacter(cid){
-  const items = allItems.filter(i => i.isPostmaster && i.characterId === cid);
-  if(items.length === 0) return;
-  bulkTransferInProgress = true;
-  showLoading(`PULLING ${items.length} ITEM${items.length===1?'':'S'}…`);
-  let failCount = 0;
-  for(const item of items){
-    try{
-      const res = await apiPost("/Platform/Destiny2/Actions/Items/PullFromPostmaster/", {
-        itemReferenceHash: item.itemHash, itemId: item.itemInstanceId, stackSize: item.quantity,
-        characterId: item.characterId, membershipType: membership.membershipType
-      });
-      if(res?.ErrorCode !== 1) throw new Error(res?.Message || "pull failed");
-    }catch(e){ console.warn("Pull failed for", item.name, e); failCount++; }
-  }
-  bulkTransferInProgress = false;
-  await loadEverything();
-  if(failCount) alert(`${failCount} item${failCount===1?'':'s'} couldn't be pulled — that character's real inventory may be full, or they need to be claimed in-game.`);
-}
-
-// ---------- Bulk multi-select transfer ----------
-function renderBulkBar(){
-  const bar = $("#bulkActions");
-  if(!bar) return;
-  if(!selectModeOn || selectedForBulk.size === 0){ bar.style.display = "none"; return; }
-  bar.style.display = "flex";
-  bar.innerHTML = `
-    <button class="btn primary" id="bulkMoveBtn">Move ${selectedForBulk.size} item${selectedForBulk.size===1?'':'s'}…</button>
-    <button class="btn ghost" id="bulkClearBtn">Clear</button>`;
-  $("#bulkMoveBtn").addEventListener("click", openBulkMoveSheet);
-  $("#bulkClearBtn").addEventListener("click", () => { selectedForBulk.clear(); renderBrowse(); });
-}
-
-function openBulkMoveSheet(){
-  const sheet = $("#sheet");
-  const opts = [`<div class="opt" data-dest="__vault__">Vault<span>›</span></div>`,
-    ...Object.entries(characterClassById).map(([cid,label]) => `<div class="opt" data-dest="${cid}">${label}<span>›</span></div>`)
-  ].join("");
-  sheet.innerHTML = `<h3>Move ${selectedForBulk.size} item${selectedForBulk.size===1?'':'s'} to</h3>${opts}<div class="cancel" id="sheetCancel">Cancel</div>`;
-  openSheet();
-  sheet.querySelectorAll(".opt").forEach(opt => opt.addEventListener("click", async () => {
-    closeSheet();
-    await bulkMoveSelected(opt.dataset.dest);
-  }));
-  $("#sheetCancel").addEventListener("click", closeSheet);
-}
-
-// Same two-hop-through-vault pattern as doStageAll — Bungie's API has no direct
-// character-to-character transfer, so a char-to-char move is really "to vault" then
-// "vault to target character" as two separate calls.
-async function bulkMoveSelected(dest){
-  const toVault = dest === "__vault__";
-  const items = allItems.filter(i => selectedForBulk.has(i.itemInstanceId));
-  bulkTransferInProgress = true;
-  showLoading(`MOVING ${items.length} ITEM${items.length===1?'':'S'}…`);
-  let failCount = 0;
-  for(const item of items){
-    try{
-      if(toVault){
-        if(item.location === "Vault") continue;
-        const res = await apiPost("/Platform/Destiny2/Actions/Items/TransferItem/", {
-          itemReferenceHash: item.itemHash, stackSize: item.quantity, transferToVault: true,
-          itemId: item.itemInstanceId, characterId: item.characterId,
-          membershipType: membership.membershipType
-        });
-        if(res?.ErrorCode !== 1) throw new Error(res?.Message || "transfer failed");
-        item.characterId = null; item.location = "Vault"; item.equipped = false;
-      } else {
-        if(item.characterId === dest) continue;
-        if(item.characterId){
-          const res1 = await apiPost("/Platform/Destiny2/Actions/Items/TransferItem/", {
-            itemReferenceHash: item.itemHash, stackSize: item.quantity, transferToVault: true,
-            itemId: item.itemInstanceId, characterId: item.characterId,
-            membershipType: membership.membershipType
-          });
-          if(res1?.ErrorCode !== 1) throw new Error(res1?.Message || "transfer to vault failed");
-        }
-        const res2 = await apiPost("/Platform/Destiny2/Actions/Items/TransferItem/", {
-          itemReferenceHash: item.itemHash, stackSize: item.quantity, transferToVault: false,
-          itemId: item.itemInstanceId, characterId: dest,
-          membershipType: membership.membershipType
-        });
-        if(res2?.ErrorCode !== 1) throw new Error(res2?.Message || "transfer to character failed");
-        item.characterId = dest; item.location = characterClassById[dest] || "Guardian"; item.equipped = false;
-      }
-    }catch(e){ console.warn("Bulk move failed for", item.name, e); failCount++; }
-  }
-  bulkTransferInProgress = false;
-  hideLoading();
-  selectedForBulk.clear();
-  renderBrowse();
-  if(failCount) alert(`${failCount} item${failCount===1?'':'s'} couldn't be moved.`);
-}
-
-// ---------- Loadouts ----------
-function renderLoadouts(){
-  const listEl = $("#loadoutsList");
-  const emptyEl = $("#loadoutsEmpty");
-  if(!listEl) return;
-  listEl.innerHTML = "";
-  if(loadouts.length === 0){ emptyEl.style.display = "block"; return; }
-  emptyEl.style.display = "none";
-  loadouts.forEach((lo, idx) => {
-    const el = document.createElement("div");
-    el.className = "loadout-row";
-    el.style.animationDelay = `${Math.min(idx, 10) * 25}ms`;
-    const thumbsHtml = lo.items.slice(0, 10).map(it =>
-      `<div class="loadout-thumb">${it.icon ? `<img src="${it.icon}" onerror="this.style.display='none'">` : ''}</div>`
-    ).join('');
-    el.innerHTML = `
-      <div class="loadout-head">
-        <div class="loadout-name">${escapeHtml(lo.name)}</div>
-        <div class="loadout-meta">${classTypeName(lo.classType)} · ${lo.items.length} item${lo.items.length===1?'':'s'}</div>
-      </div>
-      <div class="loadout-thumbs">${thumbsHtml}</div>
-      <div class="loadout-actions">
-        <button class="btn primary loadout-apply">Apply</button>
-        <button class="btn ghost loadout-delete">Delete</button>
-      </div>`;
-    el.querySelector(".loadout-apply").addEventListener("click", () => openApplyLoadoutSheet(lo));
-    el.querySelector(".loadout-delete").addEventListener("click", () => {
-      if(!confirm(`Delete "${lo.name}"?`)) return;
-      loadouts.splice(idx, 1);
-      persistLoadouts();
-      renderLoadouts();
-    });
-    listEl.appendChild(el);
-  });
-}
-
-function openSaveLoadoutSheet(){
-  const charIds = Object.keys(characterClassById);
-  if(charIds.length === 0) return;
-  const sheet = $("#sheet");
-  sheet.innerHTML = "<h3>Save current loadout from</h3>" +
-    charIds.map(cid => `<div class="opt" data-cid="${cid}">${characterClassById[cid]}<span>›</span></div>`).join("") +
-    `<div class="cancel" id="sheetCancel">Cancel</div>`;
-  openSheet();
-  sheet.querySelectorAll(".opt").forEach(opt => opt.addEventListener("click", () => {
-    const cid = opt.dataset.cid;
-    closeSheet();
-    captureLoadout(cid);
-  }));
-  $("#sheetCancel").addEventListener("click", closeSheet);
-}
-
-// Snapshots everything currently equipped on that character (weapons, armor, subclass, ghost,
-// sparrow, ship, emblem — whatever's flagged equipped), not just weapons+armor, so applying it
-// back later is a faithful "put me back exactly how I was" rather than a partial gear swap.
-function captureLoadout(cid){
-  const equipped = allItems.filter(i => i.characterId === cid && i.equipped && i.itemInstanceId);
-  if(equipped.length === 0){ alert("Nothing is equipped on that character right now."); return; }
-  const name = prompt("Name this loadout:", `${characterClassById[cid]} Loadout`);
-  if(!name || !name.trim()) return;
-  loadouts.push({
-    id: `lo_${Date.now()}_${Math.random().toString(36).slice(2,8)}`,
-    name: name.trim(),
-    classType: characterClassTypeById[cid],
-    items: equipped.map(i => ({ itemInstanceId: i.itemInstanceId, itemHash: i.itemHash, name: i.name, icon: i.icon, tier: i.tier }))
-  });
-  persistLoadouts();
-  renderLoadouts();
-}
-
-function openApplyLoadoutSheet(lo){
-  const matching = Object.keys(characterClassById).filter(cid => characterClassTypeById[cid] === lo.classType);
-  if(matching.length === 0){ alert("No character of that class to apply this loadout to."); return; }
-  if(matching.length === 1){ applyLoadout(lo, matching[0]); return; }
-  const sheet = $("#sheet");
-  sheet.innerHTML = `<h3>Apply "${escapeHtml(lo.name)}" to</h3>` +
-    matching.map(cid => `<div class="opt" data-cid="${cid}">${characterClassById[cid]}<span>›</span></div>`).join("") +
-    `<div class="cancel" id="sheetCancel">Cancel</div>`;
-  openSheet();
-  sheet.querySelectorAll(".opt").forEach(opt => opt.addEventListener("click", () => {
-    closeSheet();
-    applyLoadout(lo, opt.dataset.cid);
-  }));
-  $("#sheetCancel").addEventListener("click", closeSheet);
-}
-
-// Re-resolves each saved itemInstanceId against the live inventory rather than trusting the
-// snapshot — an item saved months ago may have been dismantled since, so those are counted as
-// "missing" and skipped instead of failing the whole loadout. Same vault-hop transfer pattern as
-// bulkMoveSelected/doStageAll, then one EquipItems call so Bungie resolves any slot conflicts
-// itself instead of this app guessing equip order.
-async function applyLoadout(lo, targetCid){
-  const liveItems = lo.items.map(entry => allItems.find(i => i.itemInstanceId === entry.itemInstanceId)).filter(Boolean);
-  const missing = lo.items.length - liveItems.length;
-  if(liveItems.length === 0){ alert("None of this loadout's items are still in your inventory."); return; }
-
-  bulkTransferInProgress = true;
-  showLoading("APPLYING LOADOUT…");
-  let transferFailCount = 0;
-  for(const item of liveItems){
-    if(item.characterId === targetCid) continue; // already on the target character
-    try{
-      if(item.characterId){
-        const res1 = await apiPost("/Platform/Destiny2/Actions/Items/TransferItem/", {
-          itemReferenceHash: item.itemHash, stackSize: item.quantity, transferToVault: true,
-          itemId: item.itemInstanceId, characterId: item.characterId,
-          membershipType: membership.membershipType
-        });
-        if(res1?.ErrorCode !== 1) throw new Error(res1?.Message || "transfer to vault failed");
-      }
-      const res2 = await apiPost("/Platform/Destiny2/Actions/Items/TransferItem/", {
-        itemReferenceHash: item.itemHash, stackSize: item.quantity, transferToVault: false,
-        itemId: item.itemInstanceId, characterId: targetCid,
-        membershipType: membership.membershipType
-      });
-      if(res2?.ErrorCode !== 1) throw new Error(res2?.Message || "transfer to character failed");
-    }catch(e){ console.warn("Loadout transfer failed for", item.name, e); transferFailCount++; }
-  }
-
-  let equipFailCount = 0;
-  try{
-    const res = await apiPost("/Platform/Destiny2/Actions/Items/EquipItems/", {
-      itemIds: liveItems.map(i => i.itemInstanceId), characterId: targetCid, membershipType: membership.membershipType
-    });
-    const results = res?.Response?.equipResults || [];
-    equipFailCount = results.filter(r => r.equipStatus !== 1).length;
-    if(res?.ErrorCode !== 1 && results.length === 0) equipFailCount = liveItems.length;
-  }catch(e){ console.warn("EquipItems failed", e); equipFailCount = liveItems.length; }
-
-  bulkTransferInProgress = false;
-  // A full reload re-derives every character's equipped state/location from the server instead
-  // of this app trying to guess which other items got auto-unequipped by the EquipItems call.
-  await loadEverything();
-  const parts = [];
-  if(missing) parts.push(`${missing} item${missing===1?'':'s'} no longer in your inventory`);
-  if(transferFailCount) parts.push(`${transferFailCount} couldn't be moved`);
-  if(equipFailCount) parts.push(`${equipFailCount} couldn't be equipped`);
-  alert(parts.length ? `Loadout applied with issues: ${parts.join(", ")}.` : `Loadout "${lo.name}" applied.`);
-}
-
-// ---------- Export all tags/notes (not just Marked) as a DIM-importable CSV ----------
-function exportAllTagsAsDimCsv(){
-  const relevant = allItems.filter(i => i.itemInstanceId && (i.tag || i.favorite || i.note));
-  if(relevant.length === 0){ alert("Nothing tagged, favorited, or noted yet."); return; }
-  const rows = [["Id","Hash","Tag","Notes"]];
-  relevant.forEach(item => {
-    const tag = item.tag || (item.favorite ? "favorite" : "");
-    rows.push([item.itemInstanceId, item.itemHash, tag, item.note || ""]);
-  });
-  const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(",")).join("\r\n");
-  const blob = new Blob([csv], { type: "text/csv" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url; a.download = "vault-showdown-all-tags.csv";
-  document.body.appendChild(a); a.click(); document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-}
-
-// ---------- Tag filter sheet ----------
-function openTagFilterSheet(){
-  const sheet = $("#sheet");
-  const opts = [{ key:"", label:"All" }, { key:"none", label:"Untagged" },
-    ...Object.entries(TAG_DEFS).map(([k,v]) => ({ key:k, label:`${v.emoji} ${v.label}` }))];
-  sheet.innerHTML = "<h3>Filter by tag</h3>" + opts.map(o =>
-    `<div class="opt" data-tag="${o.key}">${o.label}<span>${(tagFilter||"")===o.key?'✓':'›'}</span></div>`
-  ).join("") + `<div class="cancel" id="sheetCancel">Cancel</div>`;
-  openSheet();
-  sheet.querySelectorAll(".opt").forEach(opt => opt.addEventListener("click", () => {
-    tagFilter = opt.dataset.tag === "" ? null : opt.dataset.tag;
-    closeSheet(); renderBrowse();
-  }));
-  $("#sheetCancel").addEventListener("click", closeSheet);
-}
-
-// ---------- Saved searches ----------
-function openSavedSearchesSheet(){
-  const sheet = $("#sheet");
-  const rows = savedSearches.map((s, idx) => `
-    <div class="opt saved-search-opt" data-idx="${idx}">
-      <span style="flex:1;">${escapeHtml(s.name)}<div style="font-size:11px;color:var(--dim);font-weight:700;">${escapeHtml(s.query)}</div></span>
-      <button class="saved-search-del" data-idx="${idx}" style="background:none;border:none;color:var(--red-dk);font-size:16px;font-weight:800;padding:2px 8px;">✕</button>
-    </div>`).join("");
-  sheet.innerHTML = `<h3>Saved searches</h3>` +
-    (savedSearches.length ? rows : `<p style="color:var(--dim);font-weight:700;font-size:12.5px;">No saved searches yet.</p>`) +
-    (searchQuery.trim() ? `<div class="opt" id="saveCurrentSearchOpt">💾 Save current search<span>›</span></div>` : '') +
-    `<div class="cancel" id="sheetCancel">Close</div>`;
-  openSheet();
-  sheet.querySelectorAll(".saved-search-opt").forEach(opt => opt.addEventListener("click", (e) => {
-    if(e.target.closest(".saved-search-del")) return;
-    const s = savedSearches[Number(opt.dataset.idx)];
-    searchQuery = s.query;
-    $("#search").value = s.query;
-    closeSheet();
-    renderBrowse();
-  }));
-  sheet.querySelectorAll(".saved-search-del").forEach(btn => btn.addEventListener("click", (e) => {
-    e.stopPropagation();
-    savedSearches.splice(Number(btn.dataset.idx), 1);
-    localStorage.setItem("vault_saved_searches", JSON.stringify(savedSearches));
-    openSavedSearchesSheet();
-  }));
-  const saveOpt = $("#saveCurrentSearchOpt");
-  if(saveOpt) saveOpt.addEventListener("click", () => {
-    const name = prompt("Name this search:", searchQuery);
-    if(!name || !name.trim()) return;
-    savedSearches.push({ name: name.trim(), query: searchQuery.trim() });
-    localStorage.setItem("vault_saved_searches", JSON.stringify(savedSearches));
-    openSavedSearchesSheet();
-  });
-  $("#sheetCancel").addEventListener("click", closeSheet);
-}
-
 // ---------- Missing-item banner ----------
-// diagDefResolveFailed holds hashes that still failed manifest resolution after loadEverything's
-// built-in retry + one extra delayed sweep — those items are silently absent from allItems
-// entirely (not shown in Browse, not eligible for Showdown), so this is the one place that
-// actually tells the user instead of leaving it to a console log.
 function renderMissingItemsBanner(){
   const el = $("#missingItemsBanner");
   if(!el) return;
@@ -1957,9 +1336,6 @@ function renderMissingItemsBanner(){
 }
 
 // ---------- Vault / Postmaster capacity dashboard ----------
-// Renders against the FULL profile inventory (not just weapons/armor, since materials, mods and
-// consumables count against the vault's general slots too) so the numbers match what the in-game
-// vault screen actually shows, not just what Showdown cares about.
 function renderCapacityDash(){
   const el = $("#capacityDash");
   if(!el) return;
@@ -1969,164 +1345,64 @@ function renderCapacityDash(){
   allItems.forEach(i => { if(i.isPostmaster) postmasterCounts[i.characterId] = (postmasterCounts[i.characterId]||0) + 1; });
   Object.keys(characterClassById).forEach(cid => {
     const count = postmasterCounts[cid] || 0;
-    if(count === 0) return; // don't clutter the dashboard with empty postmasters
+    if(count === 0) return;
     rows.push(capRowHtml(`${characterClassById[cid]}'s Postmaster`, count, POSTMASTER_CAPACITY,
-      "Items here get auto-deleted once it fills up.", cid));
+      "Items here get auto-deleted once it fills up — pull them in-game."));
   });
   el.innerHTML = rows.join("");
-  el.querySelectorAll(".pull-all-btn").forEach(btn => btn.addEventListener("click", (e) => {
-    e.stopPropagation();
-    pullAllPostmasterForCharacter(btn.dataset.cid);
-  }));
-  // Bars are written into the DOM at width:0 (see capRowHtml) so this fill-to-target always
-  // has a real 0% starting point to transition from, rather than just snapping to place.
   requestAnimationFrame(() => requestAnimationFrame(() => {
     el.querySelectorAll(".cap-fill").forEach(bar => { bar.style.width = bar.dataset.pct + "%"; });
   }));
 }
-function capRowHtml(label, count, cap, dangerNote, pullCid){
+function capRowHtml(label, count, cap, dangerNote){
   const pct = Math.min(100, Math.round((count/cap)*100));
   const state = pct >= 95 ? "danger" : pct >= 80 ? "warn" : "";
   return `<div class="cap-row ${state}">
-    <div class="cap-top">
-      <span>${label}${state==="danger" && dangerNote ? " — " + dangerNote : ""}</span>
-      <span style="display:flex; align-items:center; gap:8px;">
-        <span class="cap-count">${count} / ${cap}</span>
-        ${pullCid ? `<button class="pull-all-btn" data-cid="${pullCid}">Pull all</button>` : ''}
-      </span>
-    </div>
+    <div class="cap-top"><span>${label}${state==="danger" && dangerNote ? " — " + dangerNote : ""}</span><span class="cap-count">${count} / ${cap}</span></div>
     <div class="cap-track"><div class="cap-fill" data-pct="${pct}" style="width:0%"></div></div>
   </div>`;
 }
 
 // ---------- Browse tab (search / sort / manual transfer) ----------
-// Supports simple DIM-style query operators alongside plain name text:
-//   is:locked / is:masterwork / is:crafted / is:exotic / is:favorite / is:equipped
-//   tier:<rare|legendary|...>   type:<hand cannon|helmet|...> (substring match)
-// Unrecognized "word:value" tokens are left alone and matched as plain text instead, so this
-// degrades gracefully rather than breaking a search that happens to contain a colon.
-// "Loose" on purpose: a bare keyword like "exotic" or "smg" should just work without the user
-// needing to know the tier:/type: syntax exists at all. Each plain word only has to appear
-// SOMEWHERE across name/type/tier (not as one exact contiguous phrase in the name specifically),
-// and different words are independent (AND'd together, each matching its own field) rather than
-// requiring them adjacent — so "vex exotic" finds an exotic with "vex" in the name even though
-// the literal string "vex exotic" never appears anywhere on the item.
-// Word-boundary matching instead of plain substring — the fix for "machine gun" incorrectly
-// matching "Submachine Gun". A boundary is required right before the search term, so "machine"
-// only matches where it starts a word (never matches inside "Submachine").
-function tokenMatches(haystack, token){
-  const escaped = token.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  return new RegExp('\\b' + escaped, 'i').test(haystack);
-}
-// Shared by stat:/power: — "25" alone means ">=25" (DIM's own default), or an explicit
-// >, >=, <, <=, = prefix. Returns null for garbage so the caller can fall back to a keyword.
-function parseCompareExpr(expr){
-  const m = expr.match(/^(>=|<=|>|<|=)?(\d+)$/);
-  if(!m) return null;
-  return { op: m[1] || ">=", num: Number(m[2]) };
-}
-function compareOp(value, op, num){
-  switch(op){
-    case ">": return value > num;
-    case ">=": return value >= num;
-    case "<": return value < num;
-    case "<=": return value <= num;
-    case "=": return value === num;
-    default: return value >= num;
-  }
-}
-// Recognized DIM-style operators:
-//   is:locked / masterwork / crafted / exotic / favorite / equipped / tagged / postmaster
-//   is:keep / is:junk / is:infuse   (same as tag:keep etc.)
-//   tag:<keep|junk|infuse|none>     tier:<rare|legendary|...>     type:<hand cannon|...>
-//   element:<arc|solar|...>         class:<titan|hunter|warlock>  ammo:<primary|special|heavy>
-//   power:<op><n>  e.g. power:>1000, power:950         stat:<statname>:<op><n>  e.g. stat:recovery:>=25
+// Supports simple, LOOSE keyword search alongside is:/tier:/type: operators — each plain word
+// only has to appear SOMEWHERE across name/type/tier (not as one exact contiguous phrase in
+// the name specifically), so a bare keyword like "exotic" or "smg" just works.
 function parseSearchQuery(q){
   const tokens = q.trim().split(/\s+/).filter(Boolean);
   const filters = []; const words = [];
   tokens.forEach(tok => {
-    const statM = tok.match(/^stat:([a-z ]+):(.+)$/i);
-    if(statM){
-      const statNameLc = statM[1].toLowerCase().trim();
-      const parsed = parseCompareExpr(statM[2]);
-      if(parsed){
-        filters.push(i => {
-          const s = (i.statBreakdown||[]).find(s => s.name && s.name.toLowerCase() === statNameLc);
-          return !!s && compareOp(s.value, parsed.op, parsed.num);
-        });
-      } else words.push(tok.toLowerCase());
-      return;
-    }
-    const powerM = tok.match(/^power:(.+)$/i);
-    if(powerM){
-      const parsed = parseCompareExpr(powerM[1]);
-      if(parsed) filters.push(i => compareOp(i.power||0, parsed.op, parsed.num));
-      else words.push(tok.toLowerCase());
-      return;
-    }
-    const classM = tok.match(/^class:(.+)$/i);
-    if(classM){
-      const classIdx = { titan:0, hunter:1, warlock:2 }[classM[1].toLowerCase()];
-      if(classIdx !== undefined) filters.push(i => i.classType === classIdx || i.classType === 3);
-      else words.push(tok.toLowerCase());
-      return;
-    }
-    const ammoM = tok.match(/^ammo:(.+)$/i);
-    if(ammoM){
-      const val = ammoM[1].toLowerCase();
-      filters.push(i => (AMMO_NAMES[i.ammoType]||"").toLowerCase() === val);
-      return;
-    }
-    const tagM = tok.match(/^tag:(.+)$/i);
-    if(tagM){
-      const val = tagM[1].toLowerCase();
-      filters.push(val === "none" ? (i => !i.tag) : (i => i.tag === val));
-      return;
-    }
-    const m = tok.match(/^(is|tier|type|element):(.+)$/i);
+    const m = tok.match(/^(is|tier|type):(.+)$/i);
     if(!m){ words.push(tok.toLowerCase()); return; }
     const [, key, valRaw] = m; const val = valRaw.toLowerCase();
     const key_ = key.toLowerCase();
     if(key_ === "is"){
       const preds = {
         locked: i=>i.locked, masterwork: i=>i.masterwork, crafted: i=>i.crafted,
-        exotic: i=>i.tier==="Exotic", favorite: i=>i.favorite, equipped: i=>i.equipped,
-        keep: i=>i.tag==="keep", junk: i=>i.tag==="junk", infuse: i=>i.tag==="infuse",
-        tagged: i=>!!i.tag, postmaster: i=>i.isPostmaster
+        exotic: i=>i.tier==="Exotic", favorite: i=>i.favorite, equipped: i=>i.equipped
       };
-      // Recognized is:/tier:/type:/element: operators stay exact (that's the point of typing one on
-      // purpose) — anything unrecognized just falls back to being matched as a loose keyword
-      // instead of silently doing nothing, e.g. "is:typo" still searches for "is:typo" as text.
       if(preds[val]) filters.push(preds[val]); else words.push(tok.toLowerCase());
     } else if(key_ === "tier"){
       filters.push(i => (i.tier||"").toLowerCase() === val);
     } else if(key_ === "type"){
-      filters.push(i => tokenMatches((i.type||"").toLowerCase(), val));
-    } else if(key_ === "element"){
-      filters.push(i => (i.element||"").toLowerCase() === val);
+      filters.push(i => (i.type||"").toLowerCase().includes(val));
     }
   });
   return { filters, words };
 }
 function renderBrowse(){
   renderCapacityDash();
-  // Only weapons and armor — quest steps, bounties, consumables etc. aren't vault-cleanup
-  // material and were just adding noise to a screen about deciding what gear to keep.
   let list = allItems.filter(i => i.itemType === 2 || i.itemType === 3);
   const { filters, words } = parseSearchQuery(searchQuery);
   filters.forEach(f => { list = list.filter(f); });
   if(words.length){
     list = list.filter(i => {
-      const haystack = `${i.name} ${i.type} ${i.tier} ${i.element||''} ${i.note||''}`.toLowerCase();
-      return words.every(w => tokenMatches(haystack, w));
+      const haystack = `${i.name} ${i.type} ${i.tier}`.toLowerCase();
+      return words.every(w => haystack.includes(w));
     });
   }
   if(favoritesOnly) list = list.filter(i => i.favorite);
   if(locationFilter) list = list.filter(i => i.location === locationFilter);
-  if(tagFilter) list = list.filter(i => tagFilter === "none" ? !i.tag : i.tag === tagFilter);
 
-  // Group exact duplicates into one row instead of one per copy — a stack of 6 identical
-  // guns is a "how many do I have" fact worth surfacing, not 6 rows to scroll past.
   const groups = {};
   list.forEach(item => { (groups[item.itemHash] = groups[item.itemHash] || []).push(item); });
   let rows = Object.values(groups).map(g => ({
@@ -2145,72 +1421,43 @@ function renderBrowse(){
   rows.forEach(({rep, items}, idx) => {
     const el = document.createElement("div");
     el.className = "browse-item";
-    el.style.animationDelay = `${Math.min(idx, 10) * 25}ms`; // cap so long lists don't feel sluggish to appear
+    el.style.animationDelay = `${Math.min(idx, 10) * 25}ms`;
     const color = TIER_COLORS[rep.tier] || TIER_COLORS.Common;
-    el.style.borderLeftColor = color;
 
     if(items.length > 1){
-      const groupChips = rowChipsHtml(rep);
       el.innerHTML = `
-        <div class="icon" style="box-shadow:0 0 16px 1px ${color}66;">${iconImgHtml(rep)}<div class="tier-dot" style="background:${color}"></div></div>
-        <div class="info"><div class="name">${escapeHtml(rep.name)}</div><div class="sub">${elementGlyphInline(rep)}${items.length} copies owned</div>${groupChips ? `<div class="row-chips">${groupChips}</div>` : ''}</div>
+        <div class="icon">${iconImgHtml(rep)}<div class="tier-dot" style="background:${color}"></div></div>
+        <div class="info"><div class="name">${escapeHtml(rep.name)}</div><div class="sub">${items.length} copies owned</div></div>
         <button class="xfer">⚔️ Compare</button>`;
       el.querySelector(".xfer").addEventListener("click", (e) => {
         e.stopPropagation();
         const pool = items.slice().sort((a,b)=>b.power-a.power || (b.masterwork-a.masterwork) || (b.crafted-a.crafted));
         startBracket([{ pool }], "Nothing left to compare here.");
-        enterComparisonScreen();
+        goToCompareTab();
       });
       el.addEventListener("click", () => openItemDetail(rep));
     } else {
       const item = rep;
       const transferrable = (item.transferStatus & 0x1) === 0 && item.itemInstanceId;
-      // Postmaster items always get their own Pull button (they need PullFromPostmaster, not
-      // TransferItem) regardless of select mode; select mode itself skips them entirely.
-      const inSelectMode = selectModeOn && !item.isPostmaster;
-      const checked = selectedForBulk.has(item.itemInstanceId);
-      const actionHtml = item.isPostmaster
-        ? `<button class="xfer pull-btn">📥 PULL</button>`
-        : inSelectMode
-          ? `<input type="checkbox" class="bulk-check" ${checked?'checked':''}>`
-          : `${item.itemInstanceId ? `<button class="fav-star ${item.favorite?'active':''}">★</button>` : ''}<button class="xfer" ${transferrable?'':'disabled'}>${item.location==='Vault'?'TO CHAR':'TO VAULT'}</button>`;
-      const itemChips = rowChipsHtml(item);
       el.innerHTML = `
-        <div class="icon" style="box-shadow:0 0 16px 1px ${color}66;">${iconImgHtml(item)}<div class="tier-dot" style="background:${color}"></div></div>
-        <div class="info"><div class="name">${item.tag ? `<span class="tag-pill">${TAG_DEFS[item.tag].emoji}</span> ` : ''}${escapeHtml(item.name)}</div><div class="sub">${elementGlyphInline(item)}${item.location}${item.quantity>1?' · x'+item.quantity:''}</div>${itemChips ? `<div class="row-chips">${itemChips}</div>` : ''}${item.note ? `<div class="note">📝 ${escapeHtml(item.note)}</div>` : ''}</div>
-        ${actionHtml}`;
-
-      const pullBtn = el.querySelector(".pull-btn");
-      if(pullBtn) pullBtn.addEventListener("click", (e) => { e.stopPropagation(); pullFromPostmaster(item); });
-
-      const xferBtn = el.querySelector(".xfer:not(.pull-btn)");
-      if(xferBtn) xferBtn.addEventListener("click", (e) => { e.stopPropagation(); transferPrompt(item); });
-
+        <div class="icon">${iconImgHtml(item)}<div class="tier-dot" style="background:${color}"></div></div>
+        <div class="info"><div class="name">${escapeHtml(item.name)}</div><div class="sub">${item.location}${item.quantity>1?' · x'+item.quantity:''}</div>${item.note ? `<div class="note">📝 ${escapeHtml(item.note)}</div>` : ''}</div>
+        ${item.itemInstanceId ? `<button class="fav-star ${item.favorite?'active':''}">★</button>` : ''}
+        <button class="xfer" ${transferrable?'':'disabled'}>${item.location==='Vault'?'TO CHAR':'TO VAULT'}</button>`;
+      el.querySelector(".xfer").addEventListener("click", (e) => { e.stopPropagation(); transferPrompt(item); });
       const starBtn = el.querySelector(".fav-star");
       if(starBtn) starBtn.addEventListener("click", (e) => {
         e.stopPropagation();
         toggleFavorite(item.itemInstanceId);
         item.favorite = isFavorite(item.itemInstanceId);
         starBtn.classList.toggle("active", item.favorite);
-        starBtn.classList.remove("pop"); void starBtn.offsetWidth; // restart the animation even on rapid re-clicks
+        starBtn.classList.remove("pop"); void starBtn.offsetWidth;
         starBtn.classList.add("pop");
       });
-
-      const checkbox = el.querySelector(".bulk-check");
-      if(checkbox){
-        checkbox.addEventListener("click", e => e.stopPropagation());
-        checkbox.addEventListener("change", (e) => {
-          if(e.target.checked) selectedForBulk.add(item.itemInstanceId); else selectedForBulk.delete(item.itemInstanceId);
-          renderBulkBar();
-        });
-        el.addEventListener("click", () => { checkbox.checked = !checkbox.checked; checkbox.dispatchEvent(new Event("change")); });
-      } else {
-        el.addEventListener("click", () => openItemDetail(item));
-      }
+      el.addEventListener("click", () => openItemDetail(item));
     }
     container.appendChild(el);
   });
-  renderBulkBar();
 }
 function tierRank(t){ return {"Exotic":5,"Legendary":4,"Rare":3,"Uncommon":2,"Common":1}[t]||0; }
 function escapeHtml(s){ return s.replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
@@ -2224,9 +1471,6 @@ async function setLockState(item, locked){
   return res?.ErrorCode === 1;
 }
 
-// "Similar" for weapons = same weapon type (e.g. every Hand Cannon you own), not just exact
-// duplicates — matches how a player actually thinks about culling ("do I need 6 hand cannons").
-// For armor it's the same slot+class grouping Showdown's picker already uses.
 function findSimilarPool(item){
   if(!item.itemInstanceId) return [];
   const eligible = it => it.itemInstanceId && !it.locked && !it.favorite && it.itemInstanceId !== item.itemInstanceId &&
@@ -2241,124 +1485,38 @@ function findSimilarPool(item){
   return [];
 }
 
-// ---------- Quick compare — a plain side-by-side stat table, distinct from the win/lose
-// Showdown bracket. Same similar-items pool as Showdown, just for "which of these 3 is best"
-// at a glance rather than a full duplicate-culling pass. ----------
-function openQuickCompare(item){
-  const others = findSimilarPool(item);
-  closeSheet();
-  if(others.length === 0){
-    alert(`Nothing else like this to compare — "${item.name}" is the only one of its kind right now.`);
-    return;
-  }
-  const items = [item, ...others].sort((a,b) => b.power - a.power).slice(0, 3);
-  renderQuickCompareSheet(items);
-}
-
-function renderQuickCompareSheet(items){
-  const sheet = $("#sheet");
-  const maxPower = Math.max(...items.map(i => i.power || 0));
-  // Union of stat names across the compared items, in first-seen order — armor within the same
-  // slot/class always shares the same 6 stats, weapons of the same type usually do too, but this
-  // stays correct even when they don't (a stat just shows "—" for whichever item lacks it).
-  const statNames = [];
-  items.forEach(it => (it.statBreakdown || []).forEach(s => { if(!statNames.includes(s.name)) statNames.push(s.name); }));
-  const maxForStat = {};
-  statNames.forEach(name => {
-    const vals = items.map(it => (it.statBreakdown || []).find(s => s.name === name)?.value).filter(v => v !== undefined);
-    maxForStat[name] = vals.length ? Math.max(...vals) : null;
-  });
-
-  const headerRow = `<div class="qc-row qc-header"><div class="qc-cell qc-label"></div>${items.map(it => `
-    <div class="qc-cell qc-item"><div class="qc-icon">${iconImgHtml(it)}</div><div class="qc-name">${escapeHtml(it.name)}</div></div>`).join('')}</div>`;
-  const powerRow = `<div class="qc-row"><div class="qc-cell qc-label">Power</div>${items.map(it => `
-    <div class="qc-cell ${maxPower > 0 && it.power === maxPower ? 'qc-best' : ''}">${it.power || '—'}</div>`).join('')}</div>`;
-  const statRows = statNames.map(name => {
-    const cells = items.map(it => {
-      const s = (it.statBreakdown || []).find(s => s.name === name);
-      const val = s ? s.value : null;
-      const isBest = val !== null && maxForStat[name] !== null && val === maxForStat[name];
-      return `<div class="qc-cell ${isBest ? 'qc-best' : ''}">${val ?? '—'}</div>`;
-    }).join('');
-    return `<div class="qc-row"><div class="qc-cell qc-label">${escapeHtml(name)}</div>${cells}</div>`;
-  }).join('');
-
-  sheet.innerHTML = `<h3>Quick compare</h3>
-    <div class="qc-table" style="--qc-cols:${items.length};">${headerRow}${powerRow}${statRows}</div>
-    <div class="cancel" id="sheetCancel">Close</div>`;
-  openSheet();
-  $("#sheetCancel").addEventListener("click", closeSheet);
-}
-
 function openItemDetail(item){
   const sheet = $("#sheet");
   const isArmor = item.itemType === 2;
-  // Full stat breakdown as real bars (not just the top 2 crammed into a text line) — this is
-  // the same per-instance data the Showdown vcard already resolves, just given room to actually
-  // show every stat instead of being squeezed for space in a matchup card.
-  const headerChips = [
-    item.archetype ? `<span class="stat-chip">${escapeHtml(item.archetype)}</span>` : '',
-    !isArmor && item.rpm ? `<span class="stat-chip">${item.rpm} RPM</span>` : '',
-    !isArmor ? elementChipHtml(item.element) : '',
-    !isArmor ? ammoChipHtml(AMMO_NAMES[item.ammoType]) : ''
-  ].filter(Boolean).join('');
-  const statBarsHtml = (item.statBreakdown || []).map(s => `
-    <div class="stat-bar-row">
-      <span class="stat-label">${escapeHtml(s.name)}</span>
-      <div class="stat-track"><div class="stat-fill" style="width:${Math.min(100, s.value)}%"></div></div>
-      <span class="stat-value">${s.value}</span>
-    </div>`).join('');
+  const statLine = isArmor
+    ? [item.archetype ? `Archetype: ${item.archetype}` : '', ...(item.statBreakdown||[]).slice(0,2).map(s=>`${s.name} ${s.value}`)].filter(Boolean).join(' · ')
+    : [item.rpm ? `${item.rpm} RPM` : '', item.element || ''].filter(Boolean).join(' · ');
   sheet.innerHTML = `
     <div style="text-align:center;">
-      <div class="detail-icon">
-        ${item.icon ? `<img src="${item.icon}" onerror="this.style.display='none'">` : ''}
+      <div style="width:80px;height:80px;border-radius:20px;background:var(--line);margin:0 auto 10px auto;overflow:hidden;">
+        ${item.icon ? `<img src="${item.icon}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'">` : ''}
       </div>
       <h3 style="margin-bottom:2px;">${escapeHtml(item.name)}</h3>
       <div style="color:var(--dim);font-weight:700;font-size:12px;margin-bottom:8px;">${item.type||item.tier} · ${item.location}</div>
-      <div class="detail-power">${item.power||'—'} <span class="lbl">POWER</span></div>
-      ${headerChips ? `<div class="chips-inline" style="margin-top:8px;">${headerChips}</div>` : ''}
+      <div style="font-family:'Baloo 2',sans-serif;font-size:26px;font-weight:800;color:var(--purple-dk);">${item.power||'—'} <span style="font-size:11px;color:var(--dim);">POWER</span></div>
+      ${statLine ? `<div style="margin-top:6px;font-size:12px;font-weight:800;color:var(--dim);">${statLine}</div>` : ''}
       <div style="margin:10px 0; font-size:12px; font-weight:800; color:var(--dim);">
         ${item.masterwork?'⭐ Masterwork &nbsp;':''}${item.crafted?'🛠️ Crafted &nbsp;':''}${item.equipped?'✅ Equipped &nbsp;':''}${item.locked?'🔒 Locked':''}
       </div>
     </div>
-    ${statBarsHtml ? `<div class="stat-bars" style="margin:8px 0 12px 0;">${statBarsHtml}</div>` : ''}
-    ${!isArmor && item.itemInstanceId ? `<div class="perk-row" id="detailPerkRow" style="display:flex;gap:6px;flex-wrap:wrap;margin:0 0 12px 0;"><span class="perk-loading">loading roll…</span></div>` : ''}
     ${item.itemInstanceId ? `<textarea id="noteField" placeholder="Add a note (why you're keeping/marking this)…">${escapeHtml(item.note||'')}</textarea>` : ''}
-    ${item.itemInstanceId ? `<div style="display:flex;gap:8px;margin:10px 0;">${Object.entries(TAG_DEFS).map(([k,v]) =>
-      `<button class="tag-btn ${item.tag===k?'active':''}" data-tag="${k}">${v.emoji} ${v.label}</button>`).join('')}</div>` : ''}
-    <div class="opt" id="detailQuickCompareBtn">📊 Quick compare (side by side)<span>›</span></div>
-    <div class="opt" id="detailCompareBtn">⚔️ Showdown against similar<span>›</span></div>
+    <div class="opt" id="detailCompareBtn">⚔️ Compare against similar<span>›</span></div>
     ${item.itemInstanceId ? `<div class="opt" id="detailFavBtn">${item.favorite ? '★ Unfavorite (allow in Showdown)' : '☆ Favorite (never suggest for cleanup)'}<span>›</span></div>` : ''}
     ${item.itemInstanceId ? `<div class="opt" id="detailLockBtn">${item.locked ? '🔓 Unlock item' : '🔒 Lock item'}<span>›</span></div>` : ''}
-    ${item.itemInstanceId ? (item.isPostmaster
-      ? `<div class="opt" id="detailPullBtn">📥 Pull from Postmaster<span>›</span></div>`
-      : `<div class="opt" id="detailTransferBtn">${item.location==='Vault'?'Move to a character':'Move to Vault'}<span>›</span></div>`
-    ) : ''}
+    ${item.itemInstanceId ? `<div class="opt" id="detailTransferBtn">${item.location==='Vault'?'Move to a character':'Move to Vault'}<span>›</span></div>` : ''}
     <div class="cancel" id="sheetCancel">Close</div>`;
   openSheet();
-  if(!isArmor && item.itemInstanceId){
-    fetchItemPerks(item).then(perks => {
-      const row = $("#detailPerkRow"); // sheet may have been re-rendered (e.g. a tag click) since the fetch started
-      if(!row) return;
-      row.innerHTML = perks.length
-        ? perks.map(p => `<span class="perk-chip">${p.icon ? `<img src="${p.icon}" onerror="this.style.display='none'">` : ''}${escapeHtml(p.name)}</span>`).join('')
-        : `<span class="perk-loading">no roll data</span>`;
-    });
-  }
   const noteField = $("#noteField");
   if(noteField) noteField.addEventListener("blur", () => {
     setNote(item.itemInstanceId, noteField.value);
     item.note = getNote(item.itemInstanceId);
     renderBrowse(); renderMarked();
   });
-  sheet.querySelectorAll(".tag-btn").forEach(btn => btn.addEventListener("click", () => {
-    const tag = btn.dataset.tag;
-    const newTag = item.tag === tag ? null : tag;
-    setTag(item.itemInstanceId, newTag);
-    item.tag = getTag(item.itemInstanceId);
-    openItemDetail(item); // re-render the sheet so the active tag button updates
-    renderBrowse();
-  }));
   const favBtn = $("#detailFavBtn");
   if(favBtn) favBtn.addEventListener("click", () => {
     toggleFavorite(item.itemInstanceId);
@@ -2366,10 +1524,7 @@ function openItemDetail(item){
     closeSheet();
     renderBrowse();
   });
-  const pullBtn = $("#detailPullBtn");
-  if(pullBtn) pullBtn.addEventListener("click", () => { closeSheet(); pullFromPostmaster(item); });
 
-  $("#detailQuickCompareBtn").addEventListener("click", () => openQuickCompare(item));
   $("#detailCompareBtn").addEventListener("click", () => {
     const others = findSimilarPool(item);
     closeSheet();
@@ -2379,7 +1534,7 @@ function openItemDetail(item){
     }
     const pool = [item, ...others].sort((a,b) => b.power - a.power || (b.masterwork - a.masterwork) || (b.crafted - a.crafted));
     startBracket([{ pool }], "Nothing left to compare here.");
-    enterComparisonScreen();
+    goToCompareTab();
   });
   const lockBtn = $("#detailLockBtn");
   if(lockBtn) lockBtn.addEventListener("click", async () => {
@@ -2413,9 +1568,6 @@ function transferPrompt(item){
     });
     hideLoading();
     if(res?.ErrorCode === 1){
-      // Update just this item in place rather than re-fetching the whole profile —
-      // a single transfer doesn't need a full vault reload, and skipping it keeps
-      // the app responsive if you're moving several things back to back.
       item.characterId = toVault ? null : characterId;
       item.location = toVault ? "Vault" : (characterClassById[characterId] || "Guardian");
       item.equipped = false;
@@ -2427,15 +1579,13 @@ function transferPrompt(item){
   $("#sheetCancel").addEventListener("click", closeSheet);
 }
 
-// Some flows call closeSheet() then immediately openSheet() again with new content (e.g.
-// "move to vault" swaps the sheet straight into a character picker) — a generation counter
-// stops the first call's delayed display:none from stomping on the second call's reopen.
+// Some flows swap the sheet's content mid-open (e.g. "Move to a character" swaps straight
+// into the character list) — a generation counter stops a stale close's delayed
+// display:none from stomping on a newer open.
 let sheetGen = 0;
 function openSheet(){
   sheetGen++;
   $("#sheet").style.display="block"; $("#sheet-backdrop").style.display="block";
-  // display:none → block must paint at translateY(100%) before ".show" is added, otherwise
-  // the browser can skip straight to the end state and the slide-up never plays.
   requestAnimationFrame(() => requestAnimationFrame(() => {
     $("#sheet").classList.add("show"); $("#sheet-backdrop").classList.add("show");
   }));
@@ -2444,7 +1594,7 @@ function closeSheet(){
   const gen = ++sheetGen;
   $("#sheet").classList.remove("show"); $("#sheet-backdrop").classList.remove("show");
   setTimeout(() => {
-    if(sheetGen !== gen) return; // a newer open/close already happened — don't hide its content
+    if(sheetGen !== gen) return;
     $("#sheet").style.display="none"; $("#sheet-backdrop").style.display="none";
   }, 320);
 }
@@ -2453,11 +1603,7 @@ function hideLoading(){ $("#loading").style.display="none"; }
 
 // ---------- Tabs ----------
 document.querySelectorAll(".tab-btn").forEach(btn => {
-  btn.addEventListener("click", () => {
-    document.querySelectorAll(".tab-btn").forEach(b=>b.classList.remove("active"));
-    btn.classList.add("active");
-    activateTabPanel("tab-"+btn.dataset.tab);
-  });
+  btn.addEventListener("click", () => activateTabPanel("tab-"+btn.dataset.tab));
 });
 $("#backToPickerBtn").addEventListener("click", backToPicker);
 $("#emptyBackBtn").addEventListener("click", backToPicker);
@@ -2467,30 +1613,64 @@ $("#goToMarkedBtn").addEventListener("click", () => document.querySelector('[dat
 $("#stageAllBtn").addEventListener("click", stageAllOnCharacter);
 $("#exportDimCsvBtn").addEventListener("click", exportMarkedAsDimCsv);
 $("#copyDimQueryBtn").addEventListener("click", copyMarkedAsDimQuery);
-$("#saveLoadoutBtn").addEventListener("click", openSaveLoadoutSheet);
 $("#sheet-backdrop").addEventListener("click", closeSheet);
-$("#sweepModeBtn").addEventListener("click", () => {
-  showdownMode = "picker"; selectedClass = null;
-  enterComparisonScreen();
-  renderShowdown();
-});
 $("#logoutBtn").addEventListener("click", logout);
 $("#loginBtn").addEventListener("click", startLogin);
 
-// ---------- Settings (theme) ----------
-// All four dark-first, built from scratch to keep stat-bar fills legible against their track
-// regardless of accent — see the :root comment in <style> for why the old light pastel themes
-// got dropped entirely rather than kept alongside these.
+// ---------- Settings (theme + custom colors) ----------
 const THEMES = [
-  { id:"blackout", label:"Blackout", dot1:"#9c85ff", dot2:"#0a0a12" },
-  { id:"abyss",    label:"Abyss",    dot1:"#38bdf8", dot2:"#050b14" },
-  { id:"ember",    label:"Ember",    dot1:"#fb923c", dot2:"#140905" },
-  { id:"verdant",  label:"Verdant",  dot1:"#34d399", dot2:"#04120c" }
+  { id:"blackout",  label:"Blackout (true black)", dot1:"#a78bfa", dot2:"#000000" },
+  { id:"midnight",  label:"Midnight",  dot1:"#a78bfa", dot2:"#2a2045" },
+  { id:"bubblegum", label:"Bubblegum", dot1:"#8b5cf6", dot2:"#f472b6" },
+  { id:"ocean",     label:"Ocean",     dot1:"#0891b2", dot2:"#38bdf8" },
+  { id:"sunset",    label:"Sunset",    dot1:"#f97316", dot2:"#fb7185" },
+  { id:"mint",      label:"Mint",      dot1:"#10b981", dot2:"#2dd4bf" }
 ];
+// The 5 variables a beginner actually needs to touch to restyle the whole app — everything
+// else (tier colors, status colors) stays fixed on purpose so the app still reads correctly
+// no matter what someone picks.
+// --dim/--line aren't user-editable pickers (keeping the UI to 5 simple fields), but they DO
+// need to travel with the other custom vars — otherwise "custom" mode would silently inherit
+// the light-theme :root defaults for secondary text/borders (a barely-visible pale border on
+// a black card, low-contrast gray text) no matter what background/card color was actually
+// picked. Bundling them in with blackout-matching defaults keeps custom mode legible by
+// default even though only 5 of these 9 values have a picker in the UI.
+const CUSTOM_VARS = ["--bg1","--bg2","--card","--ink","--dim","--line","--purple","--purple-dk","--pink"];
+const CUSTOM_DEFAULTS = {
+  "--bg1":"#000000", "--bg2":"#050505", "--card":"#0d0d0d", "--ink":"#f5f5f5",
+  "--dim":"#8a8a8a", "--line":"#1e1e1e",
+  "--purple":"#a78bfa", "--purple-dk":"#c9b8ff", "--pink":"#f472b6"
+};
+function loadCustomColors(){
+  try{ return { ...CUSTOM_DEFAULTS, ...JSON.parse(localStorage.getItem("vault_custom_colors") || "{}") }; }
+  catch(e){ return { ...CUSTOM_DEFAULTS }; }
+}
+let customColors = loadCustomColors();
+function saveCustomColors(){ localStorage.setItem("vault_custom_colors", JSON.stringify(customColors)); }
+function clearCustomOverrides(){ CUSTOM_VARS.forEach(v => document.documentElement.style.removeProperty(v)); }
+function applyCustomColors(){
+  CUSTOM_VARS.forEach(v => document.documentElement.style.setProperty(v, customColors[v]));
+}
+// Darkens a hex color by a fixed amount — used to auto-derive the "-dk" (pressed/active)
+// variant of the accent color so picking ONE accent swatch still looks right everywhere
+// that variant shows up (active chips, buttons, etc.), instead of asking for two pickers.
+function darkenHex(hex, amount){
+  const n = parseInt(hex.replace("#",""), 16);
+  const r = Math.max(0, (n >> 16) - amount), g = Math.max(0, ((n >> 8) & 0xff) - amount), b = Math.max(0, (n & 0xff) - amount);
+  return "#" + ((1<<24) + (r<<16) + (g<<8) + b).toString(16).slice(1);
+}
+
 function applyTheme(id){
-  document.documentElement.setAttribute("data-theme", id === "blackout" ? "" : id);
+  if(id === "custom"){
+    document.documentElement.removeAttribute("data-theme");
+    applyCustomColors();
+  } else {
+    clearCustomOverrides();
+    document.documentElement.setAttribute("data-theme", id === "bubblegum" ? "" : id);
+  }
   localStorage.setItem("vault_theme", id);
 }
+
 function openThemeSheet(){
   const sheet = $("#sheet");
   const current = localStorage.getItem("vault_theme") || "blackout";
@@ -2499,26 +1679,79 @@ function openThemeSheet(){
       <div class="swatch" style="background:linear-gradient(135deg, ${t.dot1}, ${t.dot2})"></div>
       <span style="flex:1;">${t.label}</span>
       <span>${t.id === current ? '✓' : '›'}</span>
-    </div>`).join("") +
-    `<div style="font-size:11px;color:var(--dim);font-weight:800;margin:14px 0 8px 0;">DATA</div>
-    <div class="opt" id="exportAllTagsBtn">Export all tags to DIM CSV<span>›</span></div>` +
-    `<div class="cancel" id="sheetCancel">Close</div>`;
+    </div>`).join("") + `
+    <div class="opt theme-opt" id="customThemeOpt">
+      <div class="swatch" style="background:conic-gradient(from 180deg, #a78bfa, #f472b6, #38bdf8, #10b981, #a78bfa)"></div>
+      <span style="flex:1;">🎨 Custom colors</span>
+      <span>${current === 'custom' ? '✓' : '›'}</span>
+    </div>` + `<div class="cancel" id="sheetCancel">Close</div>`;
   openSheet();
-  sheet.querySelectorAll(".theme-opt").forEach(opt => opt.addEventListener("click", () => {
+  sheet.querySelectorAll(".theme-opt[data-theme-id]").forEach(opt => opt.addEventListener("click", () => {
     applyTheme(opt.dataset.themeId);
     closeSheet();
   }));
-  const exportBtn = $("#exportAllTagsBtn");
-  if(exportBtn) exportBtn.addEventListener("click", () => { exportAllTagsAsDimCsv(); closeSheet(); });
+  $("#customThemeOpt").addEventListener("click", openCustomColorSheet);
   $("#sheetCancel").addEventListener("click", closeSheet);
+}
+
+// Live color-picker screen: every change applies to the whole app instantly (via CSS custom
+// properties) AND saves, so there's no separate "preview vs apply" step — what you see while
+// dragging the picker is what you get. This is the "less code, more visual control" ask:
+// nobody has to open a stylesheet to reskin the app.
+function openCustomColorSheet(){
+  applyTheme("custom"); // switch live so changes are visible while adjusting
+  const sheet = $("#sheet");
+  const fields = [
+    { key:"--bg1", label:"Background" },
+    { key:"--card", label:"Cards" },
+    { key:"--ink", label:"Text" },
+    { key:"--purple", label:"Accent" },
+    { key:"--pink", label:"Accent 2" }
+  ];
+  sheet.innerHTML = `
+    <h3>🎨 Custom colors</h3>
+    <div id="customColorPreview">Live preview — this updates as you pick</div>
+    ${fields.map(f => `
+      <div class="color-row">
+        <label for="cc-${f.key}">${f.label}</label>
+        <input type="color" id="cc-${f.key}" value="${customColors[f.key]}">
+      </div>`).join("")}
+    <div class="opt" id="resetCustomBtn">↩ Reset to defaults<span>›</span></div>
+    <div class="cancel" id="sheetCancel">Done</div>
+  `;
+  openSheet();
+  updateCustomPreview();
+
+  fields.forEach(f => {
+    $(`#cc-${f.key}`).addEventListener("input", (e) => {
+      customColors[f.key] = e.target.value;
+      if(f.key === "--bg1") customColors["--bg2"] = e.target.value; // flat background, one control
+      if(f.key === "--purple") customColors["--purple-dk"] = darkenHex(e.target.value, 40);
+      saveCustomColors();
+      applyCustomColors();
+      updateCustomPreview();
+    });
+  });
+  $("#resetCustomBtn").addEventListener("click", () => {
+    customColors = { ...CUSTOM_DEFAULTS };
+    saveCustomColors();
+    applyCustomColors();
+    openCustomColorSheet(); // re-render with reset values in the pickers
+  });
+  $("#sheetCancel").addEventListener("click", closeSheet);
+}
+function updateCustomPreview(){
+  const preview = $("#customColorPreview");
+  if(!preview) return;
+  preview.style.background = `linear-gradient(135deg, ${customColors["--purple"]}, ${customColors["--pink"]})`;
+  preview.style.color = "#fff";
 }
 $("#themeBtn").addEventListener("click", openThemeSheet);
 
 // One-time forced reset: earlier versions of this app defaulted to the bright "Bubblegum"
 // theme and saved that choice to localStorage the moment the app first loaded — meaning
 // everyone who'd already opened the app has "bubblegum" saved even though they never
-// deliberately chose it. This runs once, overrides that leftover value to the new true-black
-// default, and never touches it again after — so an actual deliberate choice always sticks.
+// deliberately chose it. This runs once and never touches it again after.
 if(!localStorage.getItem("vault_dark_default_migration_done")){
   localStorage.setItem("vault_theme", "blackout");
   localStorage.setItem("vault_dark_default_migration_done", "1");
@@ -2530,15 +1763,6 @@ $("#sortChips").addEventListener("click", e => {
   const chip = e.target.closest(".chip");
   if(!chip) return;
   if(chip.id === "locFilterChip"){ openLocationSheet(); return; }
-  if(chip.id === "tagFilterChip"){ openTagFilterSheet(); return; }
-  if(chip.id === "savedSearchChip"){ openSavedSearchesSheet(); return; }
-  if(chip.id === "selectModeChip"){
-    selectModeOn = !selectModeOn;
-    chip.classList.toggle("active", selectModeOn);
-    if(!selectModeOn) selectedForBulk.clear();
-    renderBrowse();
-    return;
-  }
   if(chip.id === "favFilterChip"){
     favoritesOnly = !favoritesOnly;
     chip.classList.toggle("active", favoritesOnly);
@@ -2558,16 +1782,6 @@ function openLocationSheet(){
     closeSheet(); renderBrowse();
   }));
   $("#sheetCancel").addEventListener("click", closeSheet);
-}
-
-// ---------- PWA install/offline shell ----------
-// Registered unconditionally at load (not gated behind login) so the shell is cached and the
-// install prompt is eligible even before a Bungie session exists. Only caches this same-origin
-// shell (see sw.js) — never the Bungie API, so installing this never risks showing stale vault data.
-if("serviceWorker" in navigator){
-  window.addEventListener("load", () => {
-    navigator.serviceWorker.register("sw.js").catch(e => console.warn("Service worker registration failed", e));
-  });
 }
 
 // ---------- Boot ----------
