@@ -434,6 +434,17 @@
   }
   .filmstrip-thumb.current{opacity:1; border-color:var(--purple);}
   .filmstrip-thumb img{width:100%; height:100%; object-fit:cover;}
+
+  /* ---------- Desktop-only hover preview — real hover devices only, never touch ---------- */
+  @media (hover:hover){
+    #hoverPreview{
+      position:fixed; width:300px; max-height:80vh; overflow-y:auto; background:var(--card);
+      border:1px solid var(--line); border-radius:6px; box-shadow:0 12px 32px rgba(0,0,0,0.6);
+      z-index:50; opacity:0; pointer-events:none; transition:opacity .12s ease;
+    }
+    #hoverPreview.show{opacity:1;}
+    #hoverPreview .detail-body{padding:14px;}
+  }
   .theme-opt{display:flex; align-items:center; gap:12px;}
   .theme-opt .swatch{width:32px; height:32px; border-radius:50%; flex:0 0 auto; box-shadow:inset 0 0 0 2px rgba(0,0,0,0.08);}
 
@@ -547,6 +558,7 @@
 <div id="loading"><div class="spin"></div><span id="loadingLabel">LOADING…</span></div>
 <div id="sheet-backdrop"></div>
 <div id="sheet"></div>
+<div id="hoverPreview"></div>
 
 <script>
 /* =========================================================================
@@ -1710,6 +1722,7 @@ function renderBrowse(){
         enterComparisonScreen();
       });
       el.addEventListener("click", () => openItemDetail(rep));
+      wireHoverPreview(el, rep);
     } else {
       const item = rep;
       const transferrable = (item.transferStatus & 0x1) === 0 && item.itemInstanceId;
@@ -1729,6 +1742,7 @@ function renderBrowse(){
         starBtn.classList.add("pop");
       });
       el.addEventListener("click", () => openItemDetail(item));
+      wireHoverPreview(el, item);
     }
     container.appendChild(el);
   });
@@ -1806,6 +1820,44 @@ function loadDetailPerks(item, container){
         : `<span class="perk-loading">No roll data</span>`;
     }
   });
+}
+
+// ---------- Desktop hover preview ----------
+// Gated on an actual hover-capable pointer, checked once — this never wires on touch
+// devices at all, so it can't ever interfere with tap-to-open on mobile.
+const HOVER_CAPABLE = window.matchMedia && window.matchMedia('(hover: hover)').matches;
+let hoverPreviewTimer = null;
+function wireHoverPreview(rowEl, item){
+  if(!HOVER_CAPABLE) return;
+  rowEl.addEventListener("mouseenter", () => {
+    clearTimeout(hoverPreviewTimer);
+    // Small delay so quickly scanning down a list doesn't flash a preview for every row passed over.
+    hoverPreviewTimer = setTimeout(() => showHoverPreview(rowEl, item), 180);
+  });
+  rowEl.addEventListener("mouseleave", () => {
+    clearTimeout(hoverPreviewTimer);
+    hideHoverPreview();
+  });
+}
+function showHoverPreview(rowEl, item){
+  const panel = $("#hoverPreview");
+  panel.innerHTML = detailContentHtml(item);
+  loadDetailPerks(item, panel);
+
+  const rect = rowEl.getBoundingClientRect();
+  const panelWidth = 300;
+  const spaceRight = window.innerWidth - rect.right;
+  const left = spaceRight > panelWidth + 20 ? rect.right + 12 : rect.left - panelWidth - 12;
+  let top = rect.top;
+  const maxTop = window.innerHeight - (panel.offsetHeight || 300) - 12;
+  top = Math.max(12, Math.min(top, maxTop));
+
+  panel.style.left = `${Math.max(12, left)}px`;
+  panel.style.top = `${top}px`;
+  panel.classList.add("show");
+}
+function hideHoverPreview(){
+  $("#hoverPreview").classList.remove("show");
 }
 
 function openItemDetail(item){
